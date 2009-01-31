@@ -345,6 +345,8 @@ def same_tuple(tuple1,tuple2):
 
 def fix_gprs_bytes(bytes):
 	#TODO
+	#newbytes
+	#for b in btes:	
 	return bytes
 
 # MAIN
