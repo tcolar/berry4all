@@ -46,60 +46,6 @@ COMMAND_HELLO=[0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 
 MODEM_START = [0x01, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
 MODEM_ACK = [0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1c, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
 MODEM_ACK2 = [0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x18, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
-
-
-''' 'Static' Methods '''
-def debug(msg):
-	if(DEBUG):
-		print msg
-	
-def tuple_to_hex(tuple, msg):
-	text=""
-	hexa=""
-	cpt=0
-	for t in tuple:
-		#print t
-		hexa+=hex(t)+" "
-		if(t>=32 and t<=126):
-			text+=chr(t)
-		else:
-			text+="."
-		cpt+=1
-		if(cpt%16==0 or cpt==len(tuple)):
-			debug(msg+"["+hexa+"] ["+text+"]")
-			text=""
-			hexa=""
-
-def modem_write(handle,pt,data,timeout=TIMEOUT):
-	write(handle,pt,data,timeout,"\tModem -> ")
-	
-def modem_read(handle,pt,size=BUF_SIZE,timeout=TIMEOUT):
-	return read(handle,pt,size,timeout,"\tModem <- ")
-
-def write(handle,pt,data,timeout=TIMEOUT,msg="\t-> "):
-	# transform string from PTY into array of signed bytes
-	bytes=array.array("B",data)	
-	tuple_to_hex(bytes,msg)
-	handle.bulkWrite(pt, bytes, TIMEOUT)
-
-def read(handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t-< "):
-	bytes=handle.bulkRead(pt, size, TIMEOUT)
-	tuple_to_hex(bytes,msg)
-	return bytes 
-
-def same_tuple(tuple1,tuple2):
-	if tuple1==None and tuple2==None:
-		return True
-	if (tuple1==None and tuple2 != None) or (tuple1!=None and tuple2==None):
-		return False
-	if len(tuple1) != len(tuple2):
-		return False
-	# !None and same length ... compare
-	length=len(tuple1)
-	for i in range(length):
-		if tuple1[i] != tuple2[i]:
-			return False	
-	return True
 	
 ''' Main Class '''
 class BBTether:
@@ -295,6 +241,7 @@ class BBModem:
 			while(True):
 				bytes=os.read(master, 2000)
 				if(len(bytes)>0):
+					bytes=fix_gprs_bytes(bytes)
 					modem_write(self.handle,self.writept, bytes)
 				
 		except KeyboardInterrupt:
@@ -343,6 +290,62 @@ class BBModemThread( threading.Thread ):
 				else:
 					raise
 	
+''' 'Static' Methods '''
+def debug(msg):
+	if(DEBUG):
+		print msg
+	
+def tuple_to_hex(tuple, msg):
+	text=""
+	hexa=""
+	cpt=0
+	for t in tuple:
+		#print t
+		hexa+=hex(t)+" "
+		if(t>=32 and t<=126):
+			text+=chr(t)
+		else:
+			text+="."
+		cpt+=1
+		if(cpt%16==0 or cpt==len(tuple)):
+			debug(msg+"["+hexa+"] ["+text+"]")
+			text=""
+			hexa=""
+
+def modem_write(handle,pt,data,timeout=TIMEOUT):
+	write(handle,pt,data,timeout,"\tModem -> ")
+	
+def modem_read(handle,pt,size=BUF_SIZE,timeout=TIMEOUT):
+	return read(handle,pt,size,timeout,"\tModem <- ")
+
+def write(handle,pt,data,timeout=TIMEOUT,msg="\t-> "):
+	# transform string from PTY into array of signed bytes
+	bytes=array.array("B",data)	
+	tuple_to_hex(bytes,msg)
+	handle.bulkWrite(pt, bytes, TIMEOUT)
+
+def read(handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t-< "):
+	bytes=handle.bulkRead(pt, size, TIMEOUT)
+	tuple_to_hex(bytes,msg)
+	return bytes 
+
+def same_tuple(tuple1,tuple2):
+	if tuple1==None and tuple2==None:
+		return True
+	if (tuple1==None and tuple2 != None) or (tuple1!=None and tuple2==None):
+		return False
+	if len(tuple1) != len(tuple2):
+		return False
+	# !None and same length ... compare
+	length=len(tuple1)
+	for i in range(length):
+		if tuple1[i] != tuple2[i]:
+			return False	
+	return True
+
+def fix_gprs_bytes(bytes):
+	#TODO
+	return bytes
 
 # MAIN
 BBTether()
