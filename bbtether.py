@@ -344,9 +344,9 @@ def same_tuple(tuple1,tuple2):
 	return True
 
 def fix_gprs_bytes(bytes):
-	#TODO
-	#newbytes
-	#for b in btes:	
+	#for b in bytes:
+	#	if bytes[0]==0x7E and b==0x7E:
+	#		if bytes 	
 	return bytes
 
 # MAIN
