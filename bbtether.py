@@ -247,16 +247,16 @@ class BBTether:
 								# use pair after data pair as Modem pair
 								modem_readpt=red
 								modem_writept=writ
-								print "Using first pair after Data pair as Modem pair: ",hex(red),"/",hex(writ)
 
 			if options.listonly :
 				print "Listing only requested, stopping here."
 				os._exit(0)
 
 			if readpt==-1:
-				print "No good Data Endpoint pair, bailing out !";
+				print "\nNo good Data Endpoint pair, bailing out !";
 			else:
-				print "Using Endpoint Pair:",hex(readpt),"/",hex(writept);				
+				print "\nUsing Data Endpoint Pair:",hex(readpt),"/",hex(writept);				
+				print "Using first pair after Data pair as Modem pair: ",hex(red),"/",hex(writ),"\n"
 				
 				handle.claimInterface(interface);
 				
@@ -268,7 +268,7 @@ class BBTether:
 
 				# Modem use does not require to be in desktop mode, so don't do it.
 				#self.enable_desktop_mode(handle,writept,readpt)
-				modem=BBModem(self, handle, readpt, writept)
+				modem=BBModem(self, handle, modem_readpt, modem_writept)
 				
 				# This will run forever (until ^C)
 				modem.start(self.ppp)				
@@ -285,8 +285,8 @@ class BBModem:
 	
 	def __init__(self, prt, hnd, read, write):
 		self.handle=hnd
-		self.readpt=0x85#read
-		self.writept=0x6#write
+		self.readpt=read
+		self.writept=write
 		self.parent=prt
 
 	def write(self, handle,pt,data,timeout=TIMEOUT):
@@ -306,14 +306,14 @@ class BBModem:
 		
 		print "Initializing Modem"
 		self.write(self.handle,self.writept, MODEM_START)
-		print "Modem Ready at ",os.ttyname(slave)
-		
 		if(not self.parent.ppp):
-			"No ppp requested, you can now start pppd manually."
+			print "No ppp requested, you can now start pppd manually."
 		else:
 			#TODO: start ppp in thread/process
-			"Will try to start ppp now, config: ",ppp
-
+			print "Will try to start ppp now, config: ",ppp
+		
+		print "Modem Ready at ",os.ttyname(slave)," Use ^C to terminate"
+		
 		try:
 			# Read from PTY and write to USB modem
 			while(True):
