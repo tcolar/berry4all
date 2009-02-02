@@ -1,4 +1,4 @@
-pty "/home/tcolar/XmBlackBerry/gprs_protocol_fix/gprs_protocol_fix /dev/pts/2"
+#pty "/home/tcolar/XmBlackBerry/gprs_protocol_fix/gprs_protocol_fix /dev/pts/2"
 115200
 noipdefault
 defaultroute

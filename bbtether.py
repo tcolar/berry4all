@@ -1,6 +1,13 @@
 #!/usr/bin/python
 
 '''
+TODO:
+	- grps fix
+	- start pppd automatically
+	sudo pppd /dev/pts/11 file conf/tmobile debug nodetach
+'''
+
+'''
 Script to use a USB BlackBerry device as a modem (Tethering), and enable charging.
 
 This script requires python, pppd, libusb and the python usb module:
