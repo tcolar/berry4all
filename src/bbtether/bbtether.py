@@ -468,7 +468,7 @@ class BBModemThread( threading.Thread ):
 							data=array.array("B",bytes)
 							os.write(self.output,data.tostring())
 				except usb.USBError, error:
-					# Ignore the odd "No error" error, must be a pyusb bug ?
+					# Ignore the odd "No error" error, must be a pyusb bug  maybe just means no data 
 					if error.message != "No error":
 						raise
 								
