@@ -45,15 +45,17 @@ PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)   --- probably not good
 
 BERRY_CONFIG=1
 
-TIMEOUT=500
-BUF_SIZE=2000
+TIMEOUT=1000
+BUF_SIZE=50000
 
 COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00] 
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
 MODEM_START = [0x01, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
-MODEM_ACK = [0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1c, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
-MODEM_ACK2 = [0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x18, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
+MODEM_STOP = [0x01, 0x00 ,0x00, 0x00 ,0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
+RIM_PACKET_TAIL=[0x78, 0x56, 0x34, 0x12]
+#MODEM_ACK = [0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1c, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
+#MODEM_ACK2 = [0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x18, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
 MODEM_CONNECT= [0xd, 0xa, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0xd, 0xa]
 #MODE_DESKTOP_PACKET=[0x00, 0x00, 0x18, 0x00, 0x52, 0x49, 0x4d, 0x20, 0x44, 0x65, 0x73, 0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00]  # "RIM Desktop"
 	
@@ -141,8 +143,11 @@ class BBTether:
 	def usb_write(self,handle,pt,bytes,timeout=TIMEOUT,msg="\t-> "):
 		if(self.verbose):	
 			debug_bytes(bytes,msg)
-		handle.bulkWrite(pt, bytes, TIMEOUT)
-
+		try:
+			handle.bulkWrite(pt, bytes, TIMEOUT)
+		except usb.USBError, error:
+			if error.message != "No error":
+				raise
 	def usb_read(self,handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 		bytes=handle.bulkRead(pt, size, TIMEOUT)
 		if(self.verbose):	
@@ -301,8 +306,13 @@ class BBModem:
 	def read(self, handle,pt,size=BUF_SIZE,timeout=TIMEOUT):
 		return self.parent.usb_read(handle,pt,size,timeout,"\tModem <- ")
 
-	def send_start(self):
+	def init(self):
+		self.handle.clearHalt(self.readpt)
+		self.handle.clearHalt(self.writept)
+		self.write(self.handle, self.writept, MODEM_STOP)
 		self.write(self.handle, self.writept, MODEM_START)
+		session_key=[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78, 0x56, 0x34, 0x12]
+		self.write(self.handle, self.writept, session_key)
 		
 	def start(self, ppp):
 		'''Start the modem and keep going until ^C'''
@@ -314,7 +324,7 @@ class BBModem:
 		bbThread.start()
 		
 		print "Initializing Modem"
-		self.send_start()
+		self.init()
 		if(not self.parent.ppp):
 			print "No ppp requested, you can now start pppd manually."
 		else:
@@ -326,7 +336,6 @@ class BBModem:
 		try:
 			# Read from PTY and write to USB modem
 			while(True):
-				print "reading from PTY..."
 				data=os.read(master, BUF_SIZE)
 				# transform string from PTY into array of signed bytes
 				bytes=array.array("B",data)
@@ -339,10 +348,9 @@ class BBModem:
 					for b in bytes:
 						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
 							print "#################### SPECIAL ################"	
-							#self.write(self.handle,self.writept, array.array("B","\176"))						
 							newbytes.append(0x7e);
-						if b != 0x7e and last == 0x7e:
-							print "#################### STARTED ################"
+						if not started and b != 0x7e and last == 0x7e:
+							#print "#################### STARTED ################"
 							started=True
 						last2=last
 						last=b
@@ -382,8 +390,10 @@ class BBModemThread( threading.Thread ):
 					# Read from USB modem and write to PTY
 					bytes=self.modem.read(self.handle, self.readpt)
 					if(len(bytes)>0):
-						if(is_same_tuple(bytes,MODEM_ACK) or is_same_tuple(bytes,MODEM_ACK2)):
+						#if(is_same_tuple(bytes,MODEM_ACK) or is_same_tuple(bytes,MODEM_ACK2)):
+						if end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# We do not write "ACK" messages from bberry (not data)
+							print "skipping packet"
 							pass
 						else:
 							data=array.array("B",bytes)
@@ -419,6 +429,11 @@ def debug_bytes(tuple, msg):
 			debug(msg+"["+hexa+"] ["+text+"]")
 			text=""
 			hexa=""
+
+def end_with_tuple(tuple1,tuple2):
+	if len(tuple1)<len(tuple2):
+		return False
+	return is_same_tuple(tuple1[len(tuple1)-4:len(tuple1)],tuple2)
 
 def is_same_tuple(tuple1,tuple2):
 	'''Compare 2 tuples of Byes, return True if Same(same data)'''

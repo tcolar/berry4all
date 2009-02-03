@@ -17,7 +17,7 @@ user guest
 password guest
 debug debug debug
 replacedefaultroute
+persist
 
 connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
 #disconnect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/tmobile-disconnect"
-
