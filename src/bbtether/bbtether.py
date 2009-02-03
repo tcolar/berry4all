@@ -401,7 +401,7 @@ class BBModem:
 			if self.parent.verbose:
 				command=+"debug"
 			pid = subprocess.Popen(command).pid
-			# do terintaing this myself, since it should terminate by itself (properly) when bbtether is stopped.
+			# not terminating this myself, since it should terminate by itself (properly) when bbtether is stopped.
 		
 		print "Modem Ready at ",os.ttyname(slave)," Use ^C to terminate"
 		
