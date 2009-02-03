@@ -1,0 +1,25 @@
+#not tested yet
+debug debug debug
+nodetach
+115200
+nomultilink
+defaultroute
+noipdefault
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+#need lcp-echo turned off, at least for tmobile, otherwise c0onnectin
+# disconnects after few mn of inactivity.
+# thanks to ?loon? for this info
+lcp-echo-interval 50
+lcp-echo-failure 999
+modem
+noauth
+nocrtscts
+noipdefault
+novj # refused anyway, no point in trying every time
+usepeerdns
+user 5555555555@vzw3g.com
+password vzw
+connect "/usr/sbin/chat -v -f conf/verizon-chat"
+
