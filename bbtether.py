@@ -1,31 +1,22 @@
 #!/usr/bin/python
 
 '''
-TODO:
-	- grps fix
-	- start pppd automatically
-	sudo pppd /dev/pts/1 file conf/tmobile debug nodetach
-'''
+See: http://wiki.colar.net/bbtether for more infos.
 
-'''
 Script to use a USB BlackBerry device as a modem (Tethering), and enable charging.
 On My Pearl (Edge) in Seattle, I get speeds of 8K/s-29K/s, avering about 14K/s.
 
-This script requires python, pppd, libusb and the python usb module:
+This script requires python, pppd, libusb and the python usb module installed:
 	You probably already have python, pppd and libusb installed
 	Ex: sudo apt-get install python libusb pppd python-pyusb
-		yum install python libusb pppd python-pyusb
-		
+		or yum install python libusb pppd pyusb
+
+-----------------------------------		
 Thibaut Colar - 2009+
 tcolar AT colar DOT net
 http://wiki.colar.net/bbtether
-
-Protocol References:
-	http://www.off.net/cassis/protocol-description.html
-	http://xmblackberry.cvs.sourceforge.net/viewvc/xmblackberry/XmBlackBerry/	
-	http://barry.cvs.sourceforge.net/viewvc/barry/barry/
-	http://libusb.sourceforge.net/doc/
-	http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
+Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOUR OWN RISK.
+If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
  
 import usb
@@ -35,9 +26,13 @@ import time
 import threading
 import array
 import string
+import subprocess
 from optparse import OptionParser, OptionGroup
 
 VERSION="0.1"
+
+# you MIGHT need to enter the full path to pppd here
+PPPD_COMMAND="pppd"
 
 VENDOR_RIM=0x0fca
 PRODUCT_DATA=0x0001   #(serial data)
@@ -127,17 +122,17 @@ class BBTether:
 		return desc
 
 	def parse_cmd(self):
-		usage = usage = "usage: %prog [options] [pppscript]\n	If [pppscript] is there (ppp script in conf/ folder, ex: tmobile) then will start modem and connect using that ppp script. Otherwise just opens the modem and you will have to start ppd manually."
+		usage = usage = "usage: %prog [options] [pppscript]\n	If [pppscript] is there (ppp script in conf/ folder, ex: tmobile) then will start modem and connect using that ppp script. Otherwise just opens the modem and you will have to start pppd manually."
 		parser = OptionParser(usage)
-		#parser.set_defaults(verbose="false",listonly="false",noppp="false",chargeonly="false")
 		parser.add_option("-l", "--list", action="store_true", dest="listonly",help="Only detect and list Device, do nothing more")
+		parser.add_option("-p", "--pppd", dest="pppd",help="Path To pppd binary (default: /usr/sbin/pppd)")
 		parser.add_option("-v", "--verbose", action="store_true", dest="verbose",help="Verbose: Show I/O data and other infos")
 		parser.add_option("-c", "--charge", action="store_true", dest="chargeonly",help="Put the device in Charging mode and does NOT start modem.")		
 		group = OptionGroup(parser, "Advanced Options","Don't use unless you know what you are doing.")
-		group.add_option("-w", "--drp", dest="drp", help="Force Data read endpoint (ex -w 0x84)")
-		group.add_option("-x", "--dwp", dest="dwp", help="Force Data write endpoint (ex -x 0x6)")
-		group.add_option("-y", "--mrp", dest="mrp", help="Force Modem read endpoint (ex -y 0x85)")
-		group.add_option("-z", "--mwp", dest="mwp", help="Force Modem write endpoint (ex -z 0x8)")
+		group.add_option("-w", "--drp", dest="drp", help="Force Data read endpoint - Hex(ex -w 0x84)")
+		group.add_option("-x", "--dwp", dest="dwp", help="Force Data write endpoint - Hex (ex -x 0x6)")
+		group.add_option("-y", "--mrp", dest="mrp", help="Force Modem read endpoint - Hex (ex -y 0x85)")
+		group.add_option("-z", "--mwp", dest="mwp", help="Force Modem write endpoint - Hex (ex -z 0x8)")
 		group.add_option("-d", "--device", dest="device", help="Force to use a specific device ID (use together with -b)")
 		group.add_option("-b", "--bus", dest="bus", help="Force to use a specific bus ID(use together with -d)")
 		parser.add_option_group(group)
@@ -226,11 +221,11 @@ class BBTether:
 			print "	Max packet size:",berry.maxPacketSize
 			print "	Self Powered:", config.selfPowered
 			print "	Max Power:", config.maxPower
-			for int in config.interfaces:
-				print "	Interface:",int[0].interfaceNumber
-				print "		Interface class:",int[0].interfaceClass,"/",int[0].interfaceSubClass
-				print "		Interface protocol:",int[0].interfaceProtocol
-				for att in int:
+			for inter in config.interfaces:
+				print "	Interface:",inter[0].interfaceNumber
+				print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass
+				print "		Interface protocol:",inter[0].interfaceProtocol
+				for att in inter:
 					i=0
 					# check endpoint pairs
 					while i < len(att.endpoints):
@@ -246,7 +241,7 @@ class BBTether:
 								good=True
 								if readpt == -1 :
 									# Use first valid data point found
-									interface=int[0].interfaceNumber
+									interface=inter[0].interfaceNumber
 									readpt=red
 									writept=writ
 							except usb.USBError:
@@ -261,6 +256,15 @@ class BBTether:
 								# use pair after data pair as Modem pair
 								modem_readpt=red
 								modem_writept=writ
+
+			if options.drp:
+				readpt=int(options.drp, 16)
+			if options.dwp:
+				writept=int(options.dwp, 16)
+			if options.mrp:
+				modem_readpt=int(options.mrp, 16)
+			if options.mwp:
+				modem_writept=int(options.mwp, 16)				
 
 			if options.listonly :
 				print "Listing only requested, stopping here."
@@ -285,7 +289,10 @@ class BBTether:
 				modem=BBModem(self, handle, modem_readpt, modem_writept)
 				
 				# This will run forever (until ^C)
-				modem.start(self.ppp)				
+				pppdCommand="/usr/sbin/pppd";
+				if options.pppd:
+					pppdCommand=options.pppd
+				modem.start(pppdCommand)				
 			
 		else:
 			print "\nNo RIM device found"
@@ -362,7 +369,7 @@ class BBModem:
 		self.write(session_packet)
 		self.read()
 		
-	def start(self, ppp):
+	def start(self, pppdCommand):
 		'''Start the modem and keep going until ^C'''
 		#open modem PTY
 		(master,slave)=pty.openpty()
@@ -388,7 +395,13 @@ class BBModem:
 			print "No ppp requested, you can now start pppd manually."
 		else:
 			#TODO: start ppp in thread/process
-			print "Will try to start ppp now, config: ",ppp
+			print "Will try to start pppd now, (",pppdCommand,") with config: ",self.parent.ppp
+			time.sleep(.5)
+			command=[pppdCommand,os.ttyname(slave),"file","conf/"+self.parent.ppp,"nodetach"]
+			if self.parent.verbose:
+				command=+"debug"
+			pid = subprocess.Popen(command).pid
+			# do terintaing this myself, since it should terminate by itself (properly) when bbtether is stopped.
 		
 		print "Modem Ready at ",os.ttyname(slave)," Use ^C to terminate"
 		
@@ -516,3 +529,11 @@ def is_same_tuple(tuple1,tuple2):
 # MAIN
 BBTether()
 
+'''
+Protocol References: (Used to figure out BBerry protocol)
+	http://www.off.net/cassis/protocol-description.html
+	http://xmblackberry.cvs.sourceforge.net/viewvc/xmblackberry/XmBlackBerry/	
+	http://barry.cvs.sourceforge.net/viewvc/barry/barry/
+	http://libusb.sourceforge.net/doc/
+	http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
+'''
