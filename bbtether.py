@@ -4,7 +4,7 @@
 TODO:
 	- grps fix
 	- start pppd automatically
-	sudo pppd /dev/pts/11 file conf/tmobile debug nodetach
+	sudo pppd /dev/pts/1 file conf/tmobile debug nodetach
 '''
 
 '''
