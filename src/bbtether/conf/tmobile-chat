@@ -12,4 +12,5 @@ ABORT 'NO CARRIER'
 SAY 'Dialing...\n'
 OK 'ATD*99***1#'
 CONNECT
+# Without ~p it does NOT continue passed Connect !!
 ~p

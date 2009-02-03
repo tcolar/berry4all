@@ -1,4 +1,3 @@
-#pty "/home/tcolar/XmBlackBerry/gprs_protocol_fix/gprs_protocol_fix /dev/pts/2"
 115200
 noipdefault
 defaultroute
@@ -17,7 +16,5 @@ user guest
 password guest
 debug debug debug
 replacedefaultroute
-#persist
 
 connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
-#disconnect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/tmobile-disconnect"
