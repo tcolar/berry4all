@@ -14,7 +14,7 @@ This script requires python, pppd, libusb and the python usb module:
 	You probably already have python, pppd and libusb installed
 	Ex: sudo apt-get install python libusb pppd python-pyusb
 		
-Thibaut Colar - 2009
+Thibaut Colar - 2009+
 tcolar AT colar DOT net
 http://wiki.colar.net/bbtether
 
@@ -54,6 +54,7 @@ COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda
 MODEM_START = [0x01, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
 MODEM_ACK = [0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1c, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
 MODEM_ACK2 = [0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x18, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
+MODEM_CONNECT= [0xd, 0xa, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0xd, 0xa]
 #MODE_DESKTOP_PACKET=[0x00, 0x00, 0x18, 0x00, 0x52, 0x49, 0x4d, 0x20, 0x44, 0x65, 0x73, 0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00]  # "RIM Desktop"
 	
 ''' Main Class '''
@@ -137,14 +138,12 @@ class BBTether:
 		parser.add_option_group(group)
 		return parser.parse_args()
 
-	def usb_write(self,handle,pt,data,timeout=TIMEOUT,msg="\t-> "):
-		# transform string from PTY into array of signed bytes
-		bytes=array.array("B",data)
+	def usb_write(self,handle,pt,bytes,timeout=TIMEOUT,msg="\t-> "):
 		if(self.verbose):	
 			debug_bytes(bytes,msg)
 		handle.bulkWrite(pt, bytes, TIMEOUT)
 
-	def usb_read(self,handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t-< "):
+	def usb_read(self,handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 		bytes=handle.bulkRead(pt, size, TIMEOUT)
 		if(self.verbose):	
 			debug_bytes(bytes,msg)
@@ -189,7 +188,7 @@ class BBTether:
 			
 			# reopen
 			print ("Waiting few seconds, for mode to change")
-			time.sleep(3)
+			time.sleep(1.5)
 			
 			berry=self.find_berry(options.device,options.bus,False)
 			handle=berry.open()
@@ -302,6 +301,9 @@ class BBModem:
 	def read(self, handle,pt,size=BUF_SIZE,timeout=TIMEOUT):
 		return self.parent.usb_read(handle,pt,size,timeout,"\tModem <- ")
 
+	def send_start(self):
+		self.write(self.handle, self.writept, MODEM_START)
+		
 	def start(self, ppp):
 		'''Start the modem and keep going until ^C'''
 		#open modem PTY
@@ -312,7 +314,7 @@ class BBModem:
 		bbThread.start()
 		
 		print "Initializing Modem"
-		self.write(self.handle,self.writept, MODEM_START)
+		self.send_start()
 		if(not self.parent.ppp):
 			print "No ppp requested, you can now start pppd manually."
 		else:
@@ -324,10 +326,29 @@ class BBModem:
 		try:
 			# Read from PTY and write to USB modem
 			while(True):
-				bytes=os.read(master, 2000)
+				print "reading from PTY..."
+				data=os.read(master, BUF_SIZE)
+				# transform string from PTY into array of signed bytes
+				bytes=array.array("B",data)
 				if(len(bytes)>0):
-					bytes=fix_bb_gprs_bytes(bytes)
-					self.write(self.handle,self.writept, bytes)
+					# start grps fix
+					newbytes=[]
+					last=0
+					last2=0
+					started=False
+					for b in bytes:
+						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
+							print "#################### SPECIAL ################"	
+							#self.write(self.handle,self.writept, array.array("B","\176"))						
+							newbytes.append(0x7e);
+						if b != 0x7e and last == 0x7e:
+							print "#################### STARTED ################"
+							started=True
+						last2=last
+						last=b
+						newbytes.append(b)					
+					# end gprs fix
+					self.write(self.handle,self.writept, newbytes)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^C"
@@ -354,6 +375,7 @@ class BBModemThread( threading.Thread ):
 	def run (self):
 		self.done=False
 		print "Starting Modem thread"
+		isFirstConnect=False;
 		while( not self.done):
 			try:
 				try:

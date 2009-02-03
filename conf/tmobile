@@ -18,6 +18,6 @@ password guest
 debug debug debug
 replacedefaultroute
 
-connect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/tmobile"
-disconnect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/tmobile-disconnect"
+connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
+#disconnect "/usr/sbin/chat -v -f /etc/ppp/chatscripts/tmobile-disconnect"
 
