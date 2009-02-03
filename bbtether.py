@@ -9,10 +9,12 @@ TODO:
 
 '''
 Script to use a USB BlackBerry device as a modem (Tethering), and enable charging.
+On My Pearl (Edge) in Seattle, I get speeds of 8K/s-29K/s, avering about 14K/s.
 
 This script requires python, pppd, libusb and the python usb module:
 	You probably already have python, pppd and libusb installed
 	Ex: sudo apt-get install python libusb pppd python-pyusb
+		yum install python libusb pppd python-pyusb
 		
 Thibaut Colar - 2009+
 tcolar AT colar DOT net
@@ -45,9 +47,11 @@ PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)
 
 BERRY_CONFIG=1
 
-TIMEOUT=750
+TIMEOUT=1000
 BUF_SIZE=25000
 MIN_PASSWD_TRIES=2
+#notify every aprox ~ 100K bytes transferred
+NOTIFY_EVERY=100000
 
 COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00] 
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
@@ -147,6 +151,7 @@ class BBTether:
 		except usb.USBError, error:
 			if error.message != "No error":
 				raise
+				
 	def usb_read(self,handle,pt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 		bytes=handle.bulkRead(pt, size, TIMEOUT)
 		if(self.verbose):	
@@ -177,8 +182,7 @@ class BBTether:
 		modem_readpt=-1
 		modem_writept=-1
 
-		berry=self.find_berry(options.device,options.bus)
-				
+		berry=self.find_berry(options.device,options.bus)				
 
 		if(berry != None):
 			# open the connection
@@ -292,6 +296,9 @@ class BBModem:
 	handle=None
 	readpt=None
 	writept=None
+	red=0
+	writ=0
+	lastcount=0
 	
 	def __init__(self, prt, hnd, read, write):
 		self.handle=hnd
@@ -301,9 +308,27 @@ class BBModem:
 
 	def write(self, data, timeout=TIMEOUT):
 		self.parent.usb_write(self.handle,self.writept,data,timeout,"\tModem -> ")
-	
+		self.writ+=len(data)
+		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
+			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
+			self.lastcount=self.red+self.writ
+			
+	def try_read(self, size=BUF_SIZE,timeout=TIMEOUT):
+		data=[]
+		try:
+			data=self.read(size,timeout)
+		except usb.USBError, error:
+			if error.message != "No error":
+				raise
+		return data
+		
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
-		return self.parent.usb_read(self.handle,self.readpt,size,timeout,"\tModem <- ")
+		data=self.parent.usb_read(self.handle,self.readpt,size,timeout,"\tModem <- ")
+		self.red+=len(data)
+		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
+			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
+			self.lastcount=self.red+self.writ
+		return data
 
 	def init(self):
 		'''Initialize the modem and start the RIM session'''
@@ -313,11 +338,12 @@ class BBModem:
 		self.handle.clearHalt(self.writept)
 		# reset modem
 		self.write(MODEM_STOP)
-		self.read()
+		#might or not reply, so use try_read
+		self.try_read()
 		self.write(MODEM_START)
 		answer=self.read()
 		# check for password request (newer devices)
-		if len(answer)>0 and answer[0]=0x2 and end_with_tuple(answer,RIM_PACKET_TAIL):
+		if len(answer)>0 and answer[0]==0x2 and end_with_tuple(answer,RIM_PACKET_TAIL):
 			triesLeft=answer[8]
 			seed=answer[4:8]
 			print "Got password Request from Device (",triesLeft," tries left)"
@@ -327,12 +353,14 @@ class BBModem:
 				raise Exception
 			#TODO
 			print "Password protected Device not supported yet !"
-			raise Exception			
+			raise Exception		
+		else:
+			print "No password requested."	
 		# Send session key
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
 		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
-		self.write(self.handle, self.writept, session_packet)
-		seld.read()
+		self.write(session_packet)
+		self.read()
 		
 	def start(self, ppp):
 		'''Start the modem and keep going until ^C'''
@@ -345,9 +373,10 @@ class BBModem:
 			self.init()
 		except:
 			# If init fails, cleanup and quit
+			print "Modem initialization Failed !"
 			os.close(master)
 			os.close(slave)
-			return
+			raise
 
 		# Start the USB Modem read thread
 		bbThread=BBModemThread(self.handle,self,self.readpt,self.writept,master)
