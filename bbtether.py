@@ -38,26 +38,25 @@ from optparse import OptionParser, OptionGroup
 VERSION="0.1"
 
 VENDOR_RIM=0x0fca
-PRODUCT_DATA=0x0001   #(older bberry)
+PRODUCT_DATA=0x0001   #(serial data)
 PRODUCT_NEW_DUAL=0x0004   #(mass storage & data)
 PRODUCT_NEW_8120=0x8004   #(Pearl 8120)
-PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)   --- probably not good
+PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)
 
 BERRY_CONFIG=1
 
-TIMEOUT=1000
-BUF_SIZE=50000
+TIMEOUT=750
+BUF_SIZE=25000
+MIN_PASSWD_TRIES=2
 
 COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00] 
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
+MODEM_CONNECT= [0xd, 0xa, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0xd, 0xa]
 MODEM_START = [0x01, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
 MODEM_STOP = [0x01, 0x00 ,0x00, 0x00 ,0x00, 0x00, 0x00, 0x00, 0x78, 0x56, 0x34, 0x12]
+# Packets ending by this are RIM control packets (! data)
 RIM_PACKET_TAIL=[0x78, 0x56, 0x34, 0x12]
-#MODEM_ACK = [0x4, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1c, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
-#MODEM_ACK2 = [0x0, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x20, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,  0x18, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
-MODEM_CONNECT= [0xd, 0xa, 0x43, 0x4f, 0x4e, 0x4e, 0x45, 0x43, 0x54, 0xd, 0xa]
-#MODE_DESKTOP_PACKET=[0x00, 0x00, 0x18, 0x00, 0x52, 0x49, 0x4d, 0x20, 0x44, 0x65, 0x73, 0x6b, 0x74, 0x6f, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00]  # "RIM Desktop"
 	
 ''' Main Class '''
 class BBTether:
@@ -300,19 +299,40 @@ class BBModem:
 		self.writept=write
 		self.parent=prt
 
-	def write(self, handle,pt,data,timeout=TIMEOUT):
-		self.parent.usb_write(handle,pt,data,timeout,"\tModem -> ")
+	def write(self, data, timeout=TIMEOUT):
+		self.parent.usb_write(self.handle,self.writept,data,timeout,"\tModem -> ")
 	
-	def read(self, handle,pt,size=BUF_SIZE,timeout=TIMEOUT):
-		return self.parent.usb_read(handle,pt,size,timeout,"\tModem <- ")
+	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
+		return self.parent.usb_read(self.handle,self.readpt,size,timeout,"\tModem <- ")
 
 	def init(self):
+		'''Initialize the modem and start the RIM session'''
+		session_key=[0, 0, 0, 0, 0, 0, 0, 0, 0]
+		# clear endpoints
 		self.handle.clearHalt(self.readpt)
 		self.handle.clearHalt(self.writept)
-		self.write(self.handle, self.writept, MODEM_STOP)
-		self.write(self.handle, self.writept, MODEM_START)
-		session_key=[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78, 0x56, 0x34, 0x12]
-		self.write(self.handle, self.writept, session_key)
+		# reset modem
+		self.write(MODEM_STOP)
+		self.read()
+		self.write(MODEM_START)
+		answer=self.read()
+		# check for password request (newer devices)
+		if len(answer)>0 and answer[0]=0x2 and end_with_tuple(answer,RIM_PACKET_TAIL):
+			triesLeft=answer[8]
+			seed=answer[4:8]
+			print "Got password Request from Device (",triesLeft," tries left)"
+			triesLeft=answer[8]
+			if triesLeft <= MIN_PASSWD_TRIES:
+				print "The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries.";
+				raise Exception
+			#TODO
+			print "Password protected Device not supported yet !"
+			raise Exception			
+		# Send session key
+		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
+		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
+		self.write(self.handle, self.writept, session_packet)
+		seld.read()
 		
 	def start(self, ppp):
 		'''Start the modem and keep going until ^C'''
@@ -320,11 +340,21 @@ class BBModem:
 		(master,slave)=pty.openpty()
 		print "\nModem pty: ",os.ttyname(slave)
 				
+		print "Initializing Modem"
+		try:
+			self.init()
+		except:
+			# If init fails, cleanup and quit
+			os.close(master)
+			os.close(slave)
+			return
+
+		# Start the USB Modem read thread
 		bbThread=BBModemThread(self.handle,self,self.readpt,self.writept,master)
 		bbThread.start()
 		
-		print "Initializing Modem"
-		self.init()
+		print "Modem Started"
+		
 		if(not self.parent.ppp):
 			print "No ppp requested, you can now start pppd manually."
 		else:
@@ -334,35 +364,34 @@ class BBModem:
 		print "Modem Ready at ",os.ttyname(slave)," Use ^C to terminate"
 		
 		try:
-			# Read from PTY and write to USB modem
+			# Read from PTY and write to USB modem until ^C
 			while(True):
 				data=os.read(master, BUF_SIZE)
 				# transform string from PTY into array of signed bytes
 				bytes=array.array("B",data)
 				if(len(bytes)>0):
-					# start grps fix
+					# start grps fix (needs 0x7E around each Frame)
 					newbytes=[]
 					last=0
 					last2=0
 					started=False
 					for b in bytes:
 						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
-							print "#################### SPECIAL ################"	
+							debug("GPRS fix: Added 0x7E to Frame.")
 							newbytes.append(0x7e);
 						if not started and b != 0x7e and last == 0x7e:
-							#print "#################### STARTED ################"
 							started=True
 						last2=last
 						last=b
 						newbytes.append(b)					
 					# end gprs fix
-					self.write(self.handle,self.writept, newbytes)
+					self.write(newbytes)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^C"
-		
+			
+		# Shutting down "gracefully"
 		bbThread.stop()
-		
 		os.close(master)
 		os.close(slave)
 					
@@ -388,22 +417,22 @@ class BBModemThread( threading.Thread ):
 			try:
 				try:
 					# Read from USB modem and write to PTY
-					bytes=self.modem.read(self.handle, self.readpt)
+					bytes=self.modem.read()
 					if(len(bytes)>0):
-						#if(is_same_tuple(bytes,MODEM_ACK) or is_same_tuple(bytes,MODEM_ACK2)):
 						if end_with_tuple(bytes,RIM_PACKET_TAIL):
-							# We do not write "ACK" messages from bberry (not data)
-							print "skipping packet"
-							pass
+							# Those are RIM control packet, not data. So not writing them back to PTY							
+							debug("Skipping RIM packet ending by "+RIM_PACKET_TAIL)
 						else:
 							data=array.array("B",bytes)
 							os.write(self.output,data.tostring())
 				except usb.USBError, error:
+					# Ignore the odd "No error" error, must be a pyusb bug ?
 					if error.message != "No error":
 						raise
 								
 			except:
 				if(self.done):
+					# Ignoring exception during shutdown attempt
 					pass
 				else:
 					raise
@@ -431,12 +460,17 @@ def debug_bytes(tuple, msg):
 			hexa=""
 
 def end_with_tuple(tuple1,tuple2):
-	if len(tuple1)<len(tuple2):
+	'''check if tuple1 ends with tuple2'''
+	if tuple1==None and tuple2==None:
+		return True
+	if (tuple1==None and tuple2 != None) or (tuple1!=None and tuple2==None):
 		return False
-	return is_same_tuple(tuple1[len(tuple1)-4:len(tuple1)],tuple2)
+	if len(tuple1) < len(tuple2):
+		return False
+	return is_same_tuple(tuple1[len(tuple1)-len(tuple2):len(tuple1)],tuple2)
 
 def is_same_tuple(tuple1,tuple2):
-	'''Compare 2 tuples of Byes, return True if Same(same data)'''
+	'''Compare 2 tuples of Bytes, return True if Same(same data)'''
 	if tuple1==None and tuple2==None:
 		return True
 	if (tuple1==None and tuple2 != None) or (tuple1!=None and tuple2==None):
@@ -449,13 +483,6 @@ def is_same_tuple(tuple1,tuple2):
 		if tuple1[i] != tuple2[i]:
 			return False	
 	return True
-
-def fix_bb_gprs_bytes(bytes):
-	'''Fix data Bytes received from PPP to make them compatible with what a blackberry expects'''
-	#for b in bytes:
-	#	if bytes[0]==0x7E and b==0x7E:
-	#		if bytes 	
-	return bytes
 
 # MAIN
 BBTether()
