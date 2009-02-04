@@ -29,7 +29,7 @@ import string
 import subprocess
 from optparse import OptionParser, OptionGroup
 
-VERSION="0.1"
+VERSION="0.1b"
 
 # you MIGHT need to enter the full path to pppd here
 PPPD_COMMAND="pppd"
@@ -399,7 +399,7 @@ class BBModem:
 			time.sleep(.5)
 			command=[pppdCommand,os.ttyname(slave),"file","conf/"+self.parent.ppp,"nodetach"]
 			if self.parent.verbose:
-				command=+"debug"
+				command.append("debug")
 			pid = subprocess.Popen(command).pid
 			# not terminating this myself, since it should terminate by itself (properly) when bbtether is stopped.
 		
@@ -407,21 +407,22 @@ class BBModem:
 		
 		try:
 			# Read from PTY and write to USB modem until ^C
+			last=0
+			last2=0
+			started=False
 			while(True):
 				data=os.read(master, BUF_SIZE)
 				# transform string from PTY into array of signed bytes
 				bytes=array.array("B",data)
 				if(len(bytes)>0):
-					# start grps fix (needs 0x7E around each Frame)
 					newbytes=[]
-					last=0
-					last2=0
-					started=False
+					# start grps fix (needs 0x7E around each Frame)
 					for b in bytes:
 						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
 							debug("GPRS fix: Added 0x7E to Frame.")
 							newbytes.append(0x7e);
-						if not started and b != 0x7e and last == 0x7e:
+						if (not started) and b != 0x7e and last == 0x7e:
+							debug("GPRS fix: Started.")
 							started=True
 						last2=last
 						last=b
