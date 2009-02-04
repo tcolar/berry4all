@@ -14,7 +14,6 @@ usepeerdns
 novj
 user guest
 password guest
-debug debug debug
 replacedefaultroute
 
 connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"

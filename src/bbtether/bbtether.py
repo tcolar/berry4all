@@ -419,10 +419,12 @@ class BBModem:
 					# start grps fix (needs 0x7E around each Frame)
 					for b in bytes:
 						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
-							debug("GPRS fix: Added 0x7E to Frame.")
+							if self.parent.verbose:
+								debug("GPRS fix: Added 0x7E to Frame.")
 							newbytes.append(0x7e);
 						if (not started) and b != 0x7e and last == 0x7e:
-							debug("GPRS fix: Started.")
+							if self.parent.verbose:
+								debug("GPRS fix: Started.")
 							started=True
 						last2=last
 						last=b
