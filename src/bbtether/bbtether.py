@@ -73,8 +73,7 @@ class BBTether:
 			# open the connection
 			berry.open_handle()
 			# set power & reset
-			handle=berry.handle
-			
+			handle=berry.handle			
 			bb_usb.set_bb_power(berry)
 			
 			if options.chargeonly:
@@ -85,10 +84,12 @@ class BBTether:
 			print ("Waiting few seconds, for mode to change")
 			time.sleep(1.5)
 			
+			# rescan after power / reset
 			berry=bb_usb.find_berry(options.device,options.bus,False)
 			berry.open_handle()
 			handle=berry.handle
 
+			# lookup endpoints
 			berry.read_endpoints()
 
 			# overwrite found endpoints with user endpoints if specified
@@ -118,7 +119,6 @@ class BBTether:
 				print "Description: ",berry.desc
 
 				# Modem use does not require to be in desktop mode, so don't do it.
-				#self.enable_desktop_mode(handle,writept,readpt)
 				modem=bb_modem.BBModem(berry)
 				
 				pppdCommand="/usr/sbin/pppd";
