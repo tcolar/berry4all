@@ -8,10 +8,7 @@ noipdefault
 ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
-#need lcp-echo turned off, at least for tmobile, otherwise c0onnectin
-# disconnects after few mn of inactivity.
-# thanks to ?loon? for this info
-lcp-echo-interval 50
+lcp-echo-interval 0
 lcp-echo-failure 999
 modem
 noauth

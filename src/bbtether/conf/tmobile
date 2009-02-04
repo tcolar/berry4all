@@ -5,7 +5,7 @@ nomultilink
 ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
-lcp-echo-interval 50
+lcp-echo-interval 0
 lcp-echo-failure 999
 modem
 noauth
