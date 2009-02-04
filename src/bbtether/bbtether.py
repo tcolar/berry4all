@@ -18,7 +18,7 @@ http://wiki.colar.net/bbtether
 Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOUR OWN RISK.
 If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
- 
+
 import bb_usb
 import bb_util
 import bb_modem
@@ -142,4 +142,5 @@ Protocol References: (Used to figure out BBerry protocol)
 	http://barry.cvs.sourceforge.net/viewvc/barry/barry/
 	http://libusb.sourceforge.net/doc/
 	http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
+	http://www.fibble.org/archives/000508.html
 '''
