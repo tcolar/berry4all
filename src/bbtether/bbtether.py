@@ -25,7 +25,7 @@ import bb_modem
 import time
 from optparse import OptionParser, OptionGroup
 
-VERSION="0.1b"
+VERSION="0.1c"
 
 ''' Main Class '''
 class BBTether:
