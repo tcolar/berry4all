@@ -72,7 +72,7 @@ class BBModem:
 		self.write(MODEM_START)
 		answer=self.read()
 		# check for password request (newer devices)
-		if len(answer)>0 and answer[0]==0x2 and end_with_tuple(answer,RIM_PACKET_TAIL):
+		if len(answer)>0 and answer[0]==0x2 and bb_util.end_with_tuple(answer,RIM_PACKET_TAIL):
 			triesLeft=answer[8]
 			seed=answer[4:8]
 			print "Got password Request from Device (",triesLeft," tries left)"
@@ -183,7 +183,7 @@ class BBModemThread( threading.Thread ):
 					if(len(bytes)>0):
 						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# Those are RIM control packet, not data. So not writing them back to PTY							
-							debug("Skipping RIM packet ending by "+RIM_PACKET_TAIL)
+							bb_util.debug("Skipping RIM packet ending by "+RIM_PACKET_TAIL)
 						else:
 							data=array.array("B",bytes)
 							os.write(self.master,data.tostring())

@@ -5,6 +5,7 @@ Thibaut Colar
 import usb
 import bb_data
 import bb_util
+import string
 
 TIMEOUT=1000
 BUF_SIZE=25000
@@ -31,7 +32,7 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 	berry=None
 	if userdev and userbus:
 		if verbose :
-			print "Will use user provided bus/device: ",options.bus,"/",options.device
+			print "Will use user provided bus/device: ",userbus,"/",userdev
 		for bus in usb.busses():
 			if string.atoi(bus.dirname) == string.atoi(userbus):
 				for dev in bus.devices:

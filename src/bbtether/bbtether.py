@@ -23,6 +23,7 @@ import bb_usb
 import bb_util
 import bb_modem
 import time
+import os
 from optparse import OptionParser, OptionGroup
 
 VERSION="0.1c"
@@ -73,7 +74,6 @@ class BBTether:
 			# open the connection
 			berry.open_handle()
 			# set power & reset
-			handle=berry.handle			
 			bb_usb.set_bb_power(berry)
 			
 			if options.chargeonly:
@@ -94,13 +94,13 @@ class BBTether:
 
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
-				device.readpt=int(options.drp, 16)
+				berry.readpt=int(options.drp, 16)
 			if options.dwp:
-				device.writept=int(options.dwp, 16)
+				berry.writept=int(options.dwp, 16)
 			if options.mrp:
-				device.modem_readpt=int(options.mrp, 16)
+				berry.modem_readpt=int(options.mrp, 16)
 			if options.mwp:
-				device.modem_writept=int(options.mwp, 16)				
+				berry.modem_writept=int(options.mwp, 16)
 
 			if options.listonly :
 				print "Listing only requested, stopping here."
