@@ -122,7 +122,7 @@ class BBModem:
 			command=[pppdCommand,os.ttyname(slave),"file","conf/"+pppConfig,"nodetach"]
 			if bb_util.verbose:
 				command.append("debug")
-			pid = subprocess.Popen(command).pid
+			subprocess.Popen(command)
 			# not terminating this myself, since it should terminate by itself (properly) when bbtether is stopped.
 		
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
@@ -174,7 +174,6 @@ class BBModemThread( threading.Thread ):
 	def run (self):
 		self.done=False
 		print "Starting Modem thread"
-		isFirstConnect=False;
 		while( not self.done):
 			try:
 				try:

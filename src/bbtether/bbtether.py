@@ -26,7 +26,7 @@ import time
 import os
 from optparse import OptionParser, OptionGroup
 
-VERSION="0.1c"
+VERSION="0.1d"
 
 ''' Main Class '''
 class BBTether:
