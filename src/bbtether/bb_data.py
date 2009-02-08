@@ -26,6 +26,9 @@ class device:
 	def claim_interface(self):
 		self.handle.claimInterface(self.interface)
 		
+	def release_interface(self):
+		self.handle.releaseInterface()
+
 	def read_infos(self):
 		''' read pin and description and store them in this data structure'''
 		self.pin=bb_usb.get_pin(self)

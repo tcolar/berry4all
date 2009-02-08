@@ -112,6 +112,7 @@ class BBTether:
 				print "\nUsing Data Endpoint Pair:",hex(berry.readpt),"/",hex(berry.writept);				
 				print "Using first pair after Data pair as Modem pair: ",hex(berry.modem_readpt),"/",hex(berry.modem_writept),"\n"
 				
+				print "Claiming interface"
 				berry.claim_interface()
 				
 				berry.read_infos()
@@ -127,7 +128,9 @@ class BBTether:
 					
 				# This will run forever (until ^C)
 				modem.start(pppConfig,pppdCommand)				
-			
+
+				print "Releasing interface"
+				berry.release_interface()
 		else:
 			print "\nNo RIM device found"
 	

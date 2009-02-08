@@ -91,6 +91,7 @@ def read_bb_endpoints(device):
 	print "	Max Power:", config.maxPower
 	for inter in config.interfaces:
 		print "	Interface:",inter[0].interfaceNumber
+		handle.claimInterface(inter[0].interfaceNumber)
 		print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass
 		print "		Interface protocol:",inter[0].interfaceProtocol
 		for att in inter:
@@ -123,12 +124,13 @@ def read_bb_endpoints(device):
 					if readpt != -1 and modem_readpt == -1:
 						# use pair after data pair as Modem pair
 						modem_readpt=red
-						modem_writept=writ	
-	
-		device.readpt=readpt
-		device.writept=writept
-		device.modem_readpt=modem_readpt
-		device.modem_writept=modem_writept
+						modem_writept=writ
+		handle.releaseInterface()
+
+	device.readpt=readpt
+	device.writept=writept
+	device.modem_readpt=modem_readpt
+	device.modem_writept=modem_writept
 
 def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)
