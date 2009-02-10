@@ -154,5 +154,7 @@ can try usb_get_driver_np() to figure out which driver it is, and
 usb_detach_kernel_driver_np() to detach it from this interface (and
 retry claiming). You could also try to disable/remove the offending
 driver manually.
-
+http://osdir.com/ml/lib.libusb.devel.general/2004-12/msg00013.html
+http://osdir.com/ml/lib.libusb.devel.general/2004-12/msg00014.html
+You need to do a usb_detach_kernel_driver_np( udev, interface); before the usb_claim_interface. The reason, I have read, is that the kernel has claimed the interface, and it has to be detached before the process claims it.
 '''
