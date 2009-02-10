@@ -156,5 +156,11 @@ retry claiming). You could also try to disable/remove the offending
 driver manually.
 http://osdir.com/ml/lib.libusb.devel.general/2004-12/msg00013.html
 http://osdir.com/ml/lib.libusb.devel.general/2004-12/msg00014.html
+
 You need to do a usb_detach_kernel_driver_np( udev, interface); before the usb_claim_interface. The reason, I have read, is that the kernel has claimed the interface, and it has to be detached before the process claims it.
+
+For Mac:
+http://www.apcupsd.org/manual/USB_Configuration.html
+http://statistics.roma2.infn.it/~sestito/g15mac/HOWTO-Logitech_G15_and_Mac_OS_X.html
+http://developer.apple.com/qa/qa2001/qa1076.html
 '''
