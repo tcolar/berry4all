@@ -147,4 +147,12 @@ Protocol References: (Used to figure out BBerry protocol)
 	http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
 	http://www.fibble.org/archives/000508.html
 	http://www.wxpython.org/download.php
+
+If usb_claim_interface() returns -EBUSY, this means there's already
+another (possibly kernel) driver bound to that interface. On Linux you
+can try usb_get_driver_np() to figure out which driver it is, and
+usb_detach_kernel_driver_np() to detach it from this interface (and
+retry claiming). You could also try to disable/remove the offending
+driver manually.
+
 '''
