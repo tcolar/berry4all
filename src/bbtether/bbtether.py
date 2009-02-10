@@ -163,4 +163,11 @@ For Mac:
 http://www.apcupsd.org/manual/USB_Configuration.html
 http://statistics.roma2.infn.it/~sestito/g15mac/HOWTO-Logitech_G15_and_Mac_OS_X.html
 http://developer.apple.com/qa/qa2001/qa1076.html
+
+Mac:
+- Unplug berry
+- start bbtether
+- install kext file
+- tell user to plug berry
+- when done, unplug berry, remove kext file
 '''
