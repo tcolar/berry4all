@@ -29,7 +29,7 @@ def is_osx():
 
 def is_supported_osx():
     '''
-    We want at least 10.3(Darwin 7.0), otherwise kextd cannot take SIGUP
+    We want at least 10.3 (Darwin 7.0), otherwise kextd cannot take SIGUP
     '''
     rel=platform.release()
     major=int(rel[0 : rel.indexof(".")])
