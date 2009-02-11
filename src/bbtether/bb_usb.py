@@ -26,7 +26,8 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 		userdev,userbus : potential user provided device/bus to force-use
 	'''
 	device=None
-	
+	mybus=None;
+
 	if verbose:
 		print "Looking for USB devices:"
 	berry=None
@@ -37,7 +38,8 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 			if string.atoi(bus.dirname) == string.atoi(userbus):
 				for dev in bus.devices:
 					if string.atoi(dev.filename) == string.atoi(userdev):
-						berry=dev				
+						berry=dev
+						mybus=bus
 	else:
 		for bus in usb.busses():
 			for dev in bus.devices:
@@ -45,10 +47,12 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 					print "	Bus %s Device %s: ID %04x:%04x" % (bus.dirname,dev.filename,dev.idVendor,dev.idProduct)
 				if(dev.idVendor==VENDOR_RIM):
 					berry=dev
+					mybus=bus
 	
 	if berry != None:
 		device=bb_data.Device()
 		device.usbdev=berry
+		device.bus=mybus
 
 	return device
 

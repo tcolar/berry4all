@@ -52,3 +52,8 @@ def is_same_tuple(tuple1,tuple2):
 		if tuple1[i] != tuple2[i]:
 			return False	
 	return True
+
+def debug_object_attr(obj):
+	attributes=dir(obj)
+	for a in attributes:
+		print a

@@ -19,10 +19,12 @@ Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOU
 If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
 
+import sys
 import time
 
 import bb_modem
 import bb_usb
+import bb_usbfs
 import bb_util
 from optparse import OptionGroup
 from optparse import OptionParser
@@ -58,16 +60,16 @@ class BBTether:
 		print "Use '-h' flag for more informations : 'python bbtether.py -h'."
 		print "--------------------------------\n"
 
-        if os.getuid() != 0:
-            print "Sorry, needs to run as root at this time."
-            os.exit(0)
+		if os.getuid() != 0:
+			print "Sorry, needs to run as root at this time."
+			sys.exit(0)
 
-        (options, args) = self.parse_cmd()
+		(options, args) = self.parse_cmd()
 		
 		pppConfig = None
 		if len(args) > 0:
 			pppConfig = args[0]
-		
+
 		if(options.verbose):
 			bb_util.verbose = True
 		
@@ -76,9 +78,12 @@ class BBTether:
 		berry = bb_usb.find_berry(options.device, options.bus)
 
 		if berry != None:
-			
+
 			# open the connection
 			berry.open_handle()
+
+			#bb_usbfs.find_kernel_driver(berry)
+
 			# set power & reset
 			bb_usb.set_bb_power(berry)
 			
@@ -139,7 +144,7 @@ class BBTether:
 				berry.release_interface()
 		else:
 			print "\nNo RIM device found"
-	
+
 
 # MAIN
 BBTether()

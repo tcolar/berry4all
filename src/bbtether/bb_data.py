@@ -9,8 +9,9 @@ class Device:
 	Data structure for a device infos
 	Usually created by bb_usb.find_berry
 	'''
-	# the udb device
+	# the usb device
 	usbdev=None
+	bus=None #(the bus it was found on)
 	# usb handle (once opened)
 	handle=None
 	# readpt empty until read_endpoints() called
