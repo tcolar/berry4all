@@ -19,14 +19,16 @@ Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOU
 If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
 
+import time
+
+import bb_modem
 import bb_usb
 import bb_util
-import bb_modem
-import time
+from optparse import OptionGroup
+from optparse import OptionParser
 import os
-from optparse import OptionParser, OptionGroup
 
-VERSION="0.1d"
+VERSION = "0.1d"
 
 ''' Main Class '''
 class BBTether:
@@ -34,11 +36,11 @@ class BBTether:
 	def parse_cmd(self):
 		usage = usage = "usage: %prog [options] [pppscript]\n	If [pppscript] is there (ppp script in conf/ folder, ex: tmobile) then will start modem and connect using that ppp script. Otherwise just opens the modem and you will have to start pppd manually."
 		parser = OptionParser(usage)
-		parser.add_option("-l", "--list", action="store_true", dest="listonly",help="Only detect and list Device, do nothing more")
-		parser.add_option("-p", "--pppd", dest="pppd",help="Path To pppd binary (default: /usr/sbin/pppd)")
-		parser.add_option("-v", "--verbose", action="store_true", dest="verbose",help="Verbose: Show I/O data and other infos")
-		parser.add_option("-c", "--charge", action="store_true", dest="chargeonly",help="Put the device in Charging mode and does NOT start modem.")		
-		group = OptionGroup(parser, "Advanced Options","Don't use unless you know what you are doing.")
+		parser.add_option("-l", "--list", action="store_true", dest="listonly", help="Only detect and list Device, do nothing more")
+		parser.add_option("-p", "--pppd", dest="pppd", help="Path To pppd binary (default: /usr/sbin/pppd)")
+		parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose: Show I/O data and other infos")
+		parser.add_option("-c", "--charge", action="store_true", dest="chargeonly", help="Put the device in Charging mode and does NOT start modem.")
+		group = OptionGroup(parser, "Advanced Options", "Don't use unless you know what you are doing.")
 		group.add_option("-w", "--drp", dest="drp", help="Force Data read endpoint - Hex(ex -w 0x84)")
 		group.add_option("-x", "--dwp", dest="dwp", help="Force Data write endpoint - Hex (ex -x 0x6)")
 		group.add_option("-y", "--mrp", dest="mrp", help="Force Modem read endpoint - Hex (ex -y 0x85)")
@@ -50,26 +52,30 @@ class BBTether:
 
 	def __init__(self):
 		print "--------------------------------"
-		print "BBTether ",VERSION
+		print "BBTether ", VERSION
 		print "Thibaut Colar - 2009"
 		print "http://wiki.colar.net/bbtether"
 		print "Use '-h' flag for more informations : 'python bbtether.py -h'."
 		print "--------------------------------\n"
+
+        if os.getuid() != 0:
+            print "Sorry, needs to run as root at this time."
+            os.exit(0)
+
+        (options, args) = self.parse_cmd()
 		
-		(options,args)=self.parse_cmd()
-		
-		pppConfig=None
+		pppConfig = None
 		if len(args) > 0:
-			pppConfig=args[0]
+			pppConfig = args[0]
 		
 		if(options.verbose):
-			bb_util.verbose=True
+			bb_util.verbose = True
 		
-		berry=None
+		berry = None
 		
-		berry=bb_usb.find_berry(options.device,options.bus)				
+		berry = bb_usb.find_berry(options.device, options.bus)
 
-		if berry!=None :
+		if berry != None:
 			
 			# open the connection
 			berry.open_handle()
@@ -85,49 +91,49 @@ class BBTether:
 			time.sleep(1.5)
 			
 			# rescan after power / reset
-			berry=bb_usb.find_berry(options.device,options.bus,False)
+			berry = bb_usb.find_berry(options.device, options.bus, False)
 			berry.open_handle()
-			handle=berry.handle
+			handle = berry.handle
 
 			# lookup endpoints
 			berry.read_endpoints()
 
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
-				berry.readpt=int(options.drp, 16)
+				berry.readpt = int(options.drp, 16)
 			if options.dwp:
-				berry.writept=int(options.dwp, 16)
+				berry.writept = int(options.dwp, 16)
 			if options.mrp:
-				berry.modem_readpt=int(options.mrp, 16)
+				berry.modem_readpt = int(options.mrp, 16)
 			if options.mwp:
-				berry.modem_writept=int(options.mwp, 16)
+				berry.modem_writept = int(options.mwp, 16)
 
-			if options.listonly :
+			if options.listonly:
 				print "Listing only requested, stopping here."
 				os._exit(0)
 
-			if berry.readpt==-1:
+			if berry.readpt == -1:
 				print "\nNo good Data Endpoint pair, bailing out !";
 			else:
-				print "\nUsing Data Endpoint Pair:",hex(berry.readpt),"/",hex(berry.writept);				
-				print "Using first pair after Data pair as Modem pair: ",hex(berry.modem_readpt),"/",hex(berry.modem_writept),"\n"
+				print "\nUsing Data Endpoint Pair:", hex(berry.readpt), "/", hex(berry.writept);
+				print "Using first pair after Data pair as Modem pair: ", hex(berry.modem_readpt), "/", hex(berry.modem_writept), "\n"
 				
 				print "Claiming interface"
 				berry.claim_interface()
 				
 				berry.read_infos()
-				print "Pin: ",hex(berry.pin)
-				print "Description: ",berry.desc
+				print "Pin: ", hex(berry.pin)
+				print "Description: ", berry.desc
 
 				# Modem use does not require to be in desktop mode, so don't do it.
-				modem=bb_modem.BBModem(berry)
+				modem = bb_modem.BBModem(berry)
 				
-				pppdCommand="/usr/sbin/pppd";
+				pppdCommand = "/usr/sbin/pppd";
 				if options.pppd:
-					pppdCommand=options.pppd
+					pppdCommand = options.pppd
 					
 				# This will run forever (until ^C)
-				modem.start(pppConfig,pppdCommand)				
+				modem.start(pppConfig, pppdCommand)
 
 				print "Releasing interface"
 				berry.release_interface()
@@ -159,15 +165,5 @@ http://osdir.com/ml/lib.libusb.devel.general/2004-12/msg00014.html
 
 You need to do a usb_detach_kernel_driver_np( udev, interface); before the usb_claim_interface. The reason, I have read, is that the kernel has claimed the interface, and it has to be detached before the process claims it.
 
-For Mac:
-http://www.apcupsd.org/manual/USB_Configuration.html
-http://statistics.roma2.infn.it/~sestito/g15mac/HOWTO-Logitech_G15_and_Mac_OS_X.html
-http://developer.apple.com/qa/qa2001/qa1076.html
 
-Mac:
-- Unplug berry
-- start bbtether
-- install kext file
-- tell user to plug berry
-- when done, unplug berry, remove kext file
 '''

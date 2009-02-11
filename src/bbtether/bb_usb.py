@@ -47,7 +47,7 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 					berry=dev
 	
 	if berry != None:
-		device=bb_data.device()
+		device=bb_data.Device()
 		device.usbdev=berry
 
 	return device

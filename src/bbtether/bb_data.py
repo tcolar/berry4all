@@ -4,7 +4,7 @@ Thibaut Colar
 '''
 import bb_usb
 
-class device:
+class Device:
 	'''
 	Data structure for a device infos
 	Usually created by bb_usb.find_berry
