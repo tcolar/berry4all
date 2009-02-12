@@ -1,3 +1,7 @@
+BBTether
+Thibaut Colar
+tcolar AT colar d.o.t NET
+
 0.1e: 2/12/2009
 	Introduced this file (ChangeLog)
 	Added tentative porta (brazil) ppp conf
