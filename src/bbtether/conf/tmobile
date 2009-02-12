@@ -14,8 +14,8 @@ usepeerdns
 novj
 user guest
 password guest
-debug debug debug
+#debug debug debug
 # does not exist in all pppd versions (osx)
-replacedefaultroute
+#replacedefaultroute
 
 connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
