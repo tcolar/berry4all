@@ -29,7 +29,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.1f"
+VERSION = "0.1g"
 
 ''' Main Class '''
 class BBTether:
@@ -159,6 +159,7 @@ class BBTether:
 
 				print "Releasing interface"
 				berry.release_interface()
+				print "bbtether completed."
 		else:
 			print "\nNo RIM device found"
 

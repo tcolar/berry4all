@@ -157,6 +157,10 @@ class BBModem:
 			
 		# Shutting down "gracefully"
 		bbThread.stop()
+		# we need to wait for thread to stop before we close fd's
+		# otherwise it will hang and not terminate
+		while bbThread.isAlive():
+			time.sleep(.3)
 		os.close(master)
 		os.close(slave)
 					
@@ -197,4 +201,4 @@ class BBModemThread( threading.Thread ):
 					pass
 				else:
 					raise
-
+		print "Modem thread Stopped"

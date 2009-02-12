@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1g: 2/12/2009
+	Fix so that it terminates correctly (use to hang)
+
 0.1f: 2/12/2009
 	Added ppp scripts for sprint & att
 	Added link to site in output
