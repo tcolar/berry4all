@@ -169,14 +169,19 @@ def get_description(device):
 def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 	bb_util.debug_bytes(bytes,msg)
 	try:
-		device.handle.bulkWrite(endpt, bytes, TIMEOUT)
+		device.handle.bulkWrite(endpt, bytes, timeout)
 	except usb.USBError, error:
 		if error.message != "No error":
 			print "error: ",error
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
-	bytes=device.handle.bulkRead(endpt, size, TIMEOUT)
-	bb_util.debug_bytes(bytes,msg)
+	try:
+		bytes=device.handle.bulkRead(endpt, size, timeout)
+		bb_util.debug_bytes(bytes,msg)
+	except usb.USBError, error:
+		if error.message != "No error":
+			print "error: ",error
+			raise
 	return bytes 
 
