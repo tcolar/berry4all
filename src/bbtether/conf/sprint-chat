@@ -1,0 +1,15 @@
+TIMEOUT 10
+ABORT 'BUSY'
+ABORT 'NO ANSWER'
+ABORT 'ERROR'
+SAY 'Starting GPRS connect script\n'
+
+'' AT&F
+OK ATZ
+OK ATI
+
+SAY 'Dialing...\n'
+OK ATDT#777 
+CONNECT
+# Without ~p it does NOT continue passed Connect !!
+~p

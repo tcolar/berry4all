@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1f: 2/12/2009
+	Added ppp scripts for sprint & att
+	Added link to site in output
+
 0.1e: 2/12/2009
 	Introduced this file (ChangeLog)
 	Added tentative porta (Ecuador) ppp conf

@@ -29,7 +29,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.1e"
+VERSION = "0.1f"
 
 ''' Main Class '''
 class BBTether:
@@ -55,7 +55,7 @@ class BBTether:
 		print "--------------------------------"
 		print "BBTether ", VERSION
 		print "Thibaut Colar - 2009"
-		print "http://wiki.colar.net/bbtether"
+		print "More infos: http://wiki.colar.net/bbtether"
 		print "Use '-h' flag for more informations : 'python bbtether.py -h'."
 		print "--------------------------------\n"
 

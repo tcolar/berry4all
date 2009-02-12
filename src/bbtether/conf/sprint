@@ -1,0 +1,23 @@
+# Not tested yet
+115200
+noipdefault
+defaultroute
+nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 999
+modem
+noauth
+nocrtscts
+usepeerdns
+novj
+user wapuser
+password wap
+name wapuser
+#debug debug debug
+# does not exist in all pppd versions (osx)
+#replacedefaultroute
+
+connect "/usr/sbin/chat -v -V -f conf/sprint-chat"
