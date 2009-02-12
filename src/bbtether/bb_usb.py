@@ -176,7 +176,7 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
-	bytes=None
+	bytes=[]
 	try:
 		bytes=device.handle.bulkRead(endpt, size, timeout)
 		bb_util.debug_bytes(bytes,msg)
