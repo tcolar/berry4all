@@ -2,7 +2,9 @@
 Utilities
 Thibaut Colar
 '''
-
+import re
+import subprocess
+from subprocess import PIPE
 # might be set/get from other module
 verbose=False
 
@@ -57,3 +59,14 @@ def debug_object_attr(obj):
 	attributes=dir(obj)
 	for a in attributes:
 		print a
+
+def module_loaded(mod):
+	output = subprocess.Popen(["lsmod"], stdout=PIPE).communicate()[0]
+	if verbose:
+		print "###### Modules: ######"
+		print output
+		print "######################\n"
+	return re.search(mod,output) != None
+
+def unload_module(mod):
+	subprocess.call(["rmmod",mod])

@@ -1,0 +1,25 @@
+0.1e: 2/12/2009
+	Introduced this file (ChangeLog)
+	Added tentative porta (brazil) ppp conf
+	Check running as root
+	Try to warn / unload berry_charge module
+
+0.1d: 2/11/2009
+	Removed changdefaultroute from ppp option since not always avail.
+	Updated doc to match that
+	Added some OSX code (not yet used)
+	Added usb/protocol references
+
+0.1c: 2/10/2009
+	Refactoring (not all in one file)
+	Added bulid script
+	Added PyLint checks and fixed what was found
+	Improved pppd output grabbing, for debugging.
+
+0.1b: 2/10/2009
+	Fix chat script
+	Fix bug causing disconnects (0x7E frames)
+	Added tentative verison ppp confs
+
+0.1: 2/7/2009
+	original version

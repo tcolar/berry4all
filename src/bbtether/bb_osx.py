@@ -17,9 +17,10 @@ Mac:
 
 Thibaut Colar
 '''
-import subprocess
+import os
 import platform
 import shutil
+import subprocess
 
 KEXT_FILE="bbtether.kext"
 
@@ -51,4 +52,3 @@ def uninstall_kextd():
     os.remove("/System/Library/Extensions/"+KEXT_FILE)
     restart_kextd()
 
-    

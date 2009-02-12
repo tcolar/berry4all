@@ -18,19 +18,18 @@ http://wiki.colar.net/bbtether
 Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOUR OWN RISK.
 If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
-
 import sys
 import time
 
 import bb_modem
+import bb_osx
 import bb_usb
-import bb_usbfs
 import bb_util
 from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.1d"
+VERSION = "0.1e"
 
 ''' Main Class '''
 class BBTether:
@@ -60,10 +59,6 @@ class BBTether:
 		print "Use '-h' flag for more informations : 'python bbtether.py -h'."
 		print "--------------------------------\n"
 
-		if os.getuid() != 0:
-			print "Sorry, needs to run as root at this time."
-			sys.exit(0)
-
 		(options, args) = self.parse_cmd()
 		
 		pppConfig = None
@@ -72,7 +67,29 @@ class BBTether:
 
 		if(options.verbose):
 			bb_util.verbose = True
-		
+
+		# Need to be root
+		if os.getuid() != 0:
+			print "Sorry, needs to run as root at this time."
+			sys.exit(0)
+
+		# Remove module berry_charge if present, cause it causes problems
+		if not bb_osx.is_osx():
+			if bb_util.module_loaded("berry_charge"):
+				print " * Module berry_charge is loaded, this might causes problems"
+				print "\t -> Will try to remove it now"
+				bb_util.unload_module("berry_charge")
+				if bb_util.module_loaded("berry_charge"):
+					print "************************************************************"
+					print "\t Could NOT unload module berry_charge ! (must be in use)"
+					print "\t You should remove it before calling bbtether:"
+					print "\t Ex:  sudo rmmod berry_charge"
+					print "************************************************************\n"
+					os._exit(0)
+				else:
+					print "\t -> OK.\n"
+
+
 		berry = None
 		
 		berry = bb_usb.find_berry(options.device, options.bus)
