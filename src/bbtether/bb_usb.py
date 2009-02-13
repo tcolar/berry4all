@@ -7,7 +7,7 @@ import bb_data
 import bb_util
 import string
 
-TIMEOUT=3000
+TIMEOUT=1000
 BUF_SIZE=25000
 VENDOR_RIM=0x0fca
 PRODUCT_DATA=0x0001   #(serial data)
