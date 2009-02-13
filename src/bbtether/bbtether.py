@@ -30,7 +30,7 @@ from optparse import OptionParser
 import os
 import subprocess
 
-VERSION = "0.1h"
+VERSION = "0.1i"
 
 ''' Main Class '''
 class BBTether:

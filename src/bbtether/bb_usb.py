@@ -2,10 +2,13 @@
 USB utilities for Blackberry
 Thibaut Colar
 '''
-import usb
+import sys
+
 import bb_data
 import bb_util
 import string
+import traceback
+import usb
 
 TIMEOUT=1000
 BUF_SIZE=25000
@@ -95,41 +98,45 @@ def read_bb_endpoints(device):
 	print "	Max Power:", config.maxPower
 	for inter in config.interfaces:
 		print "	Interface:",inter[0].interfaceNumber
-		handle.claimInterface(inter[0].interfaceNumber)
-		print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass
-		print "		Interface protocol:",inter[0].interfaceProtocol
-		for att in inter:
-			i=0
-			# check endpoint pairs
-			while i < len(att.endpoints):
-				good=False
-				red=att.endpoints[i].address
-				writ=att.endpoints[i+1].address
-				i+=2
-				print "		EndPoint Pair:",hex(red),"/",hex(writ)
-				try:
-					usb_write(device,writ,COMMAND_HELLO)
+		try:
+			handle.claimInterface(inter[0].interfaceNumber)
+			print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass
+			print "		Interface protocol:",inter[0].interfaceProtocol
+			for att in inter:
+				i=0
+				# check endpoint pairs
+				while i < len(att.endpoints):
+					good=False
+					red=att.endpoints[i].address
+					writ=att.endpoints[i+1].address
+					i+=2
+					print "		EndPoint Pair:",hex(red),"/",hex(writ)
 					try:
-						usb_read(device,red)
-						good=True
-						if readpt == -1 :
-							# Use first valid data point found
-							device.interface=inter[0].interfaceNumber
-							readpt=red
-							writept=writ
+						usb_write(device,writ,COMMAND_HELLO)
+						try:
+							usb_read(device,red)
+							good=True
+							if readpt == -1 :
+								# Use first valid data point found
+								device.interface=inter[0].interfaceNumber
+								readpt=red
+								writept=writ
+						except usb.USBError:
+							print "			Not Data Pair (Read failed)"
 					except usb.USBError:
-						print "			Not Data Pair (Read failed)"
-				except usb.USBError:
-					print "			Not Data Pair (Write failed)"
-				
-				if good:
-					print "			Found Data pair:",hex(red),"/",hex(writ);
-				else:
-					if readpt != -1 and modem_readpt == -1:
-						# use pair after data pair as Modem pair
-						modem_readpt=red
-						modem_writept=writ
-		handle.releaseInterface()
+						print "			Not Data Pair (Write failed)"
+
+					if good:
+						print "			Found Data pair:",hex(red),"/",hex(writ);
+					else:
+						if readpt != -1 and modem_readpt == -1:
+							# use pair after data pair as Modem pair
+							modem_readpt=red
+							modem_writept=writ
+			handle.releaseInterface()
+		except Exception:
+			print "Error while scanning interface: "+str(inter[0].interfaceNumber)+" -> skipping"
+			traceback.print_exc(file=sys.stdout)
 
 	device.readpt=readpt
 	device.writept=writept
