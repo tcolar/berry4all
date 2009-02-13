@@ -7,7 +7,7 @@ import bb_data
 import bb_util
 import string
 
-TIMEOUT=1000
+TIMEOUT=3000
 BUF_SIZE=25000
 VENDOR_RIM=0x0fca
 PRODUCT_DATA=0x0001   #(serial data)
@@ -176,13 +176,13 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
-	bytes=[]
-	try:
-		bytes=device.handle.bulkRead(endpt, size, timeout)
-		bb_util.debug_bytes(bytes,msg)
-	except usb.USBError, error:
-		if error.message != "No error":
-			print "error: ",error
-			raise
+	#bytes=[]
+	#try:
+	bytes=device.handle.bulkRead(endpt, size, timeout)
+	bb_util.debug_bytes(bytes,msg)
+	#except usb.USBError, error:
+	#	if error.message != "No error":
+	#		print "error: ",error
+	#		raise
 	return bytes 
 

@@ -2,7 +2,7 @@
 115200
 noipdefault
 defaultroute
-nomultilink
+#nomultilink
 ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote

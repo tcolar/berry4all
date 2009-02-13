@@ -2,7 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1h: 2/12/2009
+	Fixed various typos
+
 0.1g: 2/12/2009
+	Fix so that it terminates correctly (use to hang)
 	Fix so that it terminates correctly (use to hang)
 
 0.1f: 2/12/2009

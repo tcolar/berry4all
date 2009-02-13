@@ -3,7 +3,7 @@
 336000
 noipdefault
 defaultroute
-nomultilink
+#nomultilink
 ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
@@ -19,4 +19,4 @@ password guest
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect “/usr/sbin/chat -v -V -f conf/porta-chat”
+connect "/usr/sbin/chat -v -V -f conf/porta-chat"

@@ -1,7 +1,7 @@
 #not tested yet
 nodetach
 115200
-nomultilink
+#nomultilink
 defaultroute
 noipdefault
 ipcp-restart 7
