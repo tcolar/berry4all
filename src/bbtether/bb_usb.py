@@ -134,7 +134,7 @@ def read_bb_endpoints(device):
 							modem_readpt=red
 							modem_writept=writ
 			handle.releaseInterface()
-		except Exception:
+		except usb.USBError:
 			print "Error while scanning interface: "+str(inter[0].interfaceNumber)+" -> skipping"
 			traceback.print_exc(file=sys.stdout)
 

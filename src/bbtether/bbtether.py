@@ -74,25 +74,8 @@ class BBTether:
 			print "Sorry, needs to run as root at this time."
 			sys.exit(0)
 
-		# Remove module berry_charge if present, cause it causes problems
-		if not bb_osx.is_osx():
-			if bb_util.module_loaded("berry_charge"):
-				print " * Module berry_charge is loaded, this might causes problems"
-				print "\t -> Will try to remove it now"
-				bb_util.unload_module("berry_charge")
-				if bb_util.module_loaded("berry_charge"):
-					print "************************************************************"
-					print "\t Could NOT unload module berry_charge ! (must be in use)"
-					print "\t You should remove it before calling bbtether:"
-					print "\t Ex:  sudo rmmod berry_charge"
-					print "************************************************************\n"
-					os._exit(0)
-				else:
-					print "\t -> OK.\n"
-		else:
-			# todo : put stuff in the file
-			subprocess.call(['touch','/etc/ppp/options'])
-# echo "IPFORWARDING=-YES-\nAUTHSERVER=-YES-" >> /etc/hostconfig
+		bb_util.remove_berry_charge()
+		bb_osx.prepare_osx()
 
 		berry = None
 		
@@ -107,6 +90,9 @@ class BBTether:
 
 			# set power & reset
 			bb_usb.set_bb_power(berry)
+
+			time.sleep(1)
+			bb_util.remove_berry_charge()
 			
 			if options.chargeonly:
 				print "Charge only requested, stopping now."
@@ -119,7 +105,6 @@ class BBTether:
 			# rescan after power / reset
 			berry = bb_usb.find_berry(options.device, options.bus, False)
 			berry.open_handle()
-			handle = berry.handle
 
 			# lookup endpoints
 			berry.read_endpoints()

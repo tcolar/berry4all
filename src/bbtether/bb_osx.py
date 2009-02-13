@@ -29,12 +29,14 @@ def is_osx():
 
 
 def is_supported_osx():
+	'''
+	We want at least 10.3 (Darwin 7.0), otherwise kextd cannot take SIGUP
     '''
-    We want at least 10.3 (Darwin 7.0), otherwise kextd cannot take SIGUP
-    '''
-    rel=platform.release()
-    major=int(rel[0 : rel.indexof(".")])
-    return is_osx() and major > 7
+	if not is_osx():
+		return False
+	rel=platform.release()
+	major=int(rel[0 : rel.indexOf(".")])
+	return major > 7
 
 def restart_kextd():
     # send SIGUP to kextd
@@ -52,3 +54,8 @@ def uninstall_kextd():
     os.remove("/System/Library/Extensions/"+KEXT_FILE)
     restart_kextd()
 
+def prepare_osx():
+	if is_supported_osx():
+		# todo : put stuff in the file
+		subprocess.call(['touch','/etc/ppp/options'])
+		# echo "IPFORWARDING=-YES-\nAUTHSERVER=-YES-" >> /etc/hostconfig

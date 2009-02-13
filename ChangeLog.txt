@@ -2,6 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1j: 2/13/2009
+	Added more berry_chrage checks
+	Prevent complete failure if one interface is not avilable (v2)
+	cleanups
+
 0.1i: 2/13/2009
 	Added some more osx support code
 	Prevent complete failure if one interface is not avilable (busy etc...)
