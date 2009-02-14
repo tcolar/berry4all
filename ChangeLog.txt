@@ -2,6 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1l: 2/13/2009
+	-i option to forec interface
+	Fixed some more endpoints detection
+	Replace root requirement with warning
+
 0.1k: 2/13/2009
 	Improved modem detection (some device reply to hello!)
 	Removed full usb modules listing

@@ -118,23 +118,23 @@ def read_bb_endpoints(device):
 						usb_write(device,writ,COMMAND_HELLO)
 						try:
 							bytes=usb_read(device,red)
-							if readpt == -1 :
-								# on some devices, the modem replies to hello with (others, read fails):
-								# [0x7 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x78 0x56 0x34 0x12 ] [........xV4.]
-								if bb_util.is_same_tuple(bytes, MODEM_HELLO_REPLY):
-									if modem_readpt==-1:
-										modem_readpt=red
-										modem_writept=writ
-										print "			Found Modem endpoints: ",hex(red),"/",hex(writ)
+							# on some devices, the modem replies to hello with (others, read fails):
+							# [0x7 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x78 0x56 0x34 0x12 ] [........xV4.]
+							if bb_util.is_same_tuple(bytes, MODEM_HELLO_REPLY):
+								if modem_readpt==-1:
+									modem_readpt=red
+									modem_writept=writ
+									print "			Found Modem endpoints: ",hex(red),"/",hex(writ)
 
-								else:
-									if readpt==-1:
-										# Use first valid data point found
-										device.interface=inter[0].interfaceNumber
-										readpt=red
-										writept=writ
-										isDataPair=True
-										print "			Found Data endpoints: ",hex(red),"/",hex(writ)
+							else:
+								if readpt == -1 :
+									# Use first valid data point found
+									device.interface=inter[0].interfaceNumber
+									bb_util.debug("Setting interface to: "+str(device.interface))
+									readpt=red
+									writept=writ
+									isDataPair=True
+									print "			Found Data endpoints: ",hex(red),"/",hex(writ)
 						except usb.USBError:
 							print "			Not Data Pair (Read failed)"
 					except usb.USBError:

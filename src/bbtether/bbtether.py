@@ -29,7 +29,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.1i"
+VERSION = "0.1l"
 
 ''' Main Class '''
 class BBTether:
@@ -48,6 +48,7 @@ class BBTether:
 		group.add_option("-z", "--mwp", dest="mwp", help="Force Modem write endpoint - Hex (ex -z 0x8)")
 		group.add_option("-d", "--device", dest="device", help="Force to use a specific device ID (use together with -b)")
 		group.add_option("-b", "--bus", dest="bus", help="Force to use a specific bus ID(use together with -d)")
+		group.add_option("-i", "--int", dest="interface", help="Force to use a specific interface number (should not be needed)")
 		parser.add_option_group(group)
 		return parser.parse_args()
 
@@ -70,8 +71,8 @@ class BBTether:
 
 		# Need to be root
 		if os.getuid() != 0:
-			print "Sorry, needs to run as root at this time."
-			sys.exit(0)
+			print "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nThis probably will only work as root!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+			#sys.exit(0)
 
 		bb_util.remove_berry_charge()
 		bb_osx.prepare_osx()
@@ -117,6 +118,8 @@ class BBTether:
 				berry.modem_readpt = int(options.mrp, 16)
 			if options.mwp:
 				berry.modem_writept = int(options.mwp, 16)
+			if options.interface:
+				berry.interface = int(options.interface)
 
 			if options.listonly:
 				print "Listing only requested, stopping here."
@@ -128,7 +131,7 @@ class BBTether:
 				print "\nUsing Data Endpoint Pair:", hex(berry.readpt), "/", hex(berry.writept);
 				print "Using first pair after Data pair as Modem pair: ", hex(berry.modem_readpt), "/", hex(berry.modem_writept), "\n"
 				
-				print "Claiming interface"
+				print "Claiming interface ",berry.interface
 				berry.claim_interface()
 				
 				berry.read_infos()
