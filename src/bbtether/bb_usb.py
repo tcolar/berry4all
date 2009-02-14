@@ -18,7 +18,7 @@ PRODUCT_NEW_DUAL=0x0004   #(mass storage & data)
 PRODUCT_NEW_8120=0x8004   #(Pearl 8120)
 PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)
 BERRY_CONFIG=1
-COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00] 
+COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00]
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
 MODEM_HELLO_REPLY = [0x7, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
@@ -121,6 +121,8 @@ def read_bb_endpoints(device, userInterface):
 						usb_write(device,writ,COMMAND_HELLO)
 						try:
 							bytes=usb_read(device,red)
+							if len(bytes) == 0:
+								raise usb.USBError
 							# on some devices, the modem replies to hello with (others, read fails):
 							# [0x7 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x78 0x56 0x34 0x12 ] [........xV4.]
 							if bb_util.is_same_tuple(bytes, MODEM_HELLO_REPLY):
@@ -182,15 +184,15 @@ def get_pin(device):
 	pin=0x0;
 	usb_write(device, device.writept, COMMAND_PIN)
 	data=usb_read(device,device.readpt);
-	if data[4] == 0x6 and data[10] == 4:
+	if len(data)>0 and data[4] == 0x6 and data[10] == 4:
 		pin=bb_data.readlong(data,16);
 	return pin
 
 def get_description(device):
-	desc=""
+	desc="N/A"
 	usb_write(device, device.writept, COMMAND_DESC)
 	data=usb_read(device,device.readpt);
-	if data[4] == 0x6 and data[10] == 2:
+	if len(data)>0 and data[4] == 0x6 and data[10] == 2:
 		desc=bb_data.readstring(data,28)
 	return desc
 
@@ -204,13 +206,13 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
-	#bytes=[]
-	#try:
-	bytes=device.handle.bulkRead(endpt, size, timeout)
-	bb_util.debug_bytes(bytes,msg)
-	#except usb.USBError, error:
-	#	if error.message != "No error":
-	#		print "error: ",error
-	#		raise
+	bytes=[]
+	try:
+		bytes=device.handle.bulkRead(endpt, size, timeout)
+		bb_util.debug_bytes(bytes,msg)
+	except usb.USBError, error:
+		if error.message != "No error":
+			print "error: ",error
+			raise
 	return bytes 
 

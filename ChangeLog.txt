@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1m: 2/14/2009
+	Does not crash after usb read failure, keep going
+
 0.1l: 2/13/2009
 	-i option to force interface - doesn't check other ones
 	Fixed some more endpoints detection

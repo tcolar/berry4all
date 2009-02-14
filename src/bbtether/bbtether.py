@@ -18,7 +18,6 @@ http://wiki.colar.net/bbtether
 Released Under GPL2, COMES WITH ABSOLUTELY NO WARRANTIES OF ANY KIND, USE AT YOUR OWN RISK.
 If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
-import sys
 import time
 
 import bb_modem
@@ -29,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.1l"
+VERSION = "0.1m"
 
 ''' Main Class '''
 class BBTether:
@@ -133,7 +132,7 @@ class BBTether:
 				
 				print "Claiming interface ",berry.interface
 				berry.claim_interface()
-				
+
 				berry.read_infos()
 				print "Pin: ", hex(berry.pin)
 				print "Description: ", berry.desc

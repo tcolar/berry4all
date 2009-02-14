@@ -21,8 +21,8 @@ class Device:
 	modem_readpt=-1
 	modem_writept=-1
 	# Following empty until read_infos() called
-	pin=None
-	desc=None
+	pin=-1
+	desc="N/A"
 	
 	def claim_interface(self):
 		self.handle.claimInterface(self.interface)
