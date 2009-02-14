@@ -21,6 +21,7 @@ BERRY_CONFIG=1
 COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00] 
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
+MODEM_HELLO_REPLY = [0x7, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
 
 def find_berry(userdev=None, userbus=None, verbose=True):
 	'''
@@ -69,6 +70,8 @@ def read_bb_endpoints(device):
 	writept=-1
 	modem_readpt=-1
 	modem_writept=-1
+	next_readpt=-1
+	next_writept=-1
 	# List device Infos for information and find USB endpair	
 	handle=device.handle
 	berry=device.usbdev
@@ -106,7 +109,7 @@ def read_bb_endpoints(device):
 				i=0
 				# check endpoint pairs
 				while i < len(att.endpoints):
-					good=False
+					isDataPair=False
 					red=att.endpoints[i].address
 					writ=att.endpoints[i+1].address
 					i+=2
@@ -114,29 +117,44 @@ def read_bb_endpoints(device):
 					try:
 						usb_write(device,writ,COMMAND_HELLO)
 						try:
-							usb_read(device,red)
-							good=True
+							bytes=usb_read(device,red)
 							if readpt == -1 :
-								# Use first valid data point found
-								device.interface=inter[0].interfaceNumber
-								readpt=red
-								writept=writ
+								# on some devices, the modem replies to hello with (others, read fails):
+								# [0x7 0x0 0x0 0x0 0xc 0x0 0x0 0x0 0x78 0x56 0x34 0x12 ] [........xV4.]
+								if bb_util.is_same_tuple(bytes, MODEM_HELLO_REPLY):
+									if modem_readpt==-1:
+										modem_readpt=red
+										modem_writept=writ
+										print "			Found Modem endpoints: ",hex(red),"/",hex(writ)
+
+								else:
+									if readpt==-1:
+										# Use first valid data point found
+										device.interface=inter[0].interfaceNumber
+										readpt=red
+										writept=writ
+										isDataPair=True
+										print "			Found Data endpoints: ",hex(red),"/",hex(writ)
 						except usb.USBError:
 							print "			Not Data Pair (Read failed)"
 					except usb.USBError:
 						print "			Not Data Pair (Write failed)"
 
-					if good:
-						print "			Found Data pair:",hex(red),"/",hex(writ);
-					else:
-						if readpt != -1 and modem_readpt == -1:
-							# use pair after data pair as Modem pair
-							modem_readpt=red
-							modem_writept=writ
+					if (isDataPair==False) and readpt != -1 and next_readpt == -1:
+						next_readpt=red
+						next_writept=writ
+						print "			Next endpoints:",hex(red),"/",hex(writ)
+
 			handle.releaseInterface()
 		except usb.USBError:
 			print "Error while scanning interface: "+str(inter[0].interfaceNumber)+" -> skipping"
 			traceback.print_exc(file=sys.stdout)
+
+	# if no specific modem port found, try the one after the data one 
+	if modem_readpt==-1:
+		modem_readpt=next_readpt
+		modem_writept=next_writept
+		print "Defaulted Modem endpoints: ",hex(modem_readpt),"/",hex(modem_writept)
 
 	device.readpt=readpt
 	device.writept=writept

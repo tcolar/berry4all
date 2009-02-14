@@ -3,7 +3,6 @@ Utilities
 Thibaut Colar
 '''
 import bb_osx
-import bb_util
 import os
 import re
 import subprocess
@@ -65,10 +64,10 @@ def debug_object_attr(obj):
 
 def module_loaded(mod):
 	output = subprocess.Popen(["lsmod"], stdout=PIPE).communicate()[0]
-	if verbose:
-		print "###### Modules: ######"
-		print output
-		print "######################\n"
+	#if verbose:
+	#	print "###### Modules: ######"
+	#	print output
+	#	print "######################\n"
 	return re.search(mod, output) != None
 
 def unload_module(mod):

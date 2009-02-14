@@ -28,7 +28,6 @@ import bb_util
 from optparse import OptionGroup
 from optparse import OptionParser
 import os
-import subprocess
 
 VERSION = "0.1i"
 
