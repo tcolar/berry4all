@@ -4,6 +4,8 @@ tcolar AT colar d.o.t NET
 
 0.1m: 2/14/2009
 	Does not crash after usb read failure, keep going
+	Now works on 8130 (pearl 2)
+	If finds data/modem pairs, does not scan other interfaces
 
 0.1l: 2/13/2009
 	-i option to force interface - doesn't check other ones

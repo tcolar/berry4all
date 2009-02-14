@@ -100,10 +100,13 @@ def read_bb_endpoints(device, userInterface):
 	print "	Self Powered:", config.selfPowered
 	print "	Max Power:", config.maxPower
 	for inter in config.interfaces:
-		print
+		print "\n	*Interface:",inter[0].interfaceNumber
 		if userInterface!=None and int(userInterface)!=inter[0].interfaceNumber:
+			print "Skipping interface (-i flag used)"
 			continue
-		print "	Interface:",inter[0].interfaceNumber
+		if readpt != -1:
+			print "Skipping interface (valid endpoints already found), use -i flag to force"
+			continue
 		try:
 			handle.claimInterface(inter[0].interfaceNumber)
 			print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass

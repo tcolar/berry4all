@@ -30,6 +30,7 @@ class Device:
 	def release_interface(self):
 		self.handle.releaseInterface()
 
+	# This fails on some devices (8130), we just ignore it
 	def read_infos(self):
 		''' read pin and description and store them in this data structure'''
 		self.pin=bb_usb.get_pin(self)
