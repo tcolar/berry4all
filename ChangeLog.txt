@@ -3,7 +3,7 @@ Thibaut Colar
 tcolar AT colar d.o.t NET
 
 0.1l: 2/13/2009
-	-i option to forec interface
+	-i option to force interface - doesn't check other ones
 	Fixed some more endpoints detection
 	Replace root requirement with warning
 

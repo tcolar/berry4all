@@ -60,7 +60,7 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 
 	return device
 
-def read_bb_endpoints(device):
+def read_bb_endpoints(device, userInterface):
 	'''
 	Read the device endpoints and stores them in the device data structure
 	device was created from find_berry
@@ -100,6 +100,9 @@ def read_bb_endpoints(device):
 	print "	Self Powered:", config.selfPowered
 	print "	Max Power:", config.maxPower
 	for inter in config.interfaces:
+		print
+		if userInterface!=None and int(userInterface)!=inter[0].interfaceNumber:
+			continue
 		print "	Interface:",inter[0].interfaceNumber
 		try:
 			handle.claimInterface(inter[0].interfaceNumber)

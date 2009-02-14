@@ -107,7 +107,7 @@ class BBTether:
 			berry.open_handle()
 
 			# lookup endpoints
-			berry.read_endpoints()
+			berry.read_endpoints(options.interface)
 
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:

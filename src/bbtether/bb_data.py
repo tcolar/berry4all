@@ -35,9 +35,9 @@ class Device:
 		self.pin=bb_usb.get_pin(self)
 		self.desc=bb_usb.get_description(self)
 
-	def read_endpoints(self):
+	def read_endpoints(self,userInterface):
 		''' read endpoints (data & modem) and store them in this data structure'''
-		bb_usb.read_bb_endpoints(self)
+		bb_usb.read_bb_endpoints(self,userInterface)
 		
 	def open_handle(self):
 		''' Open the usb handle '''

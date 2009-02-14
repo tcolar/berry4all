@@ -89,6 +89,6 @@ def remove_berry_charge():
 			print "run  \"sudo /etc/init.d/udev restart\""
 			print "replug the blackberry and try again"
 			print "************************************************************\n"
-			os._exit(0)
+			#os._exit(0)
 		else:
 			print "\t -> OK.\n"
