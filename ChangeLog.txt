@@ -4,6 +4,7 @@ tcolar AT colar d.o.t NET
 
 0.1n:
 	Prevent program failure if setting power mode / data mode fails (9500)
+	Added UDEV rules to be able to run as regular user.
 
 0.1m: 2/14/2009
 	Does not crash after usb read failure, keep going
