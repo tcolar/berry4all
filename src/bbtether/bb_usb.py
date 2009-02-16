@@ -173,15 +173,24 @@ def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)
 
 def set_bb_power(device):
+	'''
+	Added try / expect blocks as I had reports of failure(which ?) on storm 9500
+	'''
 	print "\nIncreasing USB power - for charging"
-	buffer= [0,0]
-	device.handle.controlMsg(0xc0, 0xa5, buffer, 0 , 1)
-	buffer = []
-	device.handle.controlMsg(0x40, 0xA2, buffer, 0 , 1)
-	device.handle.reset()
+	try:
+		buffer= [0,0]
+		device.handle.controlMsg(0xc0, 0xa5, buffer, 0 , 1)
+		buffer = []
+		device.handle.controlMsg(0x40, 0xA2, buffer, 0 , 1)
+		device.handle.reset()
+	except usb.USBError, error:
+		print "Error increasing power ",error.message,", continuing anyway."
 	print "Switching Device to data only mode"
-	buffer= [0,0]
-	device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
+	try:
+		buffer= [0,0]
+		device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
+	except usb.USBError, error:
+		print "Error setting device to data mode ",error.message,", continuing anyway."
 
 def get_pin(device):
 	pin=0x0;

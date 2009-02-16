@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.1n:
+	Prevent program failure if setting power mode / data mode fails (9500)
+
 0.1m: 2/14/2009
 	Does not crash after usb read failure, keep going
 	Now works on 8130 (pearl 2)
