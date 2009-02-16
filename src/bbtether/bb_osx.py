@@ -2,11 +2,22 @@
 '''
 OSX specific stuff
 
-For Mac:
+** For Mac:
 http://www.apcupsd.org/manual/USB_Configuration.html
 http://statistics.roma2.infn.it/~sestito/g15mac/HOWTO-Logitech_G15_and_Mac_OS_X.html
 http://developer.apple.com/qa/qa2001/qa1076.html
 http://developer.apple.com/qa/qa2001/qa1319.html#//apple_ref/doc/uid/DTS10002355
+
+** More mac pppd stuff to explore:
+sudo kextload /System/Library/Extensions/PPTP.ppp/Contents/PlugIns/PPTP.kext
+http://fedward.org/GC82/pppd.html
+http://forums.macosxhints.com/showthread.php?t=4415
+pppconfig
+route, etc...: http://blog.liip.ch/archive/2006/01/07/changing-default-routes-on-os-x-on-vpn.html
+http://njr.sabi.net/2005/08/04/overriding-dns-for-domains-in-os-x-tiger/ (scutil --dns)
+https://macosx.com/forums/mac-os-x-system-mac-software/5620-ppp-server-setup-os-x.html
+http://mpd.sourceforge.net/
+http://www.afp548.com/articles/Jaguar/vpnd.html
 
 Mac:
 - Unplug berry
@@ -58,4 +69,5 @@ def prepare_osx():
 	if is_supported_osx():
 		# todo : put stuff in the file
 		subprocess.call(['touch','/etc/ppp/options'])
+		# what about the "Secrets file" -> needed ??
 		# echo "IPFORWARDING=-YES-\nAUTHSERVER=-YES-" >> /etc/hostconfig
