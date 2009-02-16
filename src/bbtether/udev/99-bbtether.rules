@@ -1,0 +1,2 @@
+# set (ANY) RIM device to be read/writable by everyone
+SYSFS{idVendor}=="0fca", MODE="0666"

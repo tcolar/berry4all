@@ -1,0 +1,2 @@
+# set (ANY) RIM device to be own by johnd (600)
+SYSFS{idVendor}=="0fca", MODE="0660", OWNER="johnd", GROUP="root"
