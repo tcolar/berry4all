@@ -2,7 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.1n:
+0.1p: 2/19/2009
+	Rogers (canada) ppp scripts
+
+0.1n: 2/15/2009
 	Prevent program failure if setting power mode / data mode fails (9500)
 	Added UDEV rules to be able to run as regular user.
 
