@@ -1,4 +1,5 @@
 # was tested as working
+#460800
 115200
 noipdefault
 defaultroute
@@ -13,10 +14,11 @@ noauth
 nocrtscts
 usepeerdns
 novj
-user guest
-password guest
+user ""
+password ""
+name ""
 #debug debug debug
 # does not exist in all pppd versions (osx)
-#replacedefaultroute
+replacedefaultroute
 
 connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
