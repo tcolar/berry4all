@@ -93,6 +93,10 @@ class BBTether:
 			if not (options.drp and options.dwp and options.mrp and options.mwp):
 				berry.read_endpoints(options.interface)
 
+			if options.listonly:
+				print "Listing only requested, stopping here."
+				os._exit(0)
+
 			# set power & reset
 			bb_usb.set_bb_power(berry)
 
@@ -122,10 +126,6 @@ class BBTether:
 				berry.modem_writept = int(options.mwp, 16)
 			if options.interface:
 				berry.interface = int(options.interface)
-
-			if options.listonly:
-				print "Listing only requested, stopping here."
-				os._exit(0)
 
 			if berry.readpt == -1:
 				print "\nNo good Data Endpoint pair, bailing out !";
