@@ -15,13 +15,13 @@ import array
 
 NOTIFY_EVERY=100000
 BUF_SIZE=25000
-TIMEOUT=180
+TIMEOUT=250
 PPPD_COMMAND="pppd"
 MIN_PASSWD_TRIES=2
 MODEM_STOP = [0x1, 0x0 ,0x0, 0x0 ,0x0, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12]
 MODEM_START = [0x1, 0x0 ,0x0, 0x0 ,0x1, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12]
 # "RIM BYPASS" (usb sniff from windows)
-MODEM_BYPASS_PCKT = [0x0, 0x0, 0x18, 0x0, 0x7, 0xff, 0x0, 0xc, 0x52, 0x49, 0x4d, 0x20, 0x42, 0x79, 0x70, 0x61, 0x73, 0x73, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
+MODEM_BYPASS_PCKT = [0x0, 0x0, 0x18, 0x0, 0x7, 0xff, 0x0, 0x9, 0x52, 0x49, 0x4d, 0x20, 0x42, 0x79, 0x70, 0x61, 0x73, 0x73, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0]
 
 # Packets ending by this are RIM control packets (! data)
 RIM_PACKET_TAIL=[0x78, 0x56, 0x34, 0x12]
@@ -65,14 +65,16 @@ class BBModem:
 		'''Initialize the modem and start the RIM session'''
 		session_key=[0, 0, 0, 0, 0, 0, 0, 0, 0]
 		# clear endpoints
-		bb_usb.clear_halt(self.device,self.device.modem_readpt)
-		bb_usb.clear_halt(self.device,self.device.modem_writept)
+		#bb_usb.clear_halt(self.device,self.device.modem_readpt)
+		#bb_usb.clear_halt(self.device,self.device.modem_writept)
 		# reset modem (twice as done my windows bb software)
-		while(True):
-			self.write(MODEM_STOP)
-			if len(self.read())>0:
-				break;
-			time.sleep(.1)
+		self.write(MODEM_STOP)
+		self.read()
+		self.write(MODEM_STOP)
+		self.read()
+		#print(self.device.modem_writept)
+		#bb_usb.usb_write(self.device,0x8,MODEM_STOP,TIMEOUT,"\tModem -> ")
+		#self.read()
 		#might or not reply, so use try_read
 		self.write(MODEM_START)
 		answer=self.read()
@@ -95,8 +97,8 @@ class BBModem:
 		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
-		self.write(MODEM_BYPASS_PCKT)
-		self.read()
+		#self.write(MODEM_BYPASS_PCKT)
+		#self.read()
 		
 	def start(self, pppConfig, pppdCommand):
 		'''Start the modem and keep going until ^C'''
@@ -104,6 +106,9 @@ class BBModem:
 		(master,slave)=pty.openpty()
 		print "\nModem pty: ",os.ttyname(slave)
 				
+		# Start the USB Modem read thread
+		bbThread=BBModemThread(self,master)
+		bbThread.start()
 		print "Initializing Modem"
 		try:
 			self.init()
@@ -160,7 +165,7 @@ class BBModem:
 					self.write(newbytes)
 				
 		except KeyboardInterrupt:
-			print "\nShutting down on ^C"
+			print "\nShutting down on ^c"
 			
 		# Shutting down "gracefully"
 		bbThread.stop()
@@ -193,7 +198,7 @@ class BBModemThread( threading.Thread ):
 					if(len(bytes)>0):
 						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# Those are RIM control packet, not data. So not writing them back to PTY							
-							bb_util.debug("Skipping RIM packet ending by "+RIM_PACKET_TAIL)
+							bb_util.debug("Skipping RIM packet")
 						else:
 							data=array.array("B",bytes)
 							os.write(self.master,data.tostring())

@@ -87,8 +87,14 @@ class BBTether:
 
 			#bb_usbfs.find_kernel_driver(berry)
 
+			# lookup endpoints
+			# IMPORTANT: We need to do this BEFDRE RESET, otherwise modem will be screwed
+			# folowing "test" hello packet
+			if not (options.drp and options.dwp and options.mrp and options.mwp):
+				berry.read_endpoints(options.interface)
+
 			# set power & reset
-			#bb_usb.set_bb_power(berry)
+			bb_usb.set_bb_power(berry)
 
 			time.sleep(1)
 			#bb_util.remove_berry_charge()
@@ -102,12 +108,8 @@ class BBTether:
 			time.sleep(1.5)
 			
 			# rescan after power / reset
-			berry = bb_usb.find_berry(options.device, options.bus, False)
-			berry.open_handle()
-
-			# lookup endpoints
-			if not (options.drp and options.dwp and options.mrp and options.mwp):
-			 berry.read_endpoints(options.interface)
+			#berry = bb_usb.find_berry(options.device, options.bus, False)
+			#berry.open_handle()
 
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
@@ -134,7 +136,7 @@ class BBTether:
 				print "Claiming interface ",berry.interface
 				berry.claim_interface()
 
-				#berry.read_infos()
+				berry.read_infos()
 				print "Pin: ", hex(berry.pin)
 				print "Description: ", berry.desc
 
@@ -144,13 +146,25 @@ class BBTether:
 				pppdCommand = "/usr/sbin/pppd";
 				if options.pppd:
 					pppdCommand = options.pppd
-					
+
+				#bb_usb.start_read_sink(berry, berry.readpt)
+				#bb_usb.usb_write(berry, berry.writept, bb_modem.MODEM_BYPASS_PCKT)
+				#bb_usb.usb_read_all(berry, berry.readpt)
+				#bb_usb.usb_write(berry, berry.writept, [0,0,0x8,0,0xa,0x6,0,0xa])
+				#bb_usb.usb_read_all(berry, berry.readpt)
+				#bb_usb.usb_write(berry, berry.writept, [0x6,0,0xa,0,0x40,0,0,0x1,0,0])
+				#bb_usb.usb_read_all(berry, berry.readpt)
+				#bb_usb.usb_write(berry, berry.writept, [0x6,0,0x16,0,0x40,0x1,0x1,0x2,0,0,0,0xa,0x49,0,0,0,0,0x49,0,0,0,0x1])
+				#bb_usb.usb_read_all(berry, berry.readpt)
+				#bb_usb.stop_read_sink(berry, berry.readpt)
+				
 				# This will run forever (until ^C)
 				modem.start(pppConfig, pppdCommand)
 
 				print "Releasing interface"
 				berry.release_interface()
 				print "bbtether completed."
+				os._exit(0)
 		else:
 			print "\nNo RIM device found"
 

@@ -185,12 +185,12 @@ def set_bb_power(device):
 		device.handle.reset()
 	except usb.USBError, error:
 		print "Error increasing power ",error.message,", continuing anyway."
-	print "Switching Device to data only mode"
-	try:
-		buffer= [0,0]
-		device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
-	except usb.USBError, error:
-		print "Error setting device to data mode ",error.message,", continuing anyway."
+	#print "Switching Device to data only mode"
+	#try:
+	#	buffer= [0,0]
+	#	device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
+	#except usb.USBError, error:
+	#print "Error setting device to data mode ",error.message,", continuing anyway."
 
 def get_pin(device):
 	pin=0x0;
