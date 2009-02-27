@@ -1,0 +1,14 @@
+
+http://www.mjmwired.net/kernel/Documentation/usb/usbmon.txt
+mount -t debugfs none_debugs /sys/kernel/debug
+sudo modprobe usbmon
+sudo lsusb   -> device 4 = BB
+sudo cat /sys/kernel/debug/usbmon/4u > /tmp/mon1.out
+run usb transaction in virtualbox windows
+kill cat
+
+sudo cat /sys/kernel/debug/usbmon/4u > /tmp/mon1.out
+run usb program in linux
+kill cat
+
+meld /tmp/mon1.out /tmp/mon2.out 

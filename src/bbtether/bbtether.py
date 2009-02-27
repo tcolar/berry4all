@@ -88,10 +88,10 @@ class BBTether:
 			#bb_usbfs.find_kernel_driver(berry)
 
 			# set power & reset
-			bb_usb.set_bb_power(berry)
+			#bb_usb.set_bb_power(berry)
 
 			time.sleep(1)
-			bb_util.remove_berry_charge()
+			#bb_util.remove_berry_charge()
 			
 			if options.chargeonly:
 				print "Charge only requested, stopping now."
@@ -106,7 +106,8 @@ class BBTether:
 			berry.open_handle()
 
 			# lookup endpoints
-			berry.read_endpoints(options.interface)
+			if not (options.drp and options.dwp and options.mrp and options.mwp):
+			 berry.read_endpoints(options.interface)
 
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
@@ -133,7 +134,7 @@ class BBTether:
 				print "Claiming interface ",berry.interface
 				berry.claim_interface()
 
-				berry.read_infos()
+				#berry.read_infos()
 				print "Pin: ", hex(berry.pin)
 				print "Description: ", berry.desc
 

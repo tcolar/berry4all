@@ -68,8 +68,11 @@ class BBModem:
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
 		# reset modem (twice as done my windows bb software)
-		self.write(MODEM_STOP)
-		self.read()
+		while(True):
+			self.write(MODEM_STOP)
+			if len(self.read())>0:
+				break;
+			time.sleep(.1)
 		#might or not reply, so use try_read
 		self.write(MODEM_START)
 		answer=self.read()
@@ -89,7 +92,7 @@ class BBModem:
 			print "No password requested."	
 		# Send session key
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
-		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
+		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
 		self.write(MODEM_BYPASS_PCKT)
