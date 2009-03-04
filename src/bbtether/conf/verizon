@@ -11,11 +11,12 @@ lcp-echo-interval 0
 lcp-echo-failure 999
 modem
 noauth
-nocrtscts
+crtscts
+nomagic
+noccp
 noipdefault
 novj # refused anyway, no point in trying every time
 usepeerdns
 user 5555555555@vzw3g.com
 password vzw
-connect "/usr/sbin/chat -v -f conf/verizon-chat"
-
+connect "/usr/sbin/chat -f conf/verizon-chat"

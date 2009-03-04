@@ -11,30 +11,26 @@ lcp-echo-interval 0
 lcp-echo-failure 999
 modem
 noauth
-nocrtscts
-usepeerdns
-local
 nomagic
-novj
-noaccomp
 noccp
-nodeflate
-nopcomp
-nobsdcomp
-user "skflotp123@t-mobile.com"
+crtscts
+novj
+user "guest"
 password ""
-noproxyarp
-pap-timeout 60
-pap-restart 60
+
+usepeerdns
+
 #debug debug debug
 # does not exist in all pppd versions (osx)
-replacedefaultroute
+#replacedefaultroute
 
-# Use this for phone tzones plans (works for all)
-#connect "/usr/sbin/chat -f conf/tmobile-chat"
-# Use this if you have data plan (maybe faster)
-connect "/usr/sbin/chat -f conf/tmobile-data-chat"
-# Use this if you have VPN data plan
-#connect "/usr/sbin/chat -f conf/tmobile-vpn-chat"
-# Another one for other phones
+# Default (works for all but slower ?) wap.voicestreeam.com
+connect "/usr/sbin/chat -f conf/tmobile-chat"
+#Use this if you have data plan @29.99? (maybe faster) INTERNET2.VOICESTREAM.COM
+#connect "/usr/sbin/chat -f conf/tmobile-data-chat"
+# Use this if you have VPN data plan  Internet3.voicestream.com
+#connect "/usr/sbin/chat -f conf/tmobile-vpn-chat" 
+# Another one for other phones(Compressed images - good for 3G). epc.t-mobile.com
 #connect "/usr/sbin/chat -f conf/tmobile-epc-chat"
+# Blackberry plans. blackberry.net
+#connect "/usr/sbin/chat -f conf/tmobile-bb-chat"

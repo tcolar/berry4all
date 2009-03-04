@@ -2,6 +2,13 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2a: 3/4/2009
+	Many Changes, to make it work with OS 4.5 (did not work before)
+	Should be faster (better USB lattency)
+	More ppp scripts (& t-mobile options)
+	Better Error Catching
+	Cleaner shutdowns
+
 0.1p: 2/19/2009
 	Rogers (canada) ppp scripts
 

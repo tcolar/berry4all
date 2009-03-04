@@ -62,15 +62,16 @@ class BBModem:
 	def init(self):
 		'''Initialize the modem and start the RIM session'''
 		# 8 bytes session key (random)
-		self.session_key=[0,0,0,0,0,0,0,0,0]
-		for i in range(9):
-			self.session_key[i]=random.randrange(0, 256)
+		#self.session_key=[0,0,0,0,0,0,0,0]
+		#for i in range(8):
+		#	self.session_key[i]=random.randrange(0, 256)
+		self.session_key=[0x42,0x42,0x54,0x45,0x54,0x48,0x45,0x52] #(BBTETHER)
 		# clear endpoints
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
 		# reset modem (twice as done my windows bb software)
-		#self.write(MODEM_STOP)
-		#self.read()
+		self.write(MODEM_STOP)
+		self.read()
 		self.write(MODEM_STOP)
 		self.read()
 		self.write(MODEM_START)
@@ -89,9 +90,12 @@ class BBModem:
 			raise Exception		
 		else:
 			print "No password requested."	
-		# Send session key
+		# Send session key & start sessin (as seen on windows trace)
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
-		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ self.session_key + RIM_PACKET_TAIL
+		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+		self.write(session_packet)
+		self.read()
+		session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0x23, 0, 0, 0, 0, 0xC2, 1, 0, 0x18, 0, 0, 0]+RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
 		print "session pack sent"
@@ -162,14 +166,19 @@ class BBModem:
 			print "\nShutting down on ^c"
 			
 		# Shutting down "gracefully"
-		#self.write([0x41,0x54,0x48,0x30]) #hangup modem (ATH0)
-		#self.read()
-		# close RIM session
-		end_session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1]+ self.session_key + RIM_PACKET_TAIL
-		self.write(end_session_packet)
-		# stop BB modem
-		self.write(MODEM_STOP)
-		bbThread.stop()
+		try:
+			self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
+			self.read()
+			# close RIM session (as traced on windows)
+			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3,    0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+			self.write(end_session_packet)
+			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0x23, 0, 0, 0, 0, 0xc2, 1, 0, 0x18, 0, 0,0]+RIM_PACKET_TAIL
+			self.write(end_session_packet)
+			# stop BB modem
+			self.write(MODEM_STOP)
+			bbThread.stop()
+		except:
+			print "Failure during shutdown"
 		# stopping pppd
 		os.kill(process.pid,signal.SIGKILL)
 		os.close(master)
