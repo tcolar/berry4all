@@ -101,7 +101,7 @@ class BBTether:
 			bb_usb.set_bb_power(berry)
 
 			time.sleep(1)
-			#bb_util.remove_berry_charge()
+			bb_util.remove_berry_charge()
 			
 			if options.chargeonly:
 				print "Charge only requested, stopping now."
@@ -147,6 +147,7 @@ class BBTether:
 				if options.pppd:
 					pppdCommand = options.pppd
 
+				# Windoes does this, however it does not seem to be required
 				#bb_usb.start_read_sink(berry, berry.readpt)
 				#bb_usb.usb_write(berry, berry.writept, bb_modem.MODEM_BYPASS_PCKT)
 				#bb_usb.usb_read_all(berry, berry.readpt)
@@ -159,8 +160,13 @@ class BBTether:
 				#bb_usb.stop_read_sink(berry, berry.readpt)
 				
 				# This will run forever (until ^C)
-				modem.start(pppConfig, pppdCommand)
-
+				try:
+					modem.start(pppConfig, pppdCommand)
+				except KeyboardInterrupt:
+					# sometimes the KInterrupt will propagate here(if ^C before modem read thread started)
+					# we don't want to crash and hang.
+					pass
+				
 				print "Releasing interface"
 				berry.release_interface()
 				print "bbtether completed."

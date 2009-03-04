@@ -3,7 +3,7 @@
 115200
 noipdefault
 defaultroute
-#nomultilink
+nomultilink
 ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
@@ -13,12 +13,28 @@ modem
 noauth
 nocrtscts
 usepeerdns
+local
+nomagic
 novj
-user ""
+noaccomp
+noccp
+nodeflate
+nopcomp
+nobsdcomp
+user "skflotp123@t-mobile.com"
 password ""
-name ""
+noproxyarp
+pap-timeout 60
+pap-restart 60
 #debug debug debug
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -v -V -f conf/tmobile-chat"
+# Use this for phone tzones plans (works for all)
+#connect "/usr/sbin/chat -f conf/tmobile-chat"
+# Use this if you have data plan (maybe faster)
+connect "/usr/sbin/chat -f conf/tmobile-data-chat"
+# Use this if you have VPN data plan
+#connect "/usr/sbin/chat -f conf/tmobile-vpn-chat"
+# Another one for other phones
+#connect "/usr/sbin/chat -f conf/tmobile-epc-chat"

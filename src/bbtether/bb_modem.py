@@ -12,10 +12,12 @@ import subprocess
 import usb
 import time
 import array
+import random
+import signal
 
 NOTIFY_EVERY=100000
 BUF_SIZE=25000
-TIMEOUT=250
+TIMEOUT=50
 PPPD_COMMAND="pppd"
 MIN_PASSWD_TRIES=2
 MODEM_STOP = [0x1, 0x0 ,0x0, 0x0 ,0x0, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12]
@@ -44,17 +46,13 @@ class BBModem:
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
 			
-	def try_read(self, size=BUF_SIZE,timeout=TIMEOUT):
-		data=[]
-		try:
-			data=self.read(size,timeout)
-		except usb.USBError, error:
-			if error.message != "No error":
-				raise
-		return data
-		
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
-		data=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+		data=[]
+		datar=[1]
+		while len(datar) > 0:
+			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+			if len(datar) > 0:
+				data.extend(datar)
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
@@ -63,19 +61,18 @@ class BBModem:
 
 	def init(self):
 		'''Initialize the modem and start the RIM session'''
-		session_key=[0, 0, 0, 0, 0, 0, 0, 0, 0]
+		# 8 bytes session key (random)
+		self.session_key=[0,0,0,0,0,0,0,0,0]
+		for i in range(9):
+			self.session_key[i]=random.randrange(0, 256)
 		# clear endpoints
-		#bb_usb.clear_halt(self.device,self.device.modem_readpt)
-		#bb_usb.clear_halt(self.device,self.device.modem_writept)
+		bb_usb.clear_halt(self.device,self.device.modem_readpt)
+		bb_usb.clear_halt(self.device,self.device.modem_writept)
 		# reset modem (twice as done my windows bb software)
 		self.write(MODEM_STOP)
 		self.read()
 		self.write(MODEM_STOP)
 		self.read()
-		#print(self.device.modem_writept)
-		#bb_usb.usb_write(self.device,0x8,MODEM_STOP,TIMEOUT,"\tModem -> ")
-		#self.read()
-		#might or not reply, so use try_read
 		self.write(MODEM_START)
 		answer=self.read()
 		# check for password request (newer devices)
@@ -94,7 +91,7 @@ class BBModem:
 			print "No password requested."	
 		# Send session key
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
-		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ session_key + RIM_PACKET_TAIL
+		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ self.session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
 		#self.write(MODEM_BYPASS_PCKT)
@@ -134,8 +131,7 @@ class BBModem:
 			command=[pppdCommand,os.ttyname(slave),"file","conf/"+pppConfig,"nodetach"]
 			if bb_util.verbose:
 				command.append("debug")
-			subprocess.Popen(command)
-			# not terminating this myself, since it should terminate by itself (properly) when bbtether is stopped.
+			process=subprocess.Popen(command)
 		
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
 		
@@ -168,11 +164,16 @@ class BBModem:
 			print "\nShutting down on ^c"
 			
 		# Shutting down "gracefully"
+		#self.write([0x41,0x54,0x48,0x30]) #hangup modem (ATH0)
+		#self.read()
+		# close RIM session
+		end_session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1]+ self.session_key + RIM_PACKET_TAIL
+		self.write(end_session_packet)
+		# stop BB modem
+		self.write(MODEM_STOP)
 		bbThread.stop()
-		# we need to wait for thread to stop before we close fd's
-		# otherwise it will hang and not terminate
-		while bbThread.isAlive():
-			time.sleep(.3)
+		# stopping pppd
+		os.kill(process.pid,signal.SIGKILL)
 		os.close(master)
 		os.close(slave)
 					
