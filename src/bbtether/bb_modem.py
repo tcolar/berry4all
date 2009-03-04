@@ -69,8 +69,8 @@ class BBModem:
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
 		# reset modem (twice as done my windows bb software)
-		self.write(MODEM_STOP)
-		self.read()
+		#self.write(MODEM_STOP)
+		#self.read()
 		self.write(MODEM_STOP)
 		self.read()
 		self.write(MODEM_START)
@@ -94,6 +94,7 @@ class BBModem:
 		session_packet=[0, 0, 0, 0x23, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1]+ self.session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
+		print "session pack sent"
 		#self.write(MODEM_BYPASS_PCKT)
 		#self.read()
 		
@@ -103,9 +104,6 @@ class BBModem:
 		(master,slave)=pty.openpty()
 		print "\nModem pty: ",os.ttyname(slave)
 				
-		# Start the USB Modem read thread
-		bbThread=BBModemThread(self,master)
-		bbThread.start()
 		print "Initializing Modem"
 		try:
 			self.init()
