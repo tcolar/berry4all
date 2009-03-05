@@ -8,14 +8,14 @@ ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
 lcp-echo-interval 0
-lcp-echo-failure 999
+lcp-echo-failure 99
 modem
 noauth
 nomagic
 noccp
 crtscts
 novj
-user "guest"
+user "wap"
 password ""
 
 usepeerdns

@@ -69,6 +69,19 @@ class BBModem:
 		# clear endpoints
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
+		init_packet=[0,0,0,0,0,0,0,0,3,0,0,0,0,0xc2,1,0,0,0,0,0,0,0,0,0]+RIM_PACKET_TAIL
+		self.write(init_packet)
+		self.read()
+		try:
+			# we hangup the modem and close a potentially open session, in case that did not happen properly
+			# during last shutdown
+			self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
+			self.read()
+			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+			self.write(end_session_packet)
+			self.read()
+		except:
+			print "Failed closing previous session, continuing anyway"
 		# reset modem (twice as done my windows bb software)
 		self.write(MODEM_STOP)
 		self.read()
@@ -95,8 +108,6 @@ class BBModem:
 		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
-		session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0x23, 0, 0, 0, 0, 0xC2, 1, 0, 0x18, 0, 0, 0]+RIM_PACKET_TAIL
-		self.write(session_packet)
 		self.read()
 		print "session pack sent"
 		#self.write(MODEM_BYPASS_PCKT)
@@ -171,8 +182,6 @@ class BBModem:
 			self.read()
 			# close RIM session (as traced on windows)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3,    0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-			self.write(end_session_packet)
-			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0x23, 0, 0, 0, 0, 0xc2, 1, 0, 0x18, 0, 0,0]+RIM_PACKET_TAIL
 			self.write(end_session_packet)
 			# stop BB modem
 			self.write(MODEM_STOP)

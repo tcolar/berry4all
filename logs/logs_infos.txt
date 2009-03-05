@@ -1,0 +1,7 @@
+- db_list: 
+  xmblackberry debug output of database listing
+- usb_win2.log & .html
+  usb trace (full windows session with start / data /stop)
+- usb_win3.log & .html
+  usb trace: back 2 back session after usb_win2 (start/stop)
+

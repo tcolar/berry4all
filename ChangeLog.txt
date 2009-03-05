@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2b: 3/4/2009
+	Should be able to do multiple sessions without need to reboot blackberry
+	Should be able to have a session running for a long time (no more disconnect after few minutes)
+
 0.2a: 3/4/2009
 	Many Changes, to make it work with OS 4.5 (did not work before)
 	Should be faster (better USB lattency)
