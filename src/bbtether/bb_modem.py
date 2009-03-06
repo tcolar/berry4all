@@ -13,6 +13,7 @@ import os
 import subprocess
 import threading
 import usb
+import signal
 
 NOTIFY_EVERY=100000
 BUF_SIZE=1400
@@ -65,17 +66,15 @@ class BBModem:
 		# clear endpoints
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
-		init_packet=[0,0,0,0,0,0,0,0,3,0,0,0,0,0xc2,1,0,0,0,0,0,0,0,0,0]+RIM_PACKET_TAIL
-		self.write(init_packet)
-		self.read()
 		try:
+			pass
 			# we hangup the modem and close a potentially open session, in case that did not happen properly
 			# during last shutdown
-			self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
-			self.read()
-			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-			self.write(end_session_packet)
-			self.read()
+			#self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
+			#self.read()
+			#end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+			#self.write(end_session_packet)
+			#self.read()
 		except:
 			print "Failed closing previous session, continuing anyway"
 		# reset modem
@@ -99,6 +98,10 @@ class BBModem:
 			raise Exception		
 		else:
 			print "No password requested."	
+			
+		init_packet=[0,0,0,0,0,0,0,0,3,0,0,0,0,0xc2,1,0,0,0,0,0,0,0,0,0]+RIM_PACKET_TAIL
+		self.write(init_packet)
+		self.read()
 		# Send session key & start sessin (as seen on windows trace)
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
 		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
@@ -178,18 +181,22 @@ class BBModem:
 		# Shutting down "gracefully"
 		try:
 			self.data_mode=False
-			self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
-			self.read()
+			#stop PPP
+			os.kill(process.pid,1)#/*signal.SIGUP*/
+			#process.wait()
+			#time.sleep(15)
+			process.wait()
+			print "PPP finished"
 			# stop BB modem
 			self.write(MODEM_STOP)
 			# close RIM session (as traced on windows)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 			self.write(end_session_packet)
 			bbThread.stop()
-		except:
-			print "Failure during shutdown"
+		except Exception, error:
+			print "Failure during shutdown ",error
 		# stopping pppd
-		os.kill(process.pid,0)#/*signal.SIGKILL*/
+		os.kill(process.pid,signal.SIGKILL)
 		os.close(master)
 		os.close(slave)
 					

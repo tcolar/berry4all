@@ -1,0 +1,11 @@
+ABORT 'ERROR'
+
+SAY 'Terminating GPRS\n'
+'ATH'
+OK 'AT'
+OK 'ATE0V1'
+OK 'AT'
+OK 'AT+CGDCONT=1,"IP","wap.voicestream.com"'
+OK 'ATS0=0'
+SAY 'GPRS Terminated\n'
+

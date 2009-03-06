@@ -24,6 +24,8 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
+disconnect "/usr/sbin/chat -f conf/tmobile-chatoff"
+
 # Default (works for all but slower ?) wap.voicestreeam.com
 connect "/usr/sbin/chat -f conf/tmobile-chat"
 #Use this if you have data plan @29.99? (maybe faster) INTERNET2.VOICESTREAM.COM
