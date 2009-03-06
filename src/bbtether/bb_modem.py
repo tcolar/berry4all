@@ -3,20 +3,19 @@ Modem support for Blackberry
 Thibaut Colar
 '''
 
-import bb_util
-import threading
-import pty
-import os
-import bb_usb
-import subprocess
-import usb
-import time
 import array
-import random
-import signal
+import pty
+import time
+
+import bb_usb
+import bb_util
+import os
+import subprocess
+import threading
+import usb
 
 NOTIFY_EVERY=100000
-BUF_SIZE=25000
+BUF_SIZE=1400
 TIMEOUT=50
 PPPD_COMMAND="pppd"
 MIN_PASSWD_TRIES=2
@@ -38,6 +37,7 @@ class BBModem:
 		
 	def __init__(self, dev):
 		self.device=dev
+		self.data_mode=False
 
 	def write(self, data, timeout=TIMEOUT):
 		bb_usb.usb_write(self.device,self.device.modem_writept,data,timeout,"\tModem -> ")
@@ -61,10 +61,6 @@ class BBModem:
 
 	def init(self):
 		'''Initialize the modem and start the RIM session'''
-		# 8 bytes session key (random)
-		#self.session_key=[0,0,0,0,0,0,0,0]
-		#for i in range(8):
-		#	self.session_key[i]=random.randrange(0, 256)
 		self.session_key=[0x42,0x42,0x54,0x45,0x54,0x48,0x45,0x52] #(BBTETHER)
 		# clear endpoints
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
@@ -82,7 +78,7 @@ class BBModem:
 			self.read()
 		except:
 			print "Failed closing previous session, continuing anyway"
-		# reset modem (twice as done my windows bb software)
+		# reset modem
 		self.write(MODEM_STOP)
 		self.read()
 		self.write(MODEM_STOP)
@@ -105,9 +101,11 @@ class BBModem:
 			print "No password requested."	
 		# Send session key & start sessin (as seen on windows trace)
 		# At least on my Pearl if I don't send this now, the device will reboot itself during heavy data transfer later (odd)
-		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 0x3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
+		session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+		self.write(session_packet)
 		self.read()
 		print "session pack sent"
 		#self.write(MODEM_BYPASS_PCKT)
@@ -148,48 +146,50 @@ class BBModem:
 		
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
 		
+		#session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+		#self.write(session_packet)
+		#self.read()
+
 		try:
 			# Read from PTY and write to USB modem until ^C
-			last=0
-			last2=0
-			started=False
 			while(True):
 				data=os.read(master, BUF_SIZE)
 				# transform string from PTY into array of signed bytes
 				bytes=array.array("B",data)
 				if(len(bytes)>0):
-					newbytes=[]
-					# start grps fix (needs 0x7E around each Frame)
-					for b in bytes:
-						if started and last2 != 0x7e and last == 0x7e and b != 0x7e:
-							bb_util.debug("GPRS fix: Added 0x7E to Frame.")
-							newbytes.append(0x7e);
-						if (not started) and b != 0x7e and last == 0x7e:
-							bb_util.debug("GPRS fix: Started.")
-							started=True
-						last2=last
-						last=b
-						newbytes.append(b)					
+					if (not self.data_mode) and len(bytes)>4 and bytes[0] == 0x7e :
+						bb_util.debug("GPRS fix: Started.")
+						self.data_mode=True
+
+					if self.data_mode:
+						if bytes[0] != 0x7E:
+							bb_util.debug("GPRS fix: Added 0x7E to Frame Start.")
+							bytes.insert(0,0x7E)
+						if bytes[len(bytes)-1] != 0x7E:
+							bb_util.debug("GPRS fix: Added 0x7E to Frame End.")
+							bytes.append(0x7E)
 					# end gprs fix
-					self.write(newbytes)
+					print "Will write "+str(len(bytes))+" bytes"
+					self.write(bytes)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
 			
 		# Shutting down "gracefully"
 		try:
+			self.data_mode=False
 			self.write([0x41,0x54,0x5a,0xd]) #hangup modem (ATZ)
 			self.read()
-			# close RIM session (as traced on windows)
-			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3,    0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-			self.write(end_session_packet)
 			# stop BB modem
 			self.write(MODEM_STOP)
+			# close RIM session (as traced on windows)
+			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+			self.write(end_session_packet)
 			bbThread.stop()
 		except:
 			print "Failure during shutdown"
 		# stopping pppd
-		os.kill(process.pid,signal.SIGKILL)
+		os.kill(process.pid,0)#/*signal.SIGKILL*/
 		os.close(master)
 		os.close(slave)
 					
@@ -216,8 +216,10 @@ class BBModemThread( threading.Thread ):
 						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# Those are RIM control packet, not data. So not writing them back to PTY							
 							bb_util.debug("Skipping RIM packet")
+							# what if it's just data that ends ,like rim packet ????
 						else:
 							data=array.array("B",bytes)
+							print "Read  "+str(len(bytes))+" bytes"
 							os.write(self.master,data.tostring())
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?
