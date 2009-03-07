@@ -9,7 +9,9 @@ ipcp-accept-local
 ipcp-accept-remote
 lcp-echo-interval 0
 lcp-echo-failure 99
-modem
+#modem
+nopcomp
+noaccomp
 noauth
 nomagic
 noccp
@@ -17,14 +19,17 @@ crtscts
 novj
 user "wap"
 password ""
+mru 1500
+mtu 1500
 
 usepeerdns
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
 
 #debug debug debug
 # does not exist in all pppd versions (osx)
 replacedefaultroute
-
-disconnect "/usr/sbin/chat -f conf/tmobile-chatoff"
 
 # Default (works for all but slower ?) wap.voicestreeam.com
 connect "/usr/sbin/chat -f conf/tmobile-chat"

@@ -112,10 +112,6 @@ class BBTether:
 			print ("Waiting few seconds, for mode to change")
 			time.sleep(1.5)
 			
-			# rescan after power / reset
-			#berry = bb_usb.find_berry(options.device, options.bus, False)
-			#berry.open_handle()
-
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
 				berry.readpt = int(options.drp, 16)

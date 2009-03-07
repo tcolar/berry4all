@@ -29,7 +29,7 @@ USBMon Doc:
 http://www.mjmwired.net/kernel/Documentation/usb/usbmon.txt
 '''
 
-import sys
+from optparse import OptionParser
 import re
 import string
 
@@ -64,6 +64,13 @@ ep_styles={	0: "color:#6d9c08;font-weight:bold",
 
 }
 
+def parse_cmd():
+	usage = usage = "usage: %prog usbmon_log_file [options] > output_file.html\n"
+	parser = OptionParser(usage)
+	parser.add_option("-b", "--basic", action="store_true", dest="basic", help="Dump less data, so it can be 'diffed' more easily")
+	parser.add_option("-d", "--data", action="store_true", dest="data", help="Dump data packets only (no control/empty packets)")
+	return parser.parse_args()
+
 def hex_to_ascii(hex):
 	text=''
 	for i in range(len(hex)/2):
@@ -75,28 +82,37 @@ def hex_to_ascii(hex):
 	return text
 
 ###### MAIN ###########
-filein=sys.argv[1]
+(options, args)=parse_cmd()
+filein=args[0]
+basic=options.basic
+data_only=options.data
 file = open(filein,"r")
 lines = file.readlines()
 
 pattern = re.compile('(\S+)\s+(\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*)')
 
 timeref=0
-print "<html><body><h4>"
-print "<b>Time:</b> Time offset from first packet (MM:SS.mmmm)<br/>"
-print "<b>Type:</b> S: submission, C: control, E: Error<br/>"
-print "<b>Address:</b> Address (URB type and direction, Bus number, Device address, Endpoint nb)<br/>"
-print "&nbsp;&nbsp; - URB type and direction: <br/>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;Ci Co   Control input and output<br/>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;Zi Zo   Insochronous input and output<br/>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;Ii Io   Interrupt input and output<br/>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;Bi Bo   Bulk input and output<br/>"
-print "<b>Status:</b> Status Code returned<br/></h4>"
+if not basic:
+	print "<html><body><h4>"
+	print "<b>Time:</b> Time offset from first packet (MM:SS.mmmm)<br/>"
+	print "<b>Type:</b> S: submission, C: control, E: Error<br/>"
+	print "<b>Address:</b> Address (URB type and direction, Bus number, Device address, Endpoint nb)<br/>"
+	print "&nbsp;&nbsp; - URB type and direction: <br/>"
+	print "&nbsp;&nbsp;&nbsp;&nbsp;Ci Co   Control input and output<br/>"
+	print "&nbsp;&nbsp;&nbsp;&nbsp;Zi Zo   Insochronous input and output<br/>"
+	print "&nbsp;&nbsp;&nbsp;&nbsp;Ii Io   Interrupt input and output<br/>"
+	print "&nbsp;&nbsp;&nbsp;&nbsp;Bi Bo   Bulk input and output<br/>"
+	print "<b>Status:</b> Status Code returned<br/></h4>"
 print "<table border=1 style='font-size:14px'>"
-print "<tr><th>URB Tag</th><th>Time</th><th>Type</th><th>Address</th><th>Status</th><th>Length</th><th>Data</th></tr>"
+if not basic:
+	print "<tr><th>URB Tag</th><th>Time</th><th>Type</th><th>Address</th><th>Status</th><th>Length</th><th>Data</th></tr>"
+else:
+	print "<tr><th>Status</th><th>Length</th><th>Data</th></tr>"
+
 for line in lines:
 	m = pattern.match(line)
 	if m:
+		data=None
 		[urbtag,time,type,address,status,length,trail] = m.groups()
 		if timeref == 0:
 			timeref=string.atoi(time)
@@ -128,17 +144,22 @@ for line in lines:
 		epindex=address.rfind(":")+1
 		ep=address[epindex:]
 		address="<font style='"+address_styles[address[0:2]]+"'>"+address[0:2]+"</font>"+address[2:epindex]+"<font style='"+ep_styles[string.atoi(ep)%10]+"'>"+ep+"</font>"
-		
-		print "<tr>"
-		print "<td>"+urbtag+"</td>",
-		print "<td style='"+time_style+"'>"+nice_time+"</td>",
-		print "<td style='"+type_styles[type]+"'>"+type+"</td>",
-		print "<td>"+address+"</td>",
-		print "<td>"+status+"</td>",
-		print "<td>"+length+"</td>",
-		print "<td>"+trail+"</td>",
-		print "</tr>"
+
+		if not (data_only and data == None):
+			print "<tr>"
+			if not basic:
+				print "<td>"+urbtag+"</td>",
+				print "<td style='"+time_style+"'>"+nice_time+"</td>",
+				print "<td style='"+type_styles[type]+"'>"+type+"</td>",
+				print "<td>"+address+"</td>",
+			print "<td>"+status+"</td>",
+			print "<td>"+length+"</td>",
+			print "<td>"+trail+"</td>",
+			print "</tr>"
 	else:
-		print "<tr><td colspan=7>"+line+"</td></tr>"
+		if not basic:
+			print "<tr><td colspan=7>"+line+"</td></tr>"
+		else:
+			print "<tr><td colspan=3>"+line+"</td></tr>"
 
 print "</table></body></html>"
