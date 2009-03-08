@@ -8,6 +8,7 @@ tcolar AT colar d.o.t NET
 	Fixed read buffer sizes and timeouts values
 	Now seem to work good and not disconnect/hang anymore (tested >30mn)
 	Got speedtest.net to work fully (down and up), upload was failing before
+	Tested working on rogers(CA) by Max Taranukha
 
 0.2b: 3/4/2009
 	Should be able to do multiple sessions without need to reboot blackberry
