@@ -46,7 +46,7 @@ def is_supported_osx():
 	if not is_osx():
 		return False
 	rel=platform.release()
-	major=int(rel[0 : rel.indexOf(".")])
+	major=int(rel[0 : rel.find(".")])
 	return major > 7
 
 def restart_kextd():
