@@ -18,7 +18,8 @@ import usb
 
 NOTIFY_EVERY=100000
 BUF_SIZE=25000
-TIMEOUT=50
+# it appears that with timeout to low(50), usb read hangs at some point (libusb author recommands>100)
+TIMEOUT=250
 PPPD_COMMAND="pppd"
 MIN_PASSWD_TRIES=2
 MODEM_STOP = [0x1, 0x0 ,0x0, 0x0 ,0x0, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12]
@@ -29,6 +30,8 @@ MODEM_BYPASS_PCKT = [0x0, 0x0, 0x18, 0x0, 0x7, 0xff, 0x0, 0x9, 0x52, 0x49, 0x4d,
 # Packets ending by this are RIM control packets (! data)
 RIM_PACKET_TAIL=[0x78, 0x56, 0x34, 0x12]
 MTU=1500
+# we read this many bytes at a time max from usb, without limit it slows down downloads
+MAX_RD_SIZE=3000
 
 class BBModem:		
 	'''BlackBerry Modem class'''
@@ -43,20 +46,8 @@ class BBModem:
 		self.data_mode=False
 
 	def write(self, data, timeout=TIMEOUT):
-		print "data length: "+str(len(data))
-		for i in range(len(data)/MTU+1):
-			end=i*MTU+MTU;
-			if end > len(data):
-				end=len(data)
-			chunk=data[i*MTU:end]
-			#if self.data_mode and i>0:
-			#	print "Prepanding 0x7E to chunk"
-			#	chunk.insert(0,0x7E)
-			#if self.data_mode and i<len(data)/MTU:
-			#	print "Appending 0x7E to chunk"
-			#	chunk.append(0x7E)
-			print "Writing data Chunk "+str(i)+" size: "+str(len(chunk))
-			bb_usb.usb_write(self.device,self.device.modem_writept,chunk,timeout,"\tModem -> ")
+		bb_util.debug("Writing data size: "+str(len(data)))
+		bb_usb.usb_write(self.device,self.device.modem_writept,data,timeout,"\tModem -> ")
 		self.writ+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
@@ -65,7 +56,7 @@ class BBModem:
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
 		data=[]
 		datar=[1]
-		while len(datar) > 0:
+		while len(datar) > 0 and len(data)<MAX_RD_SIZE:
 			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
 			if len(datar) > 0:
 				data.extend(datar)
@@ -73,6 +64,8 @@ class BBModem:
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
+		if len(data)>0:
+			bb_util.debug("read: "+str(len(data)))
 		return data
 
 	def init(self):
@@ -180,7 +173,7 @@ class BBModem:
 						# doubling frame separators (0x7E)
 						# a single in between frames should work but does not always
 						if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
-							print "doubling 0x7E"
+							bb_util.debug("doubling 0x7E at: "+str(i))
 							newbytes.append(0x7E)
 							prev2=0x7E	
 						else:
@@ -210,14 +203,13 @@ class BBModem:
 			# Ending session (by opening different one, as seen in windows trace - odd)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0] + [0x71,0x67,0x7d,0x20,0x3c,0xcd,0x74,0x7d] + RIM_PACKET_TAIL
 			self.write(end_session_packet)
-			self.read()
 			# stop BB modem
 			self.write(MODEM_STOP)
 			# Ending the actual session (as traced on windows)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 			self.write(end_session_packet)
-			self.read()
 			#stopping modem read thread
+			print "Stopping modem thread"
 			bbThread.stop()
 		except Exception, error:
 			print "Failure during shutdown ",error

@@ -4,12 +4,18 @@ ABORT 'NO ANSWER'
 ABORT 'ERROR'
 SAY 'Starting GPRS connect script\n'
 
-'' AT&F
-OK ATZ
-OK ATI
-
-SAY 'Dialing...\n'
+""'AT'
+OK 'ATE0V1'
+OK 'AT'
 OK ATDT#777 
+ABORT 'NO CARRIER'
+OK 'ATS0=0'
+OK 'BBT_OS'
+OK 'AT'
+OK 'ATE0V1'
+OK ATDT#777 
+ABORT 'NO CARRIER'
+SAY 'Dialing...\n'
+OK 'ATD*99#'
 CONNECT
-# Without ~p it does NOT continue passed Connect !!
 ~p

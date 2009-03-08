@@ -20,6 +20,6 @@ OK 'ATE0V1'
 OK 'AT+CGDCONT=1,"IP","wap.voicestream.com"'
 ABORT 'NO CARRIER'
 SAY 'Dialing...\n'
-OK 'ATD*99**1#'
+OK 'ATD*99#'
 CONNECT
 ~p

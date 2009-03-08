@@ -8,7 +8,12 @@ ipcp-accept-local
 ipcp-accept-remote
 lcp-echo-interval 0
 lcp-echo-failure 999
-modem
+nopcomp
+noaccomp
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+novj
 noauth
 nomagic
 noccp
