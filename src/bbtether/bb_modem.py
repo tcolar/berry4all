@@ -49,12 +49,12 @@ class BBModem:
 			if end > len(data):
 				end=len(data)
 			chunk=data[i*MTU:end]
-			if self.data_mode and i>0:
-				print "Prepanding 0x7E to chunk"
-				chunk.insert(0,0x7E)
-			if self.data_mode and i<len(data)/MTU:
-				print "Appending 0x7E to chunk"
-				chunk.append(0x7E)
+			#if self.data_mode and i>0:
+			#	print "Prepanding 0x7E to chunk"
+			#	chunk.insert(0,0x7E)
+			#if self.data_mode and i<len(data)/MTU:
+			#	print "Appending 0x7E to chunk"
+			#	chunk.append(0x7E)
 			print "Writing data Chunk "+str(i)+" size: "+str(len(chunk))
 			bb_usb.usb_write(self.device,self.device.modem_writept,chunk,timeout,"\tModem -> ")
 		self.writ+=len(data)
@@ -149,46 +149,49 @@ class BBModem:
 		
 		try:
 			# Read from PTY and write to USB modem until ^C
+			
 			while(True):
+				prev2=0x7E #start with this, so first 0x7E not doubled
+				prev=0x00
 				data=os.read(master, BUF_SIZE)
 				# transform string from PTY into array of signed bytes
 				bytes=array.array("B",data)
-				if(len(bytes)>0):
-					# need 0x7E around all data frames
-					if (not self.data_mode) and len(bytes)>4 and bytes[0] == 0x7e :
-						bb_util.debug("GPRS fix: Started.")
-						self.data_mode=True
+				newbytes=[]
+				# need 0x7E around all data frames
+				if (not self.data_mode) and len(data)>0 and bytes[0] == 0x7e :
+					bb_util.debug("First PPP data packet")
+					self.data_mode=True
 
-					if self.data_mode:
-						if bytes[0] != 0x7E:
-							bb_util.debug("GPRS fix: Added 0x7E to Frame Start.")
-							bytes.insert(0,0x7E)
-						if bytes[len(bytes)-1] != 0x7E:
-							bb_util.debug("GPRS fix: Added 0x7E to Frame End.")
-							bytes.append(0x7E)
-					# end 0x7E fix
-
-					# check for special bbtether packet (BBT_xx.) where xx is the command
-					if not self.data_mode and len(bytes)>=6 and bb_util.is_same_tuple(bytes[0:4], [0x42,0x42,0x54,0x5F]): #BBT_
-						# On windows the session key was sent in the middle of chat script, so do the same here
-						if bytes[4] == 0x4F and bytes[5] == 0x53: # OS
-							print "Starting session"
-							session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-							self.write(session_packet)
-							self.read()
-						# return OK, so chat script can proceed to next step
-						os.write(master,"\nOK\n")
-					else:
-						# writing data
-						#print "Will write "+str(len(bytes))+" bytes"
-						if len(data) > 1500:
-							print "Too large packet to write: "+str(len(data))
-							#os._exit(0)
+				# check for special bbtether packet (BBT_xx.) where xx is the command
+				if not self.data_mode and len(bytes)>=6 and bb_util.is_same_tuple(bytes[0:4], [0x42,0x42,0x54,0x5F]): #BBT_
+					# On windows the session key was sent in the middle of chat script, so do the same here
+					if bytes[4] == 0x4F and bytes[5] == 0x53: # OS
+						print "Starting session"
+						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+						self.write(session_packet)
+						self.read()
+					# return OK, so chat script can proceed to next step
+					os.write(master,"\nOK\n")
+				
+				if not self.data_mode:
 						self.write(bytes)
+				else:											
+					for i in range(len(data)):
+						# doubling frame separators (0x7E)
+						# a single in between frames should work but does not always
+						if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
+							print "doubling 0x7E"
+							newbytes.append(0x7E)
+							prev2=0x7E	
+						else:
+							prev2=prev
+						prev=bytes[i]										
+						newbytes.append(bytes[i])
+					self.write(newbytes)
 
-					if not self.data_mode:
-						# in non-data mode (pppd init/chat), we went to send commands as "lines", so wait a bit
-						time.sleep(0.6)
+				if not self.data_mode:
+					# in non-data mode (pppd init/chat), we want to send commands as "lines", so wait a bit
+					time.sleep(0.6)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
