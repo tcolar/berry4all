@@ -4,20 +4,14 @@ ABORT 'NO ANSWER'
 ABORT 'ERROR'
 SAY 'Starting GPRS connect script\n'
 
-SAY 'Starting GPRS connect script\n'
+'' 'BBT_OS'
+'' 'ATZ'
+SAY 'Setting APN\n'
+OK 'AT+CGDCONT=1,"IP","wap.cingular"'
 
-""'AT'
-OK 'ATE0V1'
-OK 'AT'
-OK 'AT+CGDCONT=1,"IP","wap.cingular"'
-ABORT 'NO CARRIER'
-OK 'ATS0=0'
-OK 'BBT_OS'
-OK 'AT'
-OK 'ATE0V1'
-OK 'AT+CGDCONT=1,"IP","wap.cingular"'
 ABORT 'NO CARRIER'
 SAY 'Dialing...\n'
-OK 'ATD*99**1#'
+OK 'ATD*99#'
 CONNECT
+# Without ~p it does NOT continue passed Connect !!
 ~p

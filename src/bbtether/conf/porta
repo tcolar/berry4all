@@ -16,7 +16,7 @@ pap-restart 20
 lcp-restart 10
 nomagic
 noccp
-noauth
+#noauth
 crtscts
 usepeerdns
 novj

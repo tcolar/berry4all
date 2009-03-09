@@ -14,7 +14,7 @@ noaccomp
 pap-timeout 20
 pap-restart 20
 lcp-restart 10
-noauth
+#noauth
 crtscts
 nomagic
 noccp

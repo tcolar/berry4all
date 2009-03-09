@@ -11,7 +11,7 @@ lcp-echo-interval 0
 lcp-echo-failure 99
 nopcomp
 noaccomp
-noauth
+#noauth
 nomagic
 noccp
 crtscts
