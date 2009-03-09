@@ -12,6 +12,7 @@ import bb_usb
 import bb_util
 import os
 import random
+import string
 import subprocess
 import threading
 import usb
@@ -52,7 +53,26 @@ class BBModem:
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
-			
+
+	def read_line(self, master):
+		'''
+		Read byte by byte from pty until LF (0xA end of line)
+		'''
+		cpt=0
+		line=''
+		while True:
+			cpt=cpt+1
+			byte=os.read(master, 1)
+			if len(byte) > 0:
+				line+=byte
+				if byte == "\r":
+					# end of line
+					break
+			if cpt>200:
+				print "Could not find end of line (breaking): "+line
+				break
+		return line
+
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
 		data=[]
 		datar=[1]
@@ -141,34 +161,39 @@ class BBModem:
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
 		
 		try:
-			# Read from PTY and write to USB modem until ^C
-			
+			# Read from PTY and write to USB modem until ^C			
+			prev2=0x7E #start with this, so first 0x7E not doubled
+			prev=0x00
 			while(True):
-				prev2=0x7E #start with this, so first 0x7E not doubled
-				prev=0x00
-				data=os.read(master, BUF_SIZE)
-				# transform string from PTY into array of signed bytes
-				bytes=array.array("B",data)
-				newbytes=[]
-				# need 0x7E around all data frames
-				if (not self.data_mode) and len(data)>0 and bytes[0] == 0x7e :
-					bb_util.debug("First PPP data packet")
-					self.data_mode=True
+				if not self.data_mode:
+					# chat script commands
+					line=self.read_line(master)
+					print "Chat line: "+line
+					if line.startswith('~p'):
+						# ~p is last item in chat script,after that it's data
+						bb_util.debug("Starting Data Mode.")
+						self.data_mode=True
 
-				# check for special bbtether packet (BBT_xx.) where xx is the command
-				if not self.data_mode and len(bytes)>=6 and bb_util.is_same_tuple(bytes[0:4], [0x42,0x42,0x54,0x5F]): #BBT_
-					# On windows the session key was sent in the middle of chat script, so do the same here
-					if bytes[4] == 0x4F and bytes[5] == 0x53: # OS
+					# look for special bbtether packet
+					if line.startswith('BBT_OS'): #BBT_
 						print "Starting session"
 						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 						self.write(session_packet)
 						self.read()
-					# return OK, so chat script can proceed to next step
-					os.write(master,"\nOK\n")
-				
-				if not self.data_mode:
+						# return OK, so chat script can proceed to next step
+						os.write(master,"\nOK\n")
+					else:
+					# otherwise just pass the data through
+						bytes=array.array("B",line)
 						self.write(bytes)
-				else:											
+
+				else:
+					# modem PPP data
+					data=os.read(master, BUF_SIZE)
+					# transform string from PTY into array of signed bytes
+					bytes=array.array("B",data)
+					newbytes=[]
+					# need 0x7E around all data frames
 					for i in range(len(data)):
 						# doubling frame separators (0x7E)
 						# a single in between frames should work but does not always
@@ -182,9 +207,6 @@ class BBModem:
 						newbytes.append(bytes[i])
 					self.write(newbytes)
 
-				if not self.data_mode:
-					# in non-data mode (pppd init/chat), we want to send commands as "lines", so wait a bit
-					time.sleep(0.6)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"

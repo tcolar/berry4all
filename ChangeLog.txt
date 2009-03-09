@@ -2,7 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.2d: 3/9/2009
+0.2e: 3/9/2009
+	Sending chat lines as complete lines
+	More debug output of chat negotiation
+
+0.2d: 3/8/2009
 	Fixed some ppp scripts again (simpified)
 	First version to work on Mac OSX (need to document)
 
