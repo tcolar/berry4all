@@ -12,7 +12,6 @@ import bb_usb
 import bb_util
 import os
 import random
-import string
 import subprocess
 import threading
 import usb
@@ -83,7 +82,13 @@ class BBModem:
 		while len(datar) > 0 and (max==-1 or len(data) < max):
 			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
 			if len(datar) > 0:
-				data.extend(datar)
+				# rim packet only in m!data_mode ??
+				if (not self.data_mode) and bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
+					# ignore BB protocol answers
+					bb_util.debug("Skipping RIM packet ")
+				else:
+					data.extend(datar)
+
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
@@ -264,22 +269,13 @@ class BBModemThread( threading.Thread ):
 		while( not self.done):
 			try:
 				try:
-					# Read from USB modem and write to PTY
-					if not self.modem.data_mode:
-						# we want complete chat requests (as one piece)
-						bytes=self.modem.read_all()
-					else:
-						# read whatever data is available
-						bytes=self.modem.read()
+					# read whatever data is available
+					bytes=self.modem.read()
+						
 					if(len(bytes)>0):
-						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
-							# Those are RIM control packet, not data. So not writing them back to PTY							
-							bb_util.debug("Skipping RIM packet")
-							# what if it's just data that ends ,like rim packet ????
-						else:
-							data=array.array("B",bytes)
-							#print "Read  "+str(len(bytes))+" bytes"
-							os.write(self.master,data.tostring())
+						data=array.array("B",bytes)
+						bb_util.debug("Read  "+str(len(bytes))+" bytes")
+						os.write(self.master,data.tostring())
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?
 					if error.message != "No error":
