@@ -192,7 +192,7 @@ class BBModem:
 						bb_util.debug("Starting Data Mode.")
 						self.data_mode=True
 
-				# otherwise just pass the data through
+					# otherwise just pass the data through
 					bytes=array.array("B",line)
 					self.write(bytes)
 
@@ -205,7 +205,9 @@ class BBModem:
 					# need 0x7E around all data frames
 					for i in range(len(data)):
 						# doubling frame separators (0x7E)
-						# a single in between frames should work but does not always
+						# a single in between frames should work(PPP spec) but does not always
+						# with some providers / bb, so doubling them
+						# http://www.tcpipguide.com/free/t_PPPGeneralFrameFormat.htm
 						if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
 							bb_util.debug("doubling 0x7E at: "+str(i))
 							newbytes.append(0x7E)

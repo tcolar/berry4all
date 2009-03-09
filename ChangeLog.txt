@@ -3,7 +3,8 @@ Thibaut Colar
 tcolar AT colar d.o.t NET
 
 0.2e: 3/9/2008
-	Chnage so that chat command annswers are read fully as one (! data_mode)
+	Change so that chat command annswers are read fully as one (! data_mode)
+	Fix, so that device RIM packets sent during chat negotiation do not break ppp (ignored)
 
 0.2f: 3/9/2008
 	Removed the BBT_OS stuff from chat scripts as it seem to cause problems with some pppd
