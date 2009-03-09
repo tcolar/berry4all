@@ -8,15 +8,8 @@ ABORT RINGING
 
 SAY 'Starting GPRS connect script\n'
 
-""'AT'
-OK 'ATE0V1'
-OK 'AT'
-OK 'AT+CGDCONT=1,"IP","wap.voicestream.com"'
-ABORT 'NO CARRIER'
-OK 'ATS0=0'
-OK 'BBT_OS'
-OK 'AT'
-OK 'ATE0V1'
+'' 'BBT_OS'
+'' 'ATZ'
 OK 'AT+CGDCONT=1,"IP","wap.voicestream.com"'
 ABORT 'NO CARRIER'
 SAY 'Dialing...\n'
