@@ -61,6 +61,7 @@ class BBModem:
 		cpt=0
 		line=''
 		while True:
+			#bb_util.debug("continuing line "+line)
 			cpt=cpt+1
 			byte=os.read(master, 1)
 			if len(byte) > 0:
@@ -73,10 +74,13 @@ class BBModem:
 				break
 		return line
 
-	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
+	def read_all(self, size=BUF_SIZE,timeout=TIMEOUT):
+		return self.read(size, timeout, -1)
+
+	def read(self, size=BUF_SIZE,timeout=TIMEOUT,max=MAX_RD_SIZE):
 		data=[]
 		datar=[1]
-		while len(datar) > 0 and len(data)<MAX_RD_SIZE:
+		while len(datar) > 0 and (max==-1 or len(data) < max):
 			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
 			if len(datar) > 0:
 				data.extend(datar)
@@ -261,7 +265,12 @@ class BBModemThread( threading.Thread ):
 			try:
 				try:
 					# Read from USB modem and write to PTY
-					bytes=self.modem.read()
+					if not self.modem.data_mode:
+						# we want complete chat requests (as one piece)
+						bytes=self.modem.read_all()
+					else:
+						# read whatever data is available
+						bytes=self.modem.read()
 					if(len(bytes)>0):
 						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# Those are RIM control packet, not data. So not writing them back to PTY							
