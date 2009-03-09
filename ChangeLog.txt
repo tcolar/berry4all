@@ -3,6 +3,7 @@ Thibaut Colar
 tcolar AT colar d.o.t NET
 
 0.2e: 3/9/2009
+	Fixed chat script 'BBT_OS' issue (was not interpreted right)
 	Sending chat lines as complete lines
 	More debug output of chat negotiation
 
