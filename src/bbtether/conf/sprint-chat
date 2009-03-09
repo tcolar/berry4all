@@ -7,7 +7,7 @@ SAY 'Starting GPRS connect script\n'
 '' AT&F
 OK ATZ
 OK ATI
-'BBT_OS'
+OK 'BBT_OS'
 OK ATDT#777 
 CONNECT
 # Without ~p it does NOT continue passed Connect !!
