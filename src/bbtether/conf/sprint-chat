@@ -4,7 +4,6 @@ ABORT 'NO ANSWER'
 ABORT 'ERROR'
 SAY 'Starting GPRS connect script\n'
 
-'' BBT_OS
 '' AT&F
 OK ATZ
 OK ATI

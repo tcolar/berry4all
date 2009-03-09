@@ -146,7 +146,12 @@ class BBModem:
 		bbThread.start()
 		
 		print "Modem Started"
-		
+
+		print "Starting session"
+		session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+		self.write(session_packet)
+		self.read()
+
 		if(not pppConfig):
 			print "No ppp requested, you can now start pppd manually."
 		else:
@@ -174,18 +179,9 @@ class BBModem:
 						bb_util.debug("Starting Data Mode.")
 						self.data_mode=True
 
-					# look for special bbtether packet
-					if line.startswith('BBT_OS'): #BBT_
-						print "Starting session"
-						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-						self.write(session_packet)
-						self.read()
-						# return OK, so chat script can proceed to next step
-						os.write(master,"\nOK\n")
-					else:
-					# otherwise just pass the data through
-						bytes=array.array("B",line)
-						self.write(bytes)
+				# otherwise just pass the data through
+					bytes=array.array("B",line)
+					self.write(bytes)
 
 				else:
 					# modem PPP data

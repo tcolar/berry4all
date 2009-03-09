@@ -1,3 +1,59 @@
+        // check for 02 00 00 00 SS SS SS SS RR 00 00 00 0a 00 00 00 PP PP PP PP PP 00 00 00 78 56 34 12
+249         if( data.GetSize() >= 9 && data.GetData()[0] == 0x02  &&
+250             memcmp(data.GetData() + data.GetSize() - 4, special_flag, sizeof(special_flag))== 0 ) {
+251                 // Got a password request packet
+252                 ddout("IPModem: Password request packet:\n" << data);
+253
+254                 // Check how many retries are left
+255                 if( data.GetData()[8] < BARRY_MIN_PASSWORD_TRIES ) {
+256                         throw BadPassword("Fewer than " BARRY_MIN_PASSWORD_TRIES_ASC " password tries remaining in device. Refusing to proceed, to avoid device zapping itself.  Use a Windows client, or re-cradle the device.",
+257                                 data.GetData()[8],
+258                                 true);
+259                 }
+260                 memcpy(&seed, data.GetData() + 4, sizeof(seed));
+261                 // Send password
+262                 if( !SendPassword(password, seed) ) {
+263                         throw Barry::Error("IpModem: Error sending password.");
+264                 }
+265
+266                 // Re-send "start" packet
+267                 ddout("IPModem: Re-sending Start Response:\n");
+268                 m_dev.BulkWrite(write_ep, pw_start, sizeof(pw_start));
+269                 m_dev.BulkRead(read_ep, data);
+270                 ddout("IPModem: Start Response Packet:\n" << data);
+271         }
+272
+273         // send packet with the session_key
+274         unsigned char response_header[] = { 0x00, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xc2, 1, 0 };
+275         memcpy(&response[0], response_header, sizeof(response_header));
+276         memcpy(&response[16], m_session_key,  sizeof(m_session_key));
+277         memcpy(&response[24], special_flag, sizeof(special_flag));
+278         ddout("IPModem: Sending Session key:\n");
+279         m_dev.BulkWrite(write_ep, response, sizeof(response));
+280         if( data.GetSize() >= 16 ) {
+281                 switch(data.GetData()[0])
+282                 {
+283                 case 0x00:      // Null packet
+284                         break;
+285
+286                 case 0x02:      // password seed received
+287                         memcpy(&seed, data.GetData() + 4, sizeof(uint32_t));
+288                         if( !SendPassword( password, seed ) ) {
+289                                 throw Barry::Error("IpModem: Error sending password.");
+290                         }
+291                         break;
+292                 case 0x04:      // command accepted
+293                         break;
+294
+295                 default:        // ???
+296                         ddout("IPModem: Unknown response.\n");
+297                         break;
+298                 }
+299         }
+300 
+
+
+
 bool IpModem::SendPassword( const char *password, uint32_t seed )
 64 {
 65         if( !password || strlen(password) == 0  ) {

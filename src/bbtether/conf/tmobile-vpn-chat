@@ -4,7 +4,6 @@ ABORT 'NO ANSWER'
 ABORT 'ERROR'
 SAY 'Starting GPRS connect script\n'
 
-'' 'BBT_OS'
 '' 'ATZ'
 OK 'AT+CGDCONT=1,"IP","internet3.voicestream.com"'
 ABORT 'NO CARRIER'

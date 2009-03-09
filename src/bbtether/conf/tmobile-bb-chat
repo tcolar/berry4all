@@ -8,7 +8,6 @@ ABORT RINGING
 
 SAY 'Starting GPRS connect script\n'
 
-'' 'BBT_OS'
 '' 'ATZ'
 OK 'AT+CGDCONT=1,"IP","blackberry.net"'
 ABORT 'NO CARRIER'
