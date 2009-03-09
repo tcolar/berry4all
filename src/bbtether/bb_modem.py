@@ -73,10 +73,11 @@ class BBModem:
 				break
 		return line
 
-	def read_all(self, size=BUF_SIZE,timeout=TIMEOUT):
-		return self.read(size, timeout, -1)
-
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT,max=MAX_RD_SIZE):
+		'''
+		read data until none avail or max reached
+		max=max bytes to read: -1 = no limit
+		'''
 		data=[]
 		datar=[1]
 		while len(datar) > 0 and (max==-1 or len(data) < max):
