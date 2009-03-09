@@ -4,7 +4,7 @@
 See: http://wiki.colar.net/bbtether for more infos.
 
 Script to use a USB BlackBerry device as a modem (Tethering), and enable charging.
-On My Pearl (Edge) in Seattle, I get speeds of 8K/s-29K/s, avering about 14K/s.
+On My Pearl (Edge) in Seattle, I get speeds of 100kbps-220kbps, avering about 140kbps.
 
 This script requires python, pppd, libusb and the python usb module installed:
 	You probably already have python, pppd and libusb installed
