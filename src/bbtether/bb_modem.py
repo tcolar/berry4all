@@ -82,11 +82,14 @@ class BBModem:
 		while len(datar) > 0 and (max==-1 or len(data) < max):
 			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
 			if len(datar) > 0:
-				# rim packet only in m!data_mode ??
+				# rim packet only in ! data_mode ??
 				if (not self.data_mode) and bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
 					# ignore BB protocol answers
 					bb_util.debug("Skipping RIM packet ")
 				else:
+					# TODO: remove this if founf not to cause issues.
+					if bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
+						print "Info: Found RIM packet look alike in data (let me know if this cause failures)"
 					data.extend(datar)
 
 		self.red+=len(data)
