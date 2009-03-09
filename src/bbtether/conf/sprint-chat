@@ -1,7 +1,6 @@
 "" "AT"
 OK "ATZ"
 OK "ATE0V1"
-OK "AT+IFC=2,2"
 OK "ATDT#777"
 # Without ~p it does NOT continue passed Connect !!
 ~p
