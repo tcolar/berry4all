@@ -2,7 +2,12 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.2d: 3/9/2009
+0.2e: 3/9/2009
+	Fixed pp synchronization issues
+	Needed to read line one at a time
+	Should prevent random ppp chat failures
+
+0.2d: 3/8/2009
 	Fixed some ppp scripts again (simpified)
 	First version to work on Mac OSX (need to document)
 

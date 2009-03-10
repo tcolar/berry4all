@@ -7,6 +7,7 @@ import array
 import pty
 import signal
 import time
+import fcntl
 
 import bb_usb
 import bb_util
@@ -104,11 +105,50 @@ class BBModem:
 		self.write(session_packet)
 		self.read()
 		print "session pack sent"
+	
+	def readline(self,fd, timeout=15000):
+		'''
+		Read a line until:
+		- no more data avail
+		- end of line found (\n or \rx or \r\n)
+		'''	
+		line=""
+		char=''
+		prev=0
+		elapsed=0
+		while(True):
+			try:
+				char=os.read(fd, 1)
+			except OSError:
+				if prev == 0xD:
+					line+=char
+					break
+				#not ready yet
+				time.sleep(.1)
+				elapsed+=100
+				if elapsed > timeout:
+					raise
+				continue
+			if prev == 0xD and ord(char) != 0xA:
+				os.lseek(fd,-1,1)
+				line+=char
+				break
+			if ord(char) == 0xA:
+				line+=char
+				break
+			else:
+				line+=char
+			prev=ord(char)
+		return line
 		
 	def start(self, pppConfig, pppdCommand):
 		'''Start the modem and keep going until ^C'''
 		#open modem PTY
 		(master,slave)=pty.openpty()
+		# make master non blocking
+		flag = fcntl.fcntl(master, fcntl.F_GETFL)
+		fcntl.fcntl(master, fcntl.F_SETFL, flag | os.O_NDELAY)
+		 
 		print "\nModem pty: ",os.ttyname(slave)
 				
 		print "Initializing Modem"
@@ -146,45 +186,47 @@ class BBModem:
 			while(True):
 				prev2=0x7E #start with this, so first 0x7E not doubled
 				prev=0x00
-				data=os.read(master, BUF_SIZE)
-				# transform string from PTY into array of signed bytes
-				bytes=array.array("B",data)
-				newbytes=[]
-				# need 0x7E around all data frames
-				if (not self.data_mode) and len(data)>0 and bytes[0] == 0x7e :
-					bb_util.debug("First PPP data packet")
-					self.data_mode=True
+				
+				if not self.data_mode:
+					data=self.readline(master)
+					print "PPP data: "+data
+					# check for ~p (data mode start)
+					bytes=array.array("B",data)
+					if len(data)>0 and data.startswith("~p") :
+						bb_util.debug("Entering data mode")
+						self.data_mode=True
 
-				# check for special bbtether packet (BBT_xx.) where xx is the command
-				if not self.data_mode and len(bytes)>=6 and bb_util.is_same_tuple(bytes[0:4], [0x42,0x42,0x54,0x5F]): #BBT_
-					# On windows the session key was sent in the middle of chat script, so do the same here
-					if bytes[4] == 0x4F and bytes[5] == 0x53: # OS
+					# check for special bbtether packet (BBT_xx.) where xx is the command
+					if data.startswith("BBT_OS"):
 						print "Starting session"
 						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 						self.write(session_packet)
-						self.read()
-					# return OK, so chat script can proceed to next step
-					os.write(master,"\nOK\n")
-				
-				if not self.data_mode:
+						# return OK, so chat script can proceed to next step
+						os.write(master,"\nOK\n")
+					else:
 						self.write(bytes)
-				else:											
-					for i in range(len(data)):
-						# doubling frame separators (0x7E)
-						# a single in between frames should work but does not always
-						if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
-							bb_util.debug("doubling 0x7E at: "+str(i))
-							newbytes.append(0x7E)
-							prev2=0x7E	
-						else:
-							prev2=prev
-						prev=bytes[i]										
-						newbytes.append(bytes[i])
-					self.write(newbytes)
-
-				if not self.data_mode:
-					# in non-data mode (pppd init/chat), we want to send commands as "lines", so wait a bit
-					time.sleep(0.6)
+				else:
+					data=[]
+					try:											
+						data=os.read(master, BUF_SIZE)
+					except OSError:
+						# wait a tiny bit (10 ms)
+						time.sleep(.01)
+					if len(data) > 0:
+						bytes=array.array("B",data)
+						newbytes=[]
+						for i in range(len(data)):
+							# doubling frame separators (0x7E)
+							# a single in between frames should work but does not always
+							if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
+								bb_util.debug("doubling 0x7E at: "+str(i))
+								newbytes.append(0x7E)
+								prev2=0x7E	
+							else:
+								prev2=prev
+							prev=bytes[i]										
+							newbytes.append(bytes[i])
+						self.write(newbytes)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
@@ -194,7 +236,7 @@ class BBModem:
 			self.data_mode=False
 			#stop PPP
 			self.write([0x41,0x54,0x48,0x0d]) # send ATH (modem hangup)
-			self.read()
+			self.readline()
 			# send SIGHUP(1) to pppd (causes ppd to hangup and terminate)
 			os.kill(process.pid,1)
 			# wait for pppd to be done
