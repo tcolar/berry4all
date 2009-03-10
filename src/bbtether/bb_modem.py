@@ -183,9 +183,9 @@ class BBModem:
 		try:
 			# Read from PTY and write to USB modem until ^C
 			
+			prev2=0x7E #start with this, so first 0x7E not doubled
+			prev=0x00
 			while(True):
-				prev2=0x7E #start with this, so first 0x7E not doubled
-				prev=0x00
 				
 				if not self.data_mode:
 					data=self.readline(master)
