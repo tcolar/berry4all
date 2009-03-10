@@ -45,6 +45,7 @@ class BBModem:
 	def __init__(self, dev):
 		self.device=dev
 		self.data_mode=False
+		self.line_leftover=""
 
 	def write(self, data, timeout=TIMEOUT):
 		bb_util.debug("Writing data size: "+str(len(data)))
@@ -112,16 +113,18 @@ class BBModem:
 		- no more data avail
 		- end of line found (\n or \rx or \r\n)
 		'''	
-		line=""
 		char=''
 		prev=0
 		elapsed=0
+		line=self.line_leftover
 		while(True):
 			try:
 				char=os.read(fd, 1)
 			except OSError:
+				# if we have nothing after a \r, we are done
 				if prev == 0xD:
 					line+=char
+					self.line_leftover=""
 					break
 				#not ready yet
 				time.sleep(.1)
@@ -131,18 +134,16 @@ class BBModem:
 					raise
 				continue
 			if prev == 0xD and ord(char) != 0xA:
-				try:
-					# this might not work
-					os.lseek(fd,-1,1)
-				except:
-					print "Failed finding end of line(seek error) for: "+line
-					#raise
+				# we read one char too many, saving it in leftover and not adding it to line
+				self.line_leftover=char
 				break
 			if ord(char) == 0xA:
 				line+=char
+				self.line_leftover=""
 				break
 			else:
 				line+=char
+				self.line_leftover=""
 			prev=ord(char)
 		return line
 		
