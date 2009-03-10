@@ -112,6 +112,7 @@ class BBModem:
 		Read a line until:
 		- no more data avail
 		- end of line found (\n or \rx or \r\n)
+		Apparently some ppd send 0xD,0xA and other only 0xD
 		'''	
 		char=''
 		prev=0
