@@ -2,20 +2,7 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.2e: 3/9/2008
-	Change so that chat command annswers are read fully as one (! data_mode)
-	Fix, so that device RIM packets sent during chat negotiation do not break ppp (ignored)
-
-0.2f: 3/9/2008
-	Removed the BBT_OS stuff from chat scripts as it seem to cause problems with some pppd
-	Opening BB session before starting pppd now.
-
-0.2e: 3/9/2009
-	Fixed chat script 'BBT_OS' issue (was not interpreted right)
-	Sending chat lines as complete lines
-	More debug output of chat negotiation
-
-0.2d: 3/8/2009
+0.2d: 3/9/2009
 	Fixed some ppp scripts again (simpified)
 	First version to work on Mac OSX (need to document)
 
