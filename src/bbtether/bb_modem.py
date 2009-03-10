@@ -135,7 +135,7 @@ class BBModem:
 				continue
 			if prev == 0xD and ord(char) != 0xA:
 				# we read one char too many, saving it in leftover and not adding it to line
-				self.line_leftover=char
+				self.line_leftover=""+char
 				break
 			if ord(char) == 0xA:
 				line+=char
