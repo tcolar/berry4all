@@ -127,10 +127,16 @@ class BBModem:
 				time.sleep(.1)
 				elapsed+=100
 				if elapsed > timeout:
+					print "Failed finding end of line(timeout) for: "+line
 					raise
 				continue
 			if prev == 0xD and ord(char) != 0xA:
-				os.lseek(fd,-1,1)
+				try:
+					# this might not work
+					os.lseek(fd,-1,1)
+				except:
+					print "Failed finding end of line(seek error) for: "+line
+					raise
 				line+=char
 				break
 			if ord(char) == 0xA:
