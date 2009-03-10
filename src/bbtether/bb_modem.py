@@ -236,7 +236,7 @@ class BBModem:
 			self.data_mode=False
 			#stop PPP
 			self.write([0x41,0x54,0x48,0x0d]) # send ATH (modem hangup)
-			self.readline()
+			self.readline(master)
 			# send SIGHUP(1) to pppd (causes ppd to hangup and terminate)
 			os.kill(process.pid,1)
 			# wait for pppd to be done
