@@ -26,7 +26,7 @@ usepeerdns
 
 #debug debug debug
 # does not exist in all pppd versions (osx)
-replacedefaultroute
+#replacedefaultroute
 
 # Default (works for all but slower ?) wap.voicestreeam.com
 connect "/usr/sbin/chat -f conf/tmobile-chat"
