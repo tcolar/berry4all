@@ -31,6 +31,7 @@ def debug_bytes(tuple, msg):
 			debug(msg + "[" + hexa + "] [" + text + "]")
 			text = ""
 			hexa = ""
+	debug("")
 
 def starts_with_tuple(tuple1, tuple2):
 	if tuple1 == None and tuple2 == None:

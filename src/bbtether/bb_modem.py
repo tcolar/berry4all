@@ -53,26 +53,6 @@ class BBModem:
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
 
-	def read_line(self, master):
-		'''
-		Read byte by byte from pty until LF (0xA end of line)
-		'''
-		cpt=0
-		line=''
-		while True:
-			#bb_util.debug("continuing line "+line)
-			cpt=cpt+1
-			byte=os.read(master, 1)
-			if len(byte) > 0:
-				line+=byte
-				if byte == "\r":
-					# end of line
-					break
-			if cpt>200:
-				print "Could not find end of line (breaking): "+line
-				break
-		return line
-
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT,max=MAX_RD_SIZE):
 		'''
 		read data until none avail or max reached
@@ -80,25 +60,33 @@ class BBModem:
 		'''
 		data=[]
 		datar=[1]
-		while len(datar) > 0 and (max==-1 or len(data) < max):
-			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
-			if len(datar) > 0:
-				# rim packet only in ! data_mode ??
-				if (not self.data_mode) and bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
+		if not self.data_mode:
+			while(True):
+				#print "read>"
+				data=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+				#print "<read"
+				if bb_util.end_with_tuple(data,RIM_PACKET_TAIL):
 					# ignore BB protocol answers
 					bb_util.debug("Skipping RIM packet ")
 				else:
-					# TODO: remove this if founf not to cause issues.
-					if bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
-						print "Info: Found RIM packet look alike in data (let me know if this cause failures)"
-					data.extend(datar)
+					break;
+		else:
+			while len(datar) > 0 and (max==-1 or len(data) < max):
+				#print "dread>"
+				datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+				#print "dread<"
+				if len(datar) > 0:
+					# TODO: remove this if found not to cause issues.
+					if datar[0]!=0xFE and bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
+						print "Info: Found RIM packet look alike in data, skipping (let me know if this cause failures)"
+					else:
+						data.extend(datar)
 
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
-		if len(data)>0:
-			bb_util.debug("read: "+str(len(data)))
+		
 		return data
 
 	def init(self):
@@ -185,16 +173,16 @@ class BBModem:
 			while(True):
 				if not self.data_mode:
 					# chat script commands
-					line=self.read_line(master)
-					print "Chat line: "+line
-					if line.startswith('~p'):
-						# ~p is last item in chat script,after that it's data
-						bb_util.debug("Starting Data Mode.")
-						self.data_mode=True
+					data=os.read(master,BUF_SIZE)
+					#print "Chat line: "+data
 
-					# otherwise just pass the data through
-					bytes=array.array("B",line)
+					bytes=array.array("B",data)
 					self.write(bytes)
+
+					if data.find("~p") != -1 :
+						# ~p is last item in chat script,after that it's data
+						print "Starting Data Mode."
+						self.data_mode=True
 
 				else:
 					# modem PPP data
