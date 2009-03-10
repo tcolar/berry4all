@@ -52,41 +52,20 @@ class BBModem:
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
-
-	def read(self, size=BUF_SIZE,timeout=TIMEOUT,max=MAX_RD_SIZE):
-		'''
-		read data until none avail or max reached
-		max=max bytes to read: -1 = no limit
-		'''
+			
+	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
 		data=[]
 		datar=[1]
-		if not self.data_mode:
-			while(True):
-				#print "read>"
-				data=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
-				#print "<read"
-				if bb_util.end_with_tuple(data,RIM_PACKET_TAIL):
-					# ignore BB protocol answers
-					bb_util.debug("Skipping RIM packet ")
-				else:
-					break;
-		else:
-			while len(datar) > 0 and (max==-1 or len(data) < max):
-				#print "dread>"
-				datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
-				#print "dread<"
-				if len(datar) > 0:
-					# TODO: remove this if found not to cause issues.
-					if datar[0]!=0xFE and bb_util.end_with_tuple(datar,RIM_PACKET_TAIL):
-						print "Info: Found RIM packet look alike in data, skipping (let me know if this cause failures)"
-					else:
-						data.extend(datar)
-
+		while len(datar) > 0 and len(data)<MAX_RD_SIZE:
+			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+			if len(datar) > 0:
+				data.extend(datar)
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
 			self.lastcount=self.red+self.writ
-		
+		if len(data)>0:
+			bb_util.debug("read: "+str(len(data)))
 		return data
 
 	def init(self):
@@ -147,12 +126,7 @@ class BBModem:
 		bbThread.start()
 		
 		print "Modem Started"
-
-		print "Starting session"
-		session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
-		self.write(session_packet)
-		self.read()
-
+		
 		if(not pppConfig):
 			print "No ppp requested, you can now start pppd manually."
 		else:
@@ -167,35 +141,37 @@ class BBModem:
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
 		
 		try:
-			# Read from PTY and write to USB modem until ^C			
-			prev2=0x7E #start with this, so first 0x7E not doubled
-			prev=0x00
+			# Read from PTY and write to USB modem until ^C
+			
 			while(True):
+				prev2=0x7E #start with this, so first 0x7E not doubled
+				prev=0x00
+				data=os.read(master, BUF_SIZE)
+				# transform string from PTY into array of signed bytes
+				bytes=array.array("B",data)
+				newbytes=[]
+				# need 0x7E around all data frames
+				if (not self.data_mode) and len(data)>0 and bytes[0] == 0x7e :
+					bb_util.debug("First PPP data packet")
+					self.data_mode=True
+
+				# check for special bbtether packet (BBT_xx.) where xx is the command
+				if not self.data_mode and len(bytes)>=6 and bb_util.is_same_tuple(bytes[0:4], [0x42,0x42,0x54,0x5F]): #BBT_
+					# On windows the session key was sent in the middle of chat script, so do the same here
+					if bytes[4] == 0x4F and bytes[5] == 0x53: # OS
+						print "Starting session"
+						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
+						self.write(session_packet)
+						self.read()
+					# return OK, so chat script can proceed to next step
+					os.write(master,"\nOK\n")
+				
 				if not self.data_mode:
-					# chat script commands
-					data=os.read(master,BUF_SIZE)
-					#print "Chat line: "+data
-
-					bytes=array.array("B",data)
-					self.write(bytes)
-
-					if data.find("~p") != -1 :
-						# ~p is last item in chat script,after that it's data
-						print "Starting Data Mode."
-						self.data_mode=True
-
-				else:
-					# modem PPP data
-					data=os.read(master, BUF_SIZE)
-					# transform string from PTY into array of signed bytes
-					bytes=array.array("B",data)
-					newbytes=[]
-					# need 0x7E around all data frames
+						self.write(bytes)
+				else:											
 					for i in range(len(data)):
 						# doubling frame separators (0x7E)
-						# a single in between frames should work(PPP spec) but does not always
-						# with some providers / bb, so doubling them
-						# http://www.tcpipguide.com/free/t_PPPGeneralFrameFormat.htm
+						# a single in between frames should work but does not always
 						if prev2!=0x7E and prev==0x7E and bytes[i]!=0x7E:
 							bb_util.debug("doubling 0x7E at: "+str(i))
 							newbytes.append(0x7E)
@@ -206,6 +182,9 @@ class BBModem:
 						newbytes.append(bytes[i])
 					self.write(newbytes)
 
+				if not self.data_mode:
+					# in non-data mode (pppd init/chat), we want to send commands as "lines", so wait a bit
+					time.sleep(0.6)
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
@@ -263,13 +242,17 @@ class BBModemThread( threading.Thread ):
 		while( not self.done):
 			try:
 				try:
-					# read whatever data is available
+					# Read from USB modem and write to PTY
 					bytes=self.modem.read()
-						
 					if(len(bytes)>0):
-						data=array.array("B",bytes)
-						bb_util.debug("Read  "+str(len(bytes))+" bytes")
-						os.write(self.master,data.tostring())
+						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
+							# Those are RIM control packet, not data. So not writing them back to PTY							
+							bb_util.debug("Skipping RIM packet")
+							# what if it's just data that ends ,like rim packet ????
+						else:
+							data=array.array("B",bytes)
+							#print "Read  "+str(len(bytes))+" bytes"
+							os.write(self.master,data.tostring())
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?
 					if error.message != "No error":

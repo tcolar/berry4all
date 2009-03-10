@@ -8,6 +8,7 @@ ABORT RINGING
 
 SAY 'Starting GPRS connect script\n'
 
+'' 'BBT_OS'
 '' 'ATZ'
 OK 'AT+CGDCONT=1,"IP","wap.voicestream.com"'
 ABORT 'NO CARRIER'

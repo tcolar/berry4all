@@ -26,4 +26,4 @@ name wapuser
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/sprint-chat"
+connect "/usr/sbin/chat -v -V -f conf/sprint-chat"

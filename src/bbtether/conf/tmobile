@@ -19,7 +19,7 @@ pap-timeout 20
 pap-restart 20
 lcp-restart 10
 novj
-user "wap2"
+user "wap"
 password ""
 
 usepeerdns

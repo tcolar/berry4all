@@ -31,16 +31,6 @@ def debug_bytes(tuple, msg):
 			debug(msg + "[" + hexa + "] [" + text + "]")
 			text = ""
 			hexa = ""
-	debug("")
-
-def starts_with_tuple(tuple1, tuple2):
-	if tuple1 == None and tuple2 == None:
-		return True
-	if (tuple1 == None and tuple2 != None) or (tuple1 != None and tuple2 == None):
-		return False
-	if len(tuple1) < len(tuple2):
-		return False
-	return is_same_tuple(tuple1[0:len(tuple1)-len(tuple2)], tuple2)
 
 def end_with_tuple(tuple1, tuple2):
 	'''check if tuple1 ends with tuple2'''

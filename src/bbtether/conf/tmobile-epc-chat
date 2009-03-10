@@ -4,6 +4,7 @@ ABORT 'NO ANSWER'
 ABORT 'ERROR'
 SAY 'Starting GPRS connect script\n'
 
+'' 'BBT_OS'
 '' 'ATZ'
 OK 'AT+CGDCONT=1,"IP","epc.t-mobile.com"'
 ABORT 'NO CARRIER'
