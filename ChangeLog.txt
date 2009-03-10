@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2f: 3/10/2009
+	Added password protected device support (tested on Pearl)
+	Added (to be tested) support for ppp that sends end of line as 0xD rather than 0xD,0xA
+
 0.2e: 3/9/2009
 	Fixed pp synchronization issues
 	Needed to read line one at a time

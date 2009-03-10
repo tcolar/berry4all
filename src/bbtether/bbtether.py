@@ -28,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.2e"
+VERSION = "0.2f"
 
 ''' Main Class '''
 class BBTether:
@@ -36,6 +36,7 @@ class BBTether:
 	def parse_cmd(self):
 		usage = usage = "usage: %prog [options] [pppscript]\n	If [pppscript] is there (ppp script in conf/ folder, ex: tmobile) then will start modem and connect using that ppp script. Otherwise just opens the modem and you will have to start pppd manually."
 		parser = OptionParser(usage)
+		parser.add_option("-P", "--password", dest="password", help="Blackberry password (if passewrd protected) ex: -P abc123")
 		parser.add_option("-l", "--list", action="store_true", dest="listonly", help="Only detect and list Device, do nothing more")
 		parser.add_option("-p", "--pppd", dest="pppd", help="Path To pppd binary (default: /usr/sbin/pppd)")
 		parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose: Show I/O data and other infos")
@@ -139,6 +140,9 @@ class BBTether:
 
 				# Modem use does not require to be in desktop mode, so don't do it.
 				modem = bb_modem.BBModem(berry)
+				
+				if options.password:
+					modem.set_password(options.password)
 				
 				pppdCommand = "/usr/sbin/pppd";
 				if options.pppd:

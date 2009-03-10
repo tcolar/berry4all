@@ -4,15 +4,16 @@ Thibaut Colar
 '''
 
 import array
+import fcntl
 import pty
 import signal
 import time
-import fcntl
 
 import bb_usb
 import bb_util
 import os
 import random
+import sha
 import subprocess
 import threading
 import usb
@@ -46,6 +47,7 @@ class BBModem:
 		self.device=dev
 		self.data_mode=False
 		self.line_leftover=""
+		self.password=""
 
 	def write(self, data, timeout=TIMEOUT):
 		bb_util.debug("Writing data size: "+str(len(data)))
@@ -70,6 +72,9 @@ class BBModem:
 			bb_util.debug("read: "+str(len(data)))
 		return data
 
+	def set_password(self,password):
+		self.password=password
+		
 	def init(self):
 		'''Initialize the modem and start the RIM session'''
 		# create a (semi-random) session key
@@ -88,16 +93,18 @@ class BBModem:
 		answer=self.read()
 		# check for password request (newer devices)
 		if len(answer)>0 and answer[0]==0x2 and bb_util.end_with_tuple(answer,RIM_PACKET_TAIL):
-			#triesLeft=answer[8]
-			#seed=answer[4:8]
-			#print "Got password Request from Device (",triesLeft," tries left)"
-			#triesLeft=answer[8]
-			#if triesLeft <= MIN_PASSWD_TRIES:
-			#	print "The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries.";
-			#	raise Exception
-			#TODO
-			print "Password protected Device not supported yet !"
-			raise Exception		
+			triesLeft=answer[8]
+			seed=answer[4:8]
+			
+			print "Got password Request from Device (",triesLeft," tries left)"
+			triesLeft=answer[8]
+			if triesLeft <= MIN_PASSWD_TRIES:
+				print "The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries.";
+				raise Exception
+			if len(self.password) == 0:
+				print "No password was provided to bbtether, can't continue (use -P <password>).";
+				raise Exception
+			self.send_password(seed)
 		else:
 			print "No password requested."	
 
@@ -147,7 +154,7 @@ class BBModem:
 				self.line_leftover=""
 			prev=ord(char)
 		return line
-		
+
 	def start(self, pppConfig, pppdCommand):
 		'''Start the modem and keep going until ^C'''
 		#open modem PTY
@@ -273,7 +280,46 @@ class BBModem:
 		os.close(master)
 		os.close(slave)
 		# done
-					
+
+	def send_password(self, seed):
+		seed_bytes=array.array("B",seed)
+		digest=sha.new(self.password).digest()
+		digest_bytes=array.array("B",digest)
+		seed_bytes.extend(digest_bytes)
+		digest2=sha.new(seed_bytes.tostring()).digest()
+		digest_list=array.array("B",digest2).tolist()
+		response=[0x3, 0, 0, 0 ]+digest_list+RIM_PACKET_TAIL
+		bb_util.debug("Sending password digest: ")
+		#bb_util.debug(response)  # unsafe to dump ?
+		self.write(response)
+		time.sleep(.5)
+		answer=self.read();
+		# check answer
+		# Storm sends 2 lines - untested
+		if len(answer)>16 and answer[0] == 0:
+			print "Received [0x0...] line (storm ??) ... trying to read again."
+			time.sleep(.5)
+			answer=self.read();
+		# Normal answer
+		if len(answer)>8 and answer[0]==0x4:
+			new_seed=answer[4:8]
+			# incr. seed value - would that fail on differnet indian system ? (shouldn't)
+			seed[3]=seed[3]+1
+
+			# if seed is now 0(pearl) or old_seed+1(curve) then password was accepted
+			if bb_util.is_same_tuple(new_seed, [0,0,0,0]) or bb_util.is_same_tuple(new_seed, seed):
+				print "Password accepted"
+				# make session key from end of hash
+				self.session_key=array.array("B",digest[len(digest)-8:]).tolist()
+				bb_util.debug_bytes(self.session_key,"Computed session key: ")
+				# we are good, done!
+				return
+			else:
+				print "New seed value is invalid"
+
+		print "Passord was not accepted, cannot continue !"
+		os._exit(0)
+
 class BBModemThread( threading.Thread ):	
 	'''Thread that reads Modem data from BlackBerry USB'''
 
