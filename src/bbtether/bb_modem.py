@@ -136,8 +136,7 @@ class BBModem:
 					os.lseek(fd,-1,1)
 				except:
 					print "Failed finding end of line(seek error) for: "+line
-					raise
-				line+=char
+					#raise
 				break
 			if ord(char) == 0xA:
 				line+=char
