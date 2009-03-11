@@ -244,6 +244,8 @@ class BBModem:
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
+			print "** PLease wait for shutdown to complete (up to 30s)"
+			print "** Otherwise you might have to reboot your BB !"
 			
 		# Shutting down "gracefully"
 		try:
@@ -268,7 +270,7 @@ class BBModem:
 			print "Stopping modem thread"
 			bbThread.stop()
 		except Exception, error:
-			print "Failure during shutdown ",error
+			print "Failure during shutdown, might have to reboot BB manually",error
 		# stopping pppd
 		try:
 			# making sure ppp process is gone (only if something went wrong)
