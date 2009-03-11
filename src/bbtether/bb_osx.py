@@ -57,7 +57,7 @@ def restart_kextd():
 def install_kext():
     print('Installing cutom Kernel Ext. File')
     shutil.copy(KEXT_FILE, "/System/Library/Extensions")
-    subprocess.call(['chmod','-R','root:wheel',KEXT_FILE])
+    subprocess.call(['chown','root:wheel',KEXT_FILE])
     restart_kextd()
 
 def uninstall_kextd():
