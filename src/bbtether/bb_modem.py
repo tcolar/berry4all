@@ -244,8 +244,10 @@ class BBModem:
 				
 		except KeyboardInterrupt:
 			print "\nShutting down on ^c"
-			print "** PLease wait for shutdown to complete (up to 30s)"
-			print "** Otherwise you might have to reboot your BB !"
+			print "******************************************************"
+			print "** Please WAIT for shutdown to complete (up to 30s) **"
+			print "** Otherwise you might have to reboot your BB !     **"
+			print "******************************************************"
 			
 		# Shutting down "gracefully"
 		try:
