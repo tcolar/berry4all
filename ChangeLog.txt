@@ -8,6 +8,7 @@ tcolar AT colar d.o.t NET
 	Only reset device if needed (no reply to modem start - Pearl)
 	Try modem init cycle multiple times (incl. reset) until good to go.
 	Added "Data Mode" flag option (-m)
+	Working on Storm! (9500)
 
 0.2f: 3/10/2009
 	Added password protected device support (tested on Pearl)
