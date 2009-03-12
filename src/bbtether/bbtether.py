@@ -28,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.2f"
+VERSION = "0.2g"
 
 ''' Main Class '''
 class BBTether:
@@ -36,11 +36,12 @@ class BBTether:
 	def parse_cmd(self):
 		usage = usage = "usage: %prog [options] [pppscript]\n	If [pppscript] is there (ppp script in conf/ folder, ex: tmobile) then will start modem and connect using that ppp script. Otherwise just opens the modem and you will have to start pppd manually."
 		parser = OptionParser(usage)
-		parser.add_option("-P", "--password", dest="password", help="Blackberry password (if passewrd protected) ex: -P abc123")
+		parser.add_option("-P", "--password", dest="password", help="Blackberry password (if passowrd protected) ex: -P abc123")
 		parser.add_option("-l", "--list", action="store_true", dest="listonly", help="Only detect and list Device, do nothing more")
 		parser.add_option("-p", "--pppd", dest="pppd", help="Path To pppd binary (default: /usr/sbin/pppd)")
 		parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose: Show I/O data and other infos")
-		parser.add_option("-c", "--charge", action="store_true", dest="chargeonly", help="Put the device in Charging mode and does NOT start modem.")
+		parser.add_option("-c", "--charge", action="store_true", dest="charge", help="Put the device in Charging mode (ex: Pearl) and reset it.")
+		parser.add_option("-m", "--dmode", action="store_true", dest="dmode", help="Put the device in data mode, might help on some devices.")
 		group = OptionGroup(parser, "Advanced Options", "Don't use unless you know what you are doing.")
 		group.add_option("-w", "--drp", dest="drp", help="Force Data read endpoint - Hex(ex -w 0x84)")
 		group.add_option("-x", "--dwp", dest="dwp", help="Force Data write endpoint - Hex (ex -x 0x6)")
@@ -89,8 +90,8 @@ class BBTether:
 			#bb_usbfs.find_kernel_driver(berry)
 
 			# lookup endpoints
-			# IMPORTANT: We need to do this BEFDRE RESET, otherwise modem will be screwed
-			# folowing "test" hello packet
+			# IMPORTANT: We need to do this BEFORE RESET, otherwise modem will be screwed
+			# folowing "test" hello packet (fail on Pearl, ok on storm)
 			if not (options.drp and options.dwp and options.mrp and options.mwp):
 				berry.read_endpoints(options.interface)
 
@@ -98,21 +99,19 @@ class BBTether:
 				print "Listing only requested, stopping here."
 				os._exit(0)
 
-			# set power & reset
-			bb_usb.set_bb_power(berry)
-
-			time.sleep(1)
-
 			bb_util.remove_berry_charge()
-			
-			if options.chargeonly:
-				print "Charge only requested, stopping now."
-				os._exit(0)
-			
-			# reopen
-			print ("Waiting few seconds, for mode to change")
-			time.sleep(1.5)
-			
+
+			# set power & reset (only if '-c' requested)
+			# Only needed with BB os < 4.5 ?
+			if options.charge:
+				bb_usb.set_bb_power(berry)
+				print ("Waiting few seconds, for mode to change")
+				time.sleep(1.5)
+
+			# set to datamode (ony if requested)
+			if options.dmode:
+				bb_usb.set_data_mode(berry)
+
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
 				berry.readpt = int(options.drp, 16)
@@ -129,7 +128,7 @@ class BBTether:
 				print "\nNo good Data Endpoint pair, bailing out !";
 			else:
 				print "\nUsing Data Endpoint Pair:", hex(berry.readpt), "/", hex(berry.writept);
-				print "Using first pair after Data pair as Modem pair: ", hex(berry.modem_readpt), "/", hex(berry.modem_writept), "\n"
+				print "Using Modem pair: ", hex(berry.modem_readpt), "/", hex(berry.modem_writept), "\n"
 				
 				print "Claiming interface ",berry.interface
 				berry.claim_interface()

@@ -11,9 +11,9 @@ import time
 
 import bb_usb
 import bb_util
+import hashlib
 import os
 import random
-import sha
 import subprocess
 import threading
 import usb
@@ -84,13 +84,38 @@ class BBModem:
 		# clear endpoints
 		bb_usb.clear_halt(self.device,self.device.modem_readpt)
 		bb_usb.clear_halt(self.device,self.device.modem_writept)
+
 		# reset modem
-		self.write(MODEM_STOP)
-		self.read()
-		self.write(MODEM_STOP)
-		self.read()
-		self.write(MODEM_START)
-		answer=self.read()
+		# ok, on pearl it will fail the first time, because after querying the modem (hello commands) it's broke and need a reset
+		# on newer devices (storm), the modem query works, so rest is not needed (and maybe causes issues)
+		answer=""
+		resetted=False
+		reset_time=0
+		while True:
+			self.write(MODEM_STOP)
+			self.read()
+			self.write(MODEM_STOP)
+			self.read()
+			self.write(MODEM_START)
+			try:
+				answer=self.read()
+			except OSError, error:
+				print "Read failed: "+error.message
+				answer=""
+			if len(answer) == 0:
+				reset_time+=5
+				if not resetted:
+					print "No answer to modem start command ... will try a reset"
+					bb_usb.reset(self.device)
+					resetted=True
+				if reset_time > 5*60:
+					print "Timeout while trying to init modem, exiting."
+					os._exit(0)
+				print "Waiting for reset completion"
+				time.sleep(5)
+			else:
+				break
+
 		# check for password request (newer devices)
 		if len(answer)>0 and answer[0]==0x2 and bb_util.end_with_tuple(answer,RIM_PACKET_TAIL):
 			triesLeft=answer[8]
@@ -287,10 +312,12 @@ class BBModem:
 
 	def send_password(self, seed):
 		seed_bytes=array.array("B",seed)
-		digest=sha.new(self.password).digest()
+		sha1=hashlib.sha1()
+		digest=sha1.update(self.password).digest()
 		digest_bytes=array.array("B",digest)
 		seed_bytes.extend(digest_bytes)
-		digest2=sha.new(seed_bytes.tostring()).digest()
+		sha1=hashlib.sha1()
+		digest2=sha1.update(seed_bytes.tostring()).digest()
 		digest_list=array.array("B",digest2).tolist()
 		response=[0x3, 0, 0, 0 ]+digest_list+RIM_PACKET_TAIL
 		bb_util.debug("Sending password digest: ")
