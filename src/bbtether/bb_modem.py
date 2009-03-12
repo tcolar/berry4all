@@ -87,7 +87,7 @@ class BBModem:
 
 		# reset modem
 		# ok, on pearl it will fail the first time, because after querying the modem (hello commands) it's broke and need a reset
-		# on newer devices (storm), the modem query works, so rest is not needed (and maybe causes issues)
+		# on newer devices (storm), the modem query works, so rest is not needed (actually breaks if reset done!)
 		answer=""
 		resetted=False
 		reset_time=0
