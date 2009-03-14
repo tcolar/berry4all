@@ -156,7 +156,6 @@ class BBModem:
 			except OSError:
 				# if we have nothing after a \r, we are done
 				if prev == 0xD:
-					line+=char
 					self.line_leftover=""
 					break
 				#not ready yet
