@@ -2,7 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.2g: 6/12/2009:
+0.2h: 3/13/2009:
+	Fixed bug in password code (password protected devices)
+	
+0.2g: 3/12/2009:
 	Made charging mode switch (more power) optional, as this does not work/not needed on storm.
 	Replaced SHA1 library(deprecated) by the new Hashlib
 	Only reset device if needed (no reply to modem start - Pearl)

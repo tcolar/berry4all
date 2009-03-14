@@ -314,11 +314,13 @@ class BBModem:
 	def send_password(self, seed):
 		seed_bytes=array.array("B",seed)
 		sha1=hashlib.sha1()
-		digest=sha1.update(self.password).digest()
+		sha1.update(self.password)
+		digest=sha1.digest()
 		digest_bytes=array.array("B",digest)
 		seed_bytes.extend(digest_bytes)
 		sha1=hashlib.sha1()
-		digest2=sha1.update(seed_bytes.tostring()).digest()
+		sha1.update(seed_bytes.tostring())
+		digest2=sha1.digest()
 		digest_list=array.array("B",digest2).tolist()
 		response=[0x3, 0, 0, 0 ]+digest_list+RIM_PACKET_TAIL
 		bb_util.debug("Sending password digest: ")

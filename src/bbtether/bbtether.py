@@ -28,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.2g"
+VERSION = "0.2h"
 
 ''' Main Class '''
 class BBTether:
