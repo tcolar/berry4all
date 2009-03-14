@@ -215,6 +215,7 @@ class BBModem:
 			command=[pppdCommand,os.ttyname(slave),"file","conf/"+pppConfig,"nodetach"]
 			if bb_util.verbose:
 				command.append("debug")
+				command.append("dump")
 			process=subprocess.Popen(command)
 		
 		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
