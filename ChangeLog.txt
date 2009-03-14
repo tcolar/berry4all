@@ -2,8 +2,15 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2i: 3/14/2009:
+	Fixes but in modem readline code, was causing failure of ppp
+	negocation (on mac at least)
+	Added "dump" options to pppd when in verbose mode
+	Works on OS X once again.
+
 0.2h: 3/13/2009:
 	Fixed bug in password code (password protected devices)
+	Working on Curve ! (8320)
 	
 0.2g: 3/12/2009:
 	Made charging mode switch (more power) optional, as this does not work/not needed on storm.
@@ -21,6 +28,7 @@ tcolar AT colar d.o.t NET
 	Fixed pp synchronization issues
 	Needed to read line one at a time
 	Should prevent random ppp chat failures
+	OS X broke again :-(
 
 0.2d: 3/8/2009
 	Fixed some ppp scripts again (simpified)
