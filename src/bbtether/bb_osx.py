@@ -33,12 +33,11 @@ import platform
 import shutil
 import subprocess
 
-KEXT_FILE="bbtether.kext"
-SECRETS_FILE="/etc/ppp/pap-secrets"
+KEXT_FOLDER = "osx/libusbshield_rim.kext"
+SECRETS_FILE = "/etc/ppp/pap-secrets"
 
 def is_osx():
     return platform.system().lower().startswith("darwin")
-
 
 def is_supported_osx():
 	'''
@@ -46,44 +45,83 @@ def is_supported_osx():
     '''
 	if not is_osx():
 		return False
-	rel=platform.release()
-	major=int(rel[0 : rel.find(".")])
+	rel = platform.release()
+	major = int(rel[0: rel.find(".")])
 	return major > 7
 
 def restart_kextd():
-    # send SIGUP to kextd
+	print('Restarting Kernel Ext. Daemon')
     # Force kext cache update
-    #touch /System/Library/Extensions
-    print('Restarting Kernel Ext. Daemon')
-    subprocess.call(['killall','-s','1','kextd'])
+	subprocess.call(['touch', '/System/Library/Extensions'])
+    # send SIGUP to kextd
+	subprocess.call(['killall', '-s', '1', 'kextd'])
 
-def install_kext():
-    print('Installing cutom Kernel Ext. File')
-    shutil.copy(KEXT_FILE, "/System/Library/Extensions")
-    subprocess.call(['chown','root:wheel',KEXT_FILE])
-    restart_kextd()
+def install_kextd():
+	print('Installing custom Kernel Ext. File')
+	shutil.copytree(KEXT_FOLDER, "/System/Library/Extensions/libusbshield_rim.kext")
+	subprocess.call(['chown', 'root:wheel', "/System/Library/Extensions/libusbshield_rim.kext"])
+	subprocess.call(['kextload', '/System/Library/Extensions/libusbshield_rim.kext'])
+	restart_kextd()
+	print "Warning: If the device still fails to claim an interface, you should reboot."
 
 def uninstall_kextd():
     print('Removing cutom Kernel Ext. File')
-    os.remove("/System/Library/Extensions/"+KEXT_FILE)
+    os.remove("/System/Library/Extensions/libusbshield_rim.kext")
     restart_kextd()
+
+def load_pocketmac():
+	print('Re-enabling pocketmac')
+	subprocess.call(['kextload', '/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext/'])
+	restart_kextd()
+
+def unload_pocketmac():
+	print('Temporarely disabling pocketmac kernel extension (imcopatible)')
+	subprocess.call(['kextunload', '/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext/'])
+	restart_kextd()
 
 def prepare_osx():
 	if is_supported_osx():
-        # Note: pocketmac kext preventing us from working !:
-        # net.pocketmac.driver.BlackberryUSB -> unload it ??
-
-		# won't manage to do pap without this
-		if not os.path.isfile(SECRETS_FILE):
-			try:
-				print "the file "+SECRETS_FILE+" does not exist, will try to create it(required)"
-				file = open(SECRETS_FILE, 'w')
-				file.write("*	*	\"\"	*")
-				file.close()
-				os.chown(SECRETS_FILE,0,0)#root:wheel
-				os.chmod(SECRETS_FILE,600)#might contain passwords .. some day
-			except:
-				print "Could not create the file:"+SECRETS_FILE+" run me as root !"
-				print "Ex: sudo python bbtether.py ....."
+		if os.getuid() == 0:
+			# Note: pocketmac kext preventing us from working !:
+			if os.path.isdir("/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext"):
+				print("PocketMac found, it's incompatible with bbtether, will try to disbale it temporarily")
+				print("*** Note that this might not work, you might have to uninstall pocketMac :-( **")
+				raw_input("Please Unplug the Blackberry, then press Enter")
+				unload_pocketmac()
+				raw_input("Please Plug the Blackberry, then press Enter")
+            #if not os.path.isdir("/System/Library/Extensions/libusbshield_rim.kext/"):
+			#	raw_input("Please Unplug the Blackberry, then press Enter")
+			#	install_kextd()
+			#	raw_input("Please Plug the Blackberry, then press Enter")
+		else:
+			if os.path.isdir("/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext"):
+				print "Need to run as root(sudo) to disable net.pocketmac.driver.BlackberryUSB.kext"
 				os._exit(0)
-				
+			#if not os.path.isdir("/System/Library/Extensions/libusbshield_rim.kext/"):
+			#	print "Need to run as root(sudo) to install libusbshield_rim.kext (just once)"
+			#	os._exit(0)
+			if not os.path.isfile(SECRETS_FILE):
+				print "Need to run as root(sudo) to install " + SECRETS_FILE + " (just once)"
+				os._exit(0)
+
+
+        # won't manage to do pap without this
+		if not os.path.isfile(SECRETS_FILE):
+			print "the file " + SECRETS_FILE + " does not exist, will try to create it(required)"
+			file = open(SECRETS_FILE, 'w')
+			file.write("*	*	\"\"	*")
+			file.close()
+			os.chown(SECRETS_FILE, 0, 0)#root:wheel
+			os.chmod(SECRETS_FILE, 600)#might contain passwords .. some day
+
+def terminate_osx():
+	if is_supported_osx():
+		if os.getuid() == 0:
+			if os.path.isdir("/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext"):
+				load_pocketmac()
+            # we will leave it unless somebody complains
+				#uninstall_kextd()
+					# instead
+				restart_kextd()
+
+        

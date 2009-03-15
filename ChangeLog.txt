@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2k: 3/15/2009:
+	More OS X work, check for poketmac (conflict) etc...
+
 0.2j: 3/14/2009:
 	Fixed code so that it can work with libusb binary
 	Had to ignore errors on OSX thrown on usb timeouts (empty errors - no numbers)

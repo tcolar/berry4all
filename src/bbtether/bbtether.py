@@ -28,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.2j"
+VERSION = "0.2k"
 
 ''' Main Class '''
 class BBTether:
@@ -62,7 +62,7 @@ class BBTether:
 		print "--------------------------------\n"
 
 		(options, args) = self.parse_cmd()
-		
+
 		pppConfig = None
 		if len(args) > 0:
 			pppConfig = args[0]
@@ -97,6 +97,7 @@ class BBTether:
 
 			if options.listonly:
 				print "Listing only requested, stopping here."
+				bb_osx.terminate_osx()
 				os._exit(0)
 
 			bb_util.remove_berry_charge()
@@ -164,9 +165,10 @@ class BBTether:
 					# sometimes the KInterrupt will propagate here(if ^C before modem read thread started)
 					# we don't want to crash and hang.
 					pass
-				
+
 				print "Releasing interface"
 				berry.release_interface()
+				bb_osx.terminate_osx()
 				print "bbtether completed."
 				os._exit(0)
 		else:
