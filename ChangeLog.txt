@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2j: 3/14/2009:
+	Fixed code so that it can work with libusb binary
+	Had to ignore errors on OSX thrown on usb timeouts (empty errors - no numbers)
+
 0.2i: 3/14/2009:
 	Fixes but in modem readline code, was causing failure of ppp
 	negocation (on mac at least)

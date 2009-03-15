@@ -34,6 +34,7 @@ import shutil
 import subprocess
 
 KEXT_FILE="bbtether.kext"
+SECRETS_FILE="/etc/ppp/pap-secrets"
 
 def is_osx():
     return platform.system().lower().startswith("darwin")
@@ -67,7 +68,17 @@ def uninstall_kextd():
 
 def prepare_osx():
 	if is_supported_osx():
-		# todo : put stuff in the file
-		subprocess.call(['touch','/etc/ppp/options'])
-		# what about the "Secrets file" -> needed ??
-		# echo "IPFORWARDING=-YES-\nAUTHSERVER=-YES-" >> /etc/hostconfig
+		# won't manage to do pap without this
+		if not os.path.isfile(SECRETS_FILE):
+			try:
+				print "the file "+SECRETS_FILE+" does not exist, will try to create it(required)"
+				file = open(SECRETS_FILE, 'w')
+				file.write("*	*	\"\"	*")
+				file.close()
+				os.chmod(SECRETS_FILE,555)
+				os.chown(SECRETS_FILE,0,0)#root:wheel
+			except:
+				print "Could not create the file:"+SECRETS_FILE+" run me as root !"
+				print "Ex: sudo python bbtether.py ....."
+				os._exit(0)
+				

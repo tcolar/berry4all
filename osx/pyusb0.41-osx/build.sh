@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DSTNAME=pyusb
-DSTVERSION=0.1.13
+DSTVERSION=0.41
 
 MACOSX_DEPLOYMENT_TARGET=$1
 
@@ -43,13 +43,9 @@ mkdir $BUILD
 
 (
     cd $BUILD
-    tar -z -x -f $SRCDIR/$DSTNAME-2009-02-22-svn.tar.gz
+    tar -z -x -f $SRCDIR/$DSTNAME-$DSTVERSION.tar.gz
 
-    cd $DSTNAME-2009-02-22-svn
-
-    patch -p1 < $SRCDIR/libusb-64bit.patch
-    patch -p1 < $SRCDIR/libusb-endian.patch
-    patch -p1 < $SRCDIR/libusb-runloop.patch
+    cd $DSTNAME-$DSTVERSION
 
     aclocal
     glibtoolize --force
