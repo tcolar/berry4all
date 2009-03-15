@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DSTNAME=libusb
+DSTNAME=pyusb
 DSTVERSION=0.1.13
 
 MACOSX_DEPLOYMENT_TARGET=$1
