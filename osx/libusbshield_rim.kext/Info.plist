@@ -34,8 +34,6 @@
 			<integer>1</integer>
 			<key>bInterfaceNumber</key>
 			<integer>0</integer>
-			<key>bcdDevice</key>
-			<integer>259</integer>
 			<key>idProduct</key>
 			<string>*</string>
 			<key>idVendor</key>
