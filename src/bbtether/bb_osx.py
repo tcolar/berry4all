@@ -75,8 +75,8 @@ def prepare_osx():
 				file = open(SECRETS_FILE, 'w')
 				file.write("*	*	\"\"	*")
 				file.close()
-				os.chmod(SECRETS_FILE,555)
 				os.chown(SECRETS_FILE,0,0)#root:wheel
+				os.chmod(SECRETS_FILE,600)#might contain passwords .. some day
 			except:
 				print "Could not create the file:"+SECRETS_FILE+" run me as root !"
 				print "Ex: sudo python bbtether.py ....."
