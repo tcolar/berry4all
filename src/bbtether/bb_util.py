@@ -3,7 +3,6 @@ Utilities
 Thibaut Colar
 '''
 import bb_osx
-import os
 import re
 import subprocess
 from subprocess import PIPE

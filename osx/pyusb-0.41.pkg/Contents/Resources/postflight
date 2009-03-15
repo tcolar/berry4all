@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+$DEST="/Library/Frameworks/Python.framework/Versions/Current/lib/";
+# finding Resources path
+$index = rindex($0,'/');
+$path=substr($0,0,$index);
+chdir("$path/pyusb-0.4.1");
+
+# findinf python libs dir
+opendir(DIR, $DEST);
+@files = grep(/^python\d+/,readdir(DIR));
+closedir(DIR);
+
+#installing pyusb stuff into python lib dir
+`rm /tmp/pyusb_install.log`;
+foreach $file (@files) 
+{
+	$dest="${DEST}${file}/site-packages/";
+   `echo "copying $path/pyusb/* to $dest" >>  /tmp/pyusb_install.log`;
+   `chmod 644 "$path/pyusb/"*`;
+   `cp "$path/pyusb/"* "$dest"`;
+}
+

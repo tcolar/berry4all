@@ -1,6 +1,3 @@
-import fcntl
-import bb_util
-
 def find_kernel_driver(device):
 	path="/dev/usbdev%d.%d" % (int(device.bus.dirname),int(device.usbdev.filename)+1);
 	#ioctl(fd, op, arg, mutate_flag)
