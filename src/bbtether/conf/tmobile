@@ -21,7 +21,6 @@ lcp-restart 10
 novj
 user "wap"
 password ""
-
 usepeerdns
 
 #debug debug debug

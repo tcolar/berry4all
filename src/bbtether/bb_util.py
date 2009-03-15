@@ -60,7 +60,7 @@ def is_same_tuple(tuple1, tuple2):
 def debug_object_attr(obj):
 	attributes = dir(obj)
 	for a in attributes:
-		print a
+		print a 
 
 def module_loaded(mod):
 	output = subprocess.Popen(["lsmod"], stdout=PIPE).communicate()[0]
