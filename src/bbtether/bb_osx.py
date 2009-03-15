@@ -52,6 +52,8 @@ def is_supported_osx():
 
 def restart_kextd():
     # send SIGUP to kextd
+    # Force kext cache update
+    #touch /System/Library/Extensions
     print('Restarting Kernel Ext. Daemon')
     subprocess.call(['killall','-s','1','kextd'])
 
@@ -68,6 +70,9 @@ def uninstall_kextd():
 
 def prepare_osx():
 	if is_supported_osx():
+        # Note: pocketmac kext preventing us from working !:
+        # net.pocketmac.driver.BlackberryUSB -> unload it ??
+
 		# won't manage to do pap without this
 		if not os.path.isfile(SECRETS_FILE):
 			try:
