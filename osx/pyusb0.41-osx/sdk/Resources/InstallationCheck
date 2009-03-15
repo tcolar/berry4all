@@ -1,3 +1,0 @@
-#! /bin/sh
-[ ! -d @NEXT_ROOT@ ] && exit 112
-exit 0
