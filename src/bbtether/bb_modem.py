@@ -87,7 +87,8 @@ class BBModem:
 
 		# reset modem
 		# ok, on pearl it will fail the first time, because after querying the modem (hello commands) it's broke and need a reset
-		# on newer devices (storm), the modem query works, so rest is not needed (actually breaks if reset done!)
+		# on newer devices (storm), the modem query works, so reset is not needed (actually breaks if reset done!)
+		# on Bold, reset also vauses trouble
 		answer=""
 		resetted=False
 		reset_time=0
@@ -105,11 +106,17 @@ class BBModem:
 			if len(answer) == 0:
 				reset_time+=5
 				if not resetted:
-					print "No answer to modem start command ... will try a reset"
+					print "No answer to modem start command ... will try a reset (Please wait)"
 					bb_usb.reset(self.device)
 					resetted=True
-				if reset_time > 5*60:
+				if reset_time > 30:
 					print "Timeout while trying to init modem, exiting."
+					print "****************************************************************************"
+					print "If this was the first time using bbtether, it might have been caused by"
+					print "the first scan of the device. (Known issue on the Bold)"
+					print "Please reboot the blackberry (remove/readd battery) and wait for BB to start"
+					print "and try again (won't have to scan anymore)."
+					print "****************************************************************************"
 					os._exit(0)
 				print "Waiting for reset completion"
 				time.sleep(5)
@@ -281,9 +288,10 @@ class BBModem:
 			self.write([0x41,0x54,0x48,0x0d]) # send ATH (modem hangup)
 			#self.readline(master)
 			# send SIGHUP(1) to pppd (causes ppd to hangup and terminate)
-			os.kill(process.pid,1)
-			# wait for pppd to be done
-			os.waitpid(process.pid, 0)
+			if process:
+				os.kill(process.pid,1)
+				# wait for pppd to be done
+				os.waitpid(process.pid, 0)
 			print "PPP finished"
 			# Ending session (by opening different one, as seen in windows trace - odd)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0] + [0x71,0x67,0x7d,0x20,0x3c,0xcd,0x74,0x7d] + RIM_PACKET_TAIL
@@ -297,7 +305,7 @@ class BBModem:
 			print "Stopping modem thread"
 			bbThread.stop()
 		except Exception, error:
-			print "Failure during shutdown, might have to reboot BB manually",error
+			print "Failure during shutdown, might have to reboot BB manually: ",error
 		# stopping pppd
 		try:
 			# making sure ppp process is gone (only if something went wrong)

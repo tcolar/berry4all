@@ -28,7 +28,7 @@ from optparse import OptionGroup
 from optparse import OptionParser
 import os
 
-VERSION = "0.2k"
+VERSION = "0.2l"
 
 ''' Main Class '''
 class BBTether:
@@ -92,6 +92,7 @@ class BBTether:
 			# lookup endpoints
 			# IMPORTANT: We need to do this BEFORE RESET, otherwise modem will be screwed
 			# folowing "test" hello packet (fail on Pearl, ok on storm)
+			# all right on the Bold the hello packet also causes problem, but reset won't fix it :-(
 			if not (options.drp and options.dwp and options.mrp and options.mwp):
 				berry.read_endpoints(options.interface)
 

@@ -2,6 +2,12 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.2l: 3/16/2009:
+	Save/Load endpoints data, so we only scan once, this fixes 2 issues:
+	- Makes subsequent use of bbtether faster
+	- Skipping the scan works better on some devices (esp. bold)
+	Works on Bold (OS X)
+
 0.2k: 3/15/2009:
 	More OS X work, check for poketmac (conflict) etc...
 

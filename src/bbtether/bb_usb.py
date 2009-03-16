@@ -4,9 +4,11 @@ Thibaut Colar
 '''
 import sys
 
+import ConfigParser
 import bb_data
-import bb_util
 import bb_osx
+import bb_util
+import os
 import string
 import traceback
 import usb
@@ -23,6 +25,8 @@ COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00]
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
 MODEM_HELLO_REPLY = [0x7, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
+
+PREF_FILE=".bbtether"
 
 def find_berry(userdev=None, userbus=None, verbose=True):
 	'''
@@ -66,7 +70,23 @@ def read_bb_endpoints(device, userInterface):
 	Read the device endpoints and stores them in the device data structure
 	device was created from find_berry
 	and device.open_handle should have been called already
-	'''		
+	Once we found endpoints, we save them as some devices (esp. Bold) don't like being probed.
+	'''
+
+	#look for previously saved endpoints
+	if os.path.isfile(PREF_FILE):
+		print "Will read saved scan results from "+PREF_FILE+" (delete if you want to force new scan)"
+		config = ConfigParser.RawConfigParser()
+		config.read(PREF_FILE)
+		device.interface=config.getint('EndPoints','interface')
+		device.readpt=config.getint('EndPoints','readpt')
+		device.writept=config.getint('EndPoints','writept')
+		device.modem_readpt=config.getint('EndPoints','modem_readpt')
+		device.modem_writept=config.getint('EndPoints','modem_writept')
+		print "Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept)
+		# return saved data
+		return device
+
 	readpt=-1
 	writept=-1
 	modem_readpt=-1
@@ -169,6 +189,19 @@ def read_bb_endpoints(device, userInterface):
 	device.writept=writept
 	device.modem_readpt=modem_readpt
 	device.modem_writept=modem_writept
+
+	#save scan results to file
+	print "Saving scan results to "+PREF_FILE+", some devices (Bold) do not like being scanned."
+	config = ConfigParser.RawConfigParser()
+	config.add_section('EndPoints')
+	config.set('EndPoints','interface', device.interface)
+	config.set('EndPoints','readpt', device.readpt)
+	config.set('EndPoints','writept', device.writept)
+	config.set('EndPoints','modem_readpt', device.modem_readpt)
+	config.set('EndPoints','modem_writept', device.modem_writept)
+	configfile=open(PREF_FILE, 'wb')
+	config.write(configfile)
+	configfile.close()
 
 def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)
