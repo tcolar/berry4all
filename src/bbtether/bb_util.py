@@ -2,6 +2,7 @@
 Utilities
 Thibaut Colar
 '''
+import bb_messenging
 import bb_osx
 import re
 import subprocess
@@ -11,7 +12,7 @@ verbose = False
 
 def debug(msg):
 	if verbose:
-		print msg
+		bb_messenging.log(msg)
 	
 def debug_bytes(tuple, msg):
 	'''Get a tuple of bytes and print it as lines of 16 digits (hex and ascii)'''
@@ -59,14 +60,10 @@ def is_same_tuple(tuple1, tuple2):
 def debug_object_attr(obj):
 	attributes = dir(obj)
 	for a in attributes:
-		print a 
+		bb_messenging.log(a)
 
 def module_loaded(mod):
 	output = subprocess.Popen(["lsmod"], stdout=PIPE).communicate()[0]
-	#if verbose:
-	#	print "###### Modules: ######"
-	#	print output
-	#	print "######################\n"
 	return re.search(mod, output) != None
 
 def unload_module(mod):
@@ -75,19 +72,20 @@ def unload_module(mod):
 def remove_berry_charge():
 # Remove module berry_charge if present, cause it causes problems
 	if (not bb_osx.is_osx()) and  module_loaded("berry_charge"):
-		print " * Module berry_charge is loaded, this might cause problems"
-		print "\t -> Will try to unload it now"
+		msg=[" * Module berry_charge is loaded, this might cause problems","\t -> Will try to unload it now"]
+		bb_messenging.warn(msg)
 		unload_module("berry_charge")
 		if module_loaded("berry_charge"):
-			print "************************************************************"
-			print "Could NOT unload module berry_charge ! (must be in use)"
-			print "You should probably blacklist it"
-			print "create a file as root called: /etc/modprobe.d/blackberry"
-			print "inside it write 'blacklist berry_charge' (without the quotes)"
-			print "save it, then unplug the blackberry"
-			print "run  \"sudo /etc/init.d/udev restart\""
-			print "replug the blackberry and try again"
-			print "************************************************************\n"
-			#os._exit(0)
+			msg=["************************************************************",
+			"Could NOT unload module berry_charge ! (must be in use)",
+			"You should probably blacklist it",
+			"create a file as root called: /etc/modprobe.d/blackberry",
+			"inside it write 'blacklist berry_charge' (without the quotes)",
+			"save it, then unplug the blackberry",
+			"run  \"sudo /etc/init.d/udev restart\"",
+			"replug the blackberry and try again",
+			"************************************************************\n"
+			]
+			bb_messenging.warn(msg)
 		else:
 			print "\t -> OK.\n"

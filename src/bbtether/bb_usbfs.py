@@ -3,7 +3,8 @@ def find_kernel_driver(device):
 	#ioctl(fd, op, arg, mutate_flag)
 	#fnct.unlock()
 	#bb_util.debug_object_attr(device.handle)
-	print path
+	#print path
+	
 
 '''
 static int op_kernel_driver_active(struct libusb_device_handle *handle,

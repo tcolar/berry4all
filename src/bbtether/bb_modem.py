@@ -9,6 +9,7 @@ import pty
 import signal
 import time
 
+import bb_messenging
 import bb_usb
 import bb_util
 import hashlib
@@ -54,7 +55,7 @@ class BBModem:
 		bb_usb.usb_write(self.device,self.device.modem_writept,data,timeout,"\tModem -> ")
 		self.writ+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
-			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
+			bb_messenging.status("GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ)
 			self.lastcount=self.red+self.writ
 			
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
@@ -66,7 +67,7 @@ class BBModem:
 				data.extend(datar)
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
-			print "GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ
+			bb_messenging.status("GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ)
 			self.lastcount=self.red+self.writ
 		if len(data)>0:
 			bb_util.debug("read: "+str(len(data)))
@@ -101,24 +102,26 @@ class BBModem:
 			try:
 				answer=self.read()
 			except OSError, error:
-				print "Read failed: "+error.message
+				bb_messenging.log("Read failed: "+error.message)
 				answer=""
 			if len(answer) == 0:
 				reset_time+=5
 				if not resetted:
-					print "No answer to modem start command ... will try a reset (Please wait)"
+					bb_messenging.status("No answer to modem start command ... will try a reset (Please wait)")
 					bb_usb.reset(self.device)
 					resetted=True
 				if reset_time > 30:
-					print "Timeout while trying to init modem, exiting."
-					print "****************************************************************************"
-					print "If this was the first time using bbtether, it might have been caused by"
-					print "the first scan of the device. (Known issue on the Bold)"
-					print "Please reboot the blackberry (remove/readd battery) and wait for BB to start"
-					print "and try again (won't have to scan anymore)."
-					print "****************************************************************************"
+					msgs=["Timeout while trying to init modem, exiting.",
+					"****************************************************************************"
+					"If this was the first time using bbtether, it might have been caused by",
+					"the first scan of the device. (Known issue on the Bold)",
+					"Please reboot the blackberry (remove/readd battery) and wait for BB to start",
+					"and try again (won't have to scan anymore).",
+					"****************************************************************************",
+					]
+					bb_messenging.warn(msgs)
 					os._exit(0)
-				print "Waiting for reset completion"
+				bb_messenging.status("Waiting for reset completion")
 				time.sleep(5)
 			else:
 				break
@@ -128,23 +131,23 @@ class BBModem:
 			triesLeft=answer[8]
 			seed=answer[4:8]
 			
-			print "Got password Request from Device (",triesLeft," tries left)"
+			bb_messenging.log("Got password Request from Device (",triesLeft," tries left)")
 			triesLeft=answer[8]
 			if triesLeft <= MIN_PASSWD_TRIES:
-				print "The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries.";
+				bb_messenging.warn(["The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries."]);
 				raise Exception
 			if len(self.password) == 0:
-				print "No password was provided to bbtether, can't continue (use -P <password>).";
+				bb_messenging.warn(["No password was provided to bbtether, can't continue."]);
 				raise Exception
 			self.send_password(seed)
 		else:
-			print "No password requested."	
+			bb_messenging.log("No password requested.")
 
 		# Send init session (as seen on windows trace)
 		session_packet=[0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 		self.write(session_packet)
 		self.read()
-		print "session pack sent"
+		bb_messenging.log("session pack sent")
 	
 	def readline(self,fd, timeout=15000):
 		'''
@@ -169,7 +172,7 @@ class BBModem:
 				time.sleep(.1)
 				elapsed+=100
 				if elapsed > timeout:
-					print "Failed finding end of line(timeout) for: "+line
+					bb_messenging.warn(["Failed finding end of line(timeout) for: "+line])
 					raise
 				continue
 			if prev == 0xD and ord(char) != 0xA:
@@ -194,14 +197,14 @@ class BBModem:
 		flag = fcntl.fcntl(master, fcntl.F_GETFL)
 		fcntl.fcntl(master, fcntl.F_SETFL, flag | os.O_NDELAY)
 		 
-		print "\nModem pty: ",os.ttyname(slave)
+		bb_messenging.debug("\nModem pty: "+os.ttyname(slave))
 				
-		print "Initializing Modem"
+		bb_messenging.status("Initializing Modem")
 		try:
 			self.init()
 		except:
 			# If init fails, cleanup and quit
-			print "Modem initialization Failed !"
+			bb_messenging.warn(["Modem initialization Failed !"])
 			os.close(master)
 			os.close(slave)
 			raise
@@ -210,13 +213,13 @@ class BBModem:
 		bbThread=BBModemThread(self,master)
 		bbThread.start()
 		
-		print "Modem Started"
+		bb_messenging.status("Modem Started")
 		
 		if(not pppConfig):
-			print "No ppp requested, you can now start pppd manually."
+			bb_messenging.warn(["No ppp requested, you can now start pppd manually."])
 		else:
 			#TODO: start pppd in thread/process
-			print "Will try to start pppd now, (",pppdCommand,") with config: ",pppConfig
+			bb_messenging.status("Will try to start pppd now, ("+pppdCommand+") with config: "+pppConfig)
 			time.sleep(.5)
 			command=[pppdCommand,os.ttyname(slave),"file","conf/"+pppConfig,"nodetach"]
 			if bb_util.verbose:
@@ -224,7 +227,10 @@ class BBModem:
 				command.append("dump")
 			process=subprocess.Popen(command)
 		
-		print "********************************************\nModem Ready at ",os.ttyname(slave)," Use ^C to terminate\n********************************************"
+		bb_messenging.log("********************************************")
+		bb_messenging.status("Modem Ready at "+os.ttyname(slave))
+		bb_messenging.log(" Use ^C to terminate")
+		bb_messenging.log("********************************************")
 		
 		try:
 			# Read from PTY and write to USB modem until ^C
@@ -235,7 +241,7 @@ class BBModem:
 				
 				if not self.data_mode:
 					data=self.readline(master)
-					print "PPP data: "+data
+					bb_messenging.status("PPP data: "+data)
 					# check for ~p (data mode start)
 					bytes=array.array("B",data)
 					if len(data)>0 and data.startswith("~p") :
@@ -244,7 +250,7 @@ class BBModem:
 
 					# check for special bbtether packet (BBT_xx.) where xx is the command
 					if data.startswith("BBT_OS"):
-						print "Starting session"
+						bb_messenging.debug("Starting session")
 						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 						self.write(session_packet)
 						# return OK, so chat script can proceed to next step
@@ -275,11 +281,13 @@ class BBModem:
 						self.write(newbytes)
 				
 		except KeyboardInterrupt:
-			print "\nShutting down on ^c"
-			print "******************************************************"
-			print "** Please WAIT for shutdown to complete (up to 30s) **"
-			print "** Otherwise you might have to reboot your BB !     **"
-			print "******************************************************"
+			msgs=["\nShutting down",
+			"******************************************************",
+			"** Please WAIT for shutdown to complete (up to 30s) **",
+			"** Otherwise you might have to reboot your BB !     **",
+			"******************************************************"
+			]
+			bb_messenging.warn(msgs)
 			
 		# Shutting down "gracefully"
 		try:
@@ -292,7 +300,7 @@ class BBModem:
 				os.kill(process.pid,1)
 				# wait for pppd to be done
 				os.waitpid(process.pid, 0)
-			print "PPP finished"
+			bb_messenging.status("PPP finished")
 			# Ending session (by opening different one, as seen in windows trace - odd)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0] + [0x71,0x67,0x7d,0x20,0x3c,0xcd,0x74,0x7d] + RIM_PACKET_TAIL
 			self.write(end_session_packet)
@@ -302,10 +310,10 @@ class BBModem:
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 0, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 			self.write(end_session_packet)
 			#stopping modem read thread
-			print "Stopping modem thread"
+			bb_messenging.status("Stopping modem thread")
 			bbThread.stop()
 		except Exception, error:
-			print "Failure during shutdown, might have to reboot BB manually: ",error
+			bb_messenging.warn(["Failure during shutdown, might have to reboot BB manually: "+error])
 		# stopping pppd
 		try:
 			# making sure ppp process is gone (only if something went wrong)
@@ -330,7 +338,7 @@ class BBModem:
 		digest2=sha1.digest()
 		digest_list=array.array("B",digest2).tolist()
 		response=[0x3, 0, 0, 0 ]+digest_list+RIM_PACKET_TAIL
-		bb_util.debug("Sending password digest: ")
+		bb_messenging.status(("Sending password digest: ")
 		#bb_util.debug(response)  # unsafe to dump ?
 		self.write(response)
 		time.sleep(.5)
@@ -338,7 +346,7 @@ class BBModem:
 		# check answer
 		# Storm sends 2 lines - untested
 		if len(answer)>16 and answer[0] == 0:
-			print "Received [0x0...] line (storm ??) ... trying to read again."
+			bb_messenging.log("Received [0x0...] line (storm ??) ... trying to read again.")
 			time.sleep(.5)
 			answer=self.read();
 		# Normal answer
@@ -349,16 +357,16 @@ class BBModem:
 
 			# if seed is now 0(pearl) or old_seed+1(curve) then password was accepted
 			if bb_util.is_same_tuple(new_seed, [0,0,0,0]) or bb_util.is_same_tuple(new_seed, seed):
-				print "Password accepted"
+				bb_messenging.status("Password accepted")
 				# make session key from end of hash
 				self.session_key=array.array("B",digest[len(digest)-8:]).tolist()
 				bb_util.debug_bytes(self.session_key,"Computed session key: ")
 				# we are good, done!
 				return
 			else:
-				print "New seed value is invalid"
+				bb_messenging.status("New seed value is invalid")
 
-		print "Passord was not accepted, cannot continue !"
+		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
 
 class BBModemThread( threading.Thread ):	
@@ -374,7 +382,7 @@ class BBModemThread( threading.Thread ):
 
 	def run (self):
 		self.done=False
-		print "Starting Modem thread"
+		bb_messenging.status("Starting Modem thread")
 		while( not self.done):
 			try:
 				try:
@@ -400,4 +408,4 @@ class BBModemThread( threading.Thread ):
 					pass
 				else:
 					raise
-		print "Modem thread Stopped"
+		bb_messenging.status("Modem thread Stopped")

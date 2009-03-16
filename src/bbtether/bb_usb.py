@@ -6,6 +6,7 @@ import sys
 
 import ConfigParser
 import bb_data
+import bb_messenging
 import bb_osx
 import bb_util
 import os
@@ -38,11 +39,11 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 	mybus=None;
 
 	if verbose:
-		print "Looking for USB devices:"
+		bb_messenging.status("Looking for USB devices:")
 	berry=None
 	if userdev and userbus:
 		if verbose :
-			print "Will use user provided bus/device: ",userbus,"/",userdev
+			bb_messenging.log("Will use user provided bus/device: "+userbus+"/"+userdev)
 		for bus in usb.busses():
 			if string.atoi(bus.dirname) == string.atoi(userbus):
 				for dev in bus.devices:
@@ -53,7 +54,7 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 		for bus in usb.busses():
 			for dev in bus.devices:
 				if(verbose):
-					print "	Bus %s Device %s: ID %04x:%04x" % (bus.dirname,dev.filename,dev.idVendor,dev.idProduct)
+					bb_messenging.log("	Bus %s Device %s: ID %04x:%04x" % (bus.dirname,dev.filename,dev.idVendor,dev.idProduct))
 				if(dev.idVendor==VENDOR_RIM):
 					berry=dev
 					mybus=bus
@@ -75,7 +76,7 @@ def read_bb_endpoints(device, userInterface):
 
 	#look for previously saved endpoints
 	if os.path.isfile(PREF_FILE):
-		print "Will read saved scan results from "+PREF_FILE+" (delete if you want to force new scan)"
+		bb_messenging.log("Will read saved scan results from "+PREF_FILE+" (delete if you want to force new scan)")
 		config = ConfigParser.RawConfigParser()
 		config.read(PREF_FILE)
 		device.interface=config.getint('EndPoints','interface')
@@ -83,7 +84,7 @@ def read_bb_endpoints(device, userInterface):
 		device.writept=config.getint('EndPoints','writept')
 		device.modem_readpt=config.getint('EndPoints','modem_readpt')
 		device.modem_writept=config.getint('EndPoints','modem_writept')
-		print "Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept)
+		bb_messenging.log("Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
 		# return saved data
 		return device
 
@@ -107,31 +108,31 @@ def read_bb_endpoints(device, userInterface):
 	if(berry.idProduct == PRODUCT_NEW_MASS_ONLY):
 		type="Storage Mode"
 	
-	print "\nFound RIM device (",type,")" 
-	print "	Manufacturer:",handle.getString(berry.iManufacturer,100)
-	print "	Product:",handle.getString(berry.iProduct,100)
+	bb_messenging.log("\nFound RIM device (",type,")")
+	bb_messenging.log("	Manufacturer:",handle.getString(berry.iManufacturer,100))
+	bb_messenging.log("	Product:",handle.getString(berry.iProduct,100))
 	#print "	Serial:",handle.getString(berry.iSerialNumber,100)
-	print "	Device:", berry.filename
-	print "	VendorId: %04x" % berry.idVendor
-	print "	ProductId: %04x" % berry.idProduct
-	print "	Version:",berry.deviceVersion
-	print "	Class:",berry.deviceClass," ",berry.deviceSubClass
-	print "	Protocol:",berry.deviceProtocol
-	print "	Max packet size:",berry.maxPacketSize
-	print "	Self Powered:", config.selfPowered
-	print "	Max Power:", config.maxPower
+	bb_messenging.log("	Device:", berry.filename)
+	bb_messenging.log("	VendorId: %04x" % berry.idVendor)
+	bb_messenging.log("	ProductId: %04x" % berry.idProduct)
+	bb_messenging.log("	Version:",berry.deviceVersion)
+	bb_messenging.log("	Class:",berry.deviceClass," ",berry.deviceSubClass)
+	bb_messenging.log("	Protocol:",berry.deviceProtocol)
+	bb_messenging.log("	Max packet size:",berry.maxPacketSize)
+	bb_messenging.log("	Self Powered:", config.selfPowered)
+	bb_messenging.log("	Max Power:", config.maxPower)
 	for inter in config.interfaces:
-		print "\n	*Interface:",inter[0].interfaceNumber
+		bb_messenging.log("\n	*Interface:",inter[0].interfaceNumber)
 		if userInterface!=None and int(userInterface)!=inter[0].interfaceNumber:
-			print "Skipping interface (-i flag used)"
+			bb_messenging.log("Skipping interface (-i flag used)")
 			continue
 		if readpt != -1:
-			print "Skipping interface (valid endpoints already found), use -i flag to force"
+			bb_messenging.log("Skipping interface (valid endpoints already found), use -i flag to force")
 			continue
 		try:
 			handle.claimInterface(inter[0].interfaceNumber)
-			print "		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass
-			print "		Interface protocol:",inter[0].interfaceProtocol
+			bb_messenging.log("		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass)
+			bb_messenging.log("		Interface protocol:",inter[0].interfaceProtocol)
 			for att in inter:
 				i=0
 				# check endpoint pairs
@@ -140,7 +141,7 @@ def read_bb_endpoints(device, userInterface):
 					red=att.endpoints[i].address
 					writ=att.endpoints[i+1].address
 					i+=2
-					print "		EndPoint Pair:",hex(red),"/",hex(writ)
+					bb_messenging.log("		EndPoint Pair:",hex(red),"/",hex(writ))
 					try:
 						usb_write(device,writ,COMMAND_HELLO)
 						try:
@@ -153,7 +154,7 @@ def read_bb_endpoints(device, userInterface):
 								if modem_readpt==-1:
 									modem_readpt=red
 									modem_writept=writ
-									print "			Found Modem endpoints: ",hex(red),"/",hex(writ)
+									bb_messenging.log("			Found Modem endpoints: ",hex(red),"/",hex(writ))
 
 							else:
 								if readpt == -1 :
@@ -163,27 +164,27 @@ def read_bb_endpoints(device, userInterface):
 									readpt=red
 									writept=writ
 									isDataPair=True
-									print "			Found Data endpoints: ",hex(red),"/",hex(writ)
+									bb_messenging.log("			Found Data endpoints: ",hex(red),"/",hex(writ))
 						except usb.USBError:
-							print "			Not Data Pair (Read failed)"
+							bb_messenging.log("			Not Data Pair (Read failed)")
 					except usb.USBError:
-						print "			Not Data Pair (Write failed)"
+						bb_messenging.log("			Not Data Pair (Write failed)")
 
 					if (isDataPair==False) and readpt != -1 and next_readpt == -1:
 						next_readpt=red
 						next_writept=writ
-						print "			Next endpoints:",hex(red),"/",hex(writ)
+						bb_messenging.log("			Next endpoints:",hex(red),"/",hex(writ))
 
 			handle.releaseInterface()
 		except usb.USBError:
-			print "Error while scanning interface: "+str(inter[0].interfaceNumber)+" -> skipping"
+			bb_messenging.log("Error while scanning interface: "+str(inter[0].interfaceNumber)+" -> skipping")
 			traceback.print_exc(file=sys.stdout)
 
 	# if no specific modem port found, try the one after the data one 
 	if modem_readpt==-1:
 		modem_readpt=next_readpt
 		modem_writept=next_writept
-		print "Defaulted Modem endpoints: ",hex(modem_readpt),"/",hex(modem_writept)
+		bb_messenging.log("Defaulted Modem endpoints: ",hex(modem_readpt),"/",hex(modem_writept))
 
 	device.readpt=readpt
 	device.writept=writept
@@ -191,7 +192,7 @@ def read_bb_endpoints(device, userInterface):
 	device.modem_writept=modem_writept
 
 	#save scan results to file
-	print "Saving scan results to "+PREF_FILE+", some devices (Bold) do not like being scanned."
+	bb_messenging.log("Saving scan results to "+PREF_FILE+", some devices (Bold) do not like being scanned.")
 	config = ConfigParser.RawConfigParser()
 	config.add_section('EndPoints')
 	config.set('EndPoints','interface', device.interface)
@@ -210,7 +211,7 @@ def set_bb_power(device):
 	'''
 	Added try / expect blocks as I had reports of failure(which ?) on storm 9500
 	'''
-	print "\nIncreasing USB power - for charging"
+	bb_messenging.status("\nIncreasing USB power - for charging")
 	try:
 		buffer= [0,0]
 		device.handle.controlMsg(0xc0, 0xa5, buffer, 0 , 1)
@@ -219,18 +220,18 @@ def set_bb_power(device):
 		# reset
 		reset()
 	except usb.USBError, error:
-		print "Error increasing power ",error.message,", continuing anyway."
+		bb_messenging.log("Error increasing power ",error.message,", continuing anyway.")
 
 def set_data_mode(device):
-	print "Switching Device to data only mode"
+	bb_messenging.status("Switching Device to data only mode")
 	try:
 		buffer= [0,0]
 		device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
 	except usb.USBError, error:
-		print "Error setting device to data mode ",error.message,", continuing anyway."
+		bb_messenging.log("Error setting device to data mode ",error.message,", continuing anyway.")
 
 def reset(device):
-	print "Resetting device"
+	bb_messenging.status("Resetting device")
 	device.handle.reset()
 
 def get_pin(device):
@@ -256,7 +257,7 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 	except usb.USBError, error:
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			print "error: ",error
+			bb_messenging.log("error: ",error)
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
@@ -267,7 +268,7 @@ def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 	except usb.USBError, error:
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			print "error: ",error
+			bb_messenging.log("error: ",error)
 			raise
 	return bytes 
 

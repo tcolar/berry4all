@@ -28,6 +28,7 @@ Mac:
 
 Thibaut Colar
 '''
+import bb_messenging
 import os
 import platform
 import shutil
@@ -50,32 +51,32 @@ def is_supported_osx():
 	return major > 7
 
 def restart_kextd():
-	print('Restarting Kernel Ext. Daemon')
+	bb_messenging.status('Restarting Kernel Ext. Daemon')
     # Force kext cache update
 	subprocess.call(['touch', '/System/Library/Extensions'])
     # send SIGUP to kextd
 	subprocess.call(['killall', '-s', '1', 'kextd'])
 
 def install_kextd():
-	print('Installing custom Kernel Ext. File')
+	bb_messenging.status('Installing custom Kernel Ext. File')
 	shutil.copytree(KEXT_FOLDER, "/System/Library/Extensions/libusbshield_rim.kext")
 	subprocess.call(['chown', 'root:wheel', "/System/Library/Extensions/libusbshield_rim.kext"])
 	subprocess.call(['kextload', '/System/Library/Extensions/libusbshield_rim.kext'])
 	restart_kextd()
-	print "Warning: If the device still fails to claim an interface, you should reboot."
+	bb_messenging.log("Warning: If the device still fails to claim an interface, you should reboot.")
 
 def uninstall_kextd():
-    print('Removing cutom Kernel Ext. File')
+    bb_messenging.status('Removing cutom Kernel Ext. File')
     os.remove("/System/Library/Extensions/libusbshield_rim.kext")
     restart_kextd()
 
 def load_pocketmac():
-	print('Re-enabling pocketmac')
+	bb_messenging.status('Re-enabling pocketmac')
 	subprocess.call(['kextload', '/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext/'])
 	restart_kextd()
 
 def unload_pocketmac():
-	print('Temporarely disabling pocketmac kernel extension (imcopatible)')
+	bb_messenging.status('Temporarely disabling pocketmac kernel extension (imcopatible)')
 	subprocess.call(['kextunload', '/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext/'])
 	restart_kextd()
 
@@ -84,30 +85,31 @@ def prepare_osx():
 		if os.getuid() == 0:
 			# Note: pocketmac kext preventing us from working !:
 			if os.path.isdir("/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext"):
-				print("PocketMac found, it's incompatible with bbtether, will try to disbale it temporarily")
-				print("*** Note that this might not work, you might have to uninstall pocketMac :-( **")
-				raw_input("Please Unplug the Blackberry, then press Enter")
+				msgs=["PocketMac found, it's incompatible with bbtether, will try to disbale it temporarily",
+				"*** Note that this might not work, you might have to uninstall pocketMac :-( **"]
+				bb_messenging.warn(msgs)
+				bb_messenging.ask(["Please Unplug the Blackberry"])
 				unload_pocketmac()
-				raw_input("Please Plug the Blackberry, then press Enter")
+				bb_messenging.ask(["Please Plug the Blackberry"])
             #if not os.path.isdir("/System/Library/Extensions/libusbshield_rim.kext/"):
 			#	raw_input("Please Unplug the Blackberry, then press Enter")
 			#	install_kextd()
 			#	raw_input("Please Plug the Blackberry, then press Enter")
 		else:
 			if os.path.isdir("/System/Library/Extensions/net.pocketmac.driver.BlackberryUSB.kext"):
-				print "Need to run as root(sudo) to disable net.pocketmac.driver.BlackberryUSB.kext"
+				bb_messenging.warn(["Need to run as root(sudo) to disable net.pocketmac.driver.BlackberryUSB.kext"])
 				os._exit(0)
 			#if not os.path.isdir("/System/Library/Extensions/libusbshield_rim.kext/"):
 			#	print "Need to run as root(sudo) to install libusbshield_rim.kext (just once)"
 			#	os._exit(0)
 			if not os.path.isfile(SECRETS_FILE):
-				print "Need to run as root(sudo) to install " + SECRETS_FILE + " (just once)"
+				bb_messenging.warn(["Need to run as root(sudo) to install " + SECRETS_FILE + " (just once)"])
 				os._exit(0)
 
 
         # won't manage to do pap without this
 		if not os.path.isfile(SECRETS_FILE):
-			print "the file " + SECRETS_FILE + " does not exist, will try to create it(required)"
+			bb_messenging.warn(["the file " + SECRETS_FILE + " does not exist, will try to create it(required)"])
 			file = open(SECRETS_FILE, 'w')
 			file.write("*	*	\"\"	*")
 			file.close()

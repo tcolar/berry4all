@@ -20,15 +20,15 @@ If you make fixes or find issues please EMAIL: tcolar AT colar Dot NET
 '''
 import time
 
+import bb_messenging
 import bb_modem
 import bb_osx
 import bb_usb
 import bb_util
+from bb_version import VERSION
 from optparse import OptionGroup
 from optparse import OptionParser
 import os
-
-VERSION = "0.2l"
 
 ''' Main Class '''
 class BBTether:
@@ -54,12 +54,12 @@ class BBTether:
 		return parser.parse_args()
 
 	def __init__(self):
-		print "--------------------------------"
-		print "BBTether ", VERSION
-		print "Thibaut Colar - 2009"
-		print "More infos: http://wiki.colar.net/bbtether"
-		print "Use '-h' flag for more informations : 'python bbtether.py -h'."
-		print "--------------------------------\n"
+		bb_messenging.log("--------------------------------")
+		bb_messenging.log("BBTether " + VERSION)
+		bb_messenging.log("Thibaut Colar - 2009")
+		bb_messenging.log("More infos: http://wiki.colar.net/bbtether")
+		bb_messenging.log("Use '-h' flag for more informations : 'python bbtether.py -h'.")
+		bb_messenging.log("--------------------------------\n")
 
 		(options, args) = self.parse_cmd()
 
@@ -72,7 +72,7 @@ class BBTether:
 
 		# Need to be root
 		if os.getuid() != 0:
-			print "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nThis probably will only work as root!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+			bb_messenging.log("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nThis probably will only work as root!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 			#sys.exit(0)
 
 		bb_util.remove_berry_charge()
@@ -97,7 +97,7 @@ class BBTether:
 				berry.read_endpoints(options.interface)
 
 			if options.listonly:
-				print "Listing only requested, stopping here."
+				bb_messenging.warn(["Listing only requested, stopping here."])
 				bb_osx.terminate_osx()
 				os._exit(0)
 
@@ -107,7 +107,7 @@ class BBTether:
 			# Only needed with BB os < 4.5 ?
 			if options.charge:
 				bb_usb.set_bb_power(berry)
-				print ("Waiting few seconds, for mode to change")
+				bb_messenging.status("Waiting few seconds, for mode to change")
 				time.sleep(1.5)
 
 			# set to datamode (ony if requested)
@@ -127,17 +127,17 @@ class BBTether:
 				berry.interface = int(options.interface)
 
 			if berry.readpt == -1:
-				print "\nNo good Data Endpoint pair, bailing out !";
+				bb_messenging.warn(["\nNo good Data Endpoint pair, bailing out !"])
 			else:
-				print "\nUsing Data Endpoint Pair:", hex(berry.readpt), "/", hex(berry.writept);
-				print "Using Modem pair: ", hex(berry.modem_readpt), "/", hex(berry.modem_writept), "\n"
+				bb_messenging.log("\nUsing Data Endpoint Pair:"+ hex(berry.readpt)+ "/"+ hex(berry.writept))
+				bb_messenging.log("Using Modem pair: "+ hex(berry.modem_readpt)+ "/"+ hex(berry.modem_writept)+ "\n")
 				
-				print "Claiming interface ",berry.interface
+				bb_messenging.log("Claiming interface "+str(berry.interface))
 				berry.claim_interface()
 
 				berry.read_infos()
-				print "Pin: ", hex(berry.pin)
-				print "Description: ", berry.desc
+				bb_messenging.log("Pin: "+ hex(berry.pin))
+				bb_messenging.log("Description: "+ berry.desc)
 
 				# Modem use does not require to be in desktop mode, so don't do it.
 				modem = bb_modem.BBModem(berry)
@@ -167,13 +167,13 @@ class BBTether:
 					# we don't want to crash and hang.
 					pass
 
-				print "Releasing interface"
+				bb_messenging.status("Releasing interface")
 				berry.release_interface()
 				bb_osx.terminate_osx()
-				print "bbtether completed."
+				bb_messenging.status("bbtether completed.")
 				os._exit(0)
 		else:
-			print "\nNo RIM device found"
+			bb_messenging.warn(["\nNo RIM device found"])
 
 
 # MAIN
