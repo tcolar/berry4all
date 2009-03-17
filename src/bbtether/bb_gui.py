@@ -58,12 +58,12 @@ class BBFrame(wx.Frame):
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
-		button_start=wx.Button(self,BUTTON_START, "START",(0,0))
-		button_stop=wx.Button(self,BUTTON_STOP, "STOP",(100,0))
+		button_start=wx.Button(self,BUTTON_START, "CONNECT",(4,4))
+		button_stop=wx.Button(self,BUTTON_STOP, "DISCONNECT",(100,4))
 		wx.EVT_BUTTON(self, BUTTON_START, self.onStart)
 		wx.EVT_BUTTON(self, BUTTON_STOP, self.onStop)
 
-		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (600, 500), style=wx.TE_MULTILINE)
+		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (700, 500), style=wx.TE_MULTILINE)
 		self.log_pane.Bind(EVT_LOG_APPEND, self.onLogEvent)
 
 		self.Fit()
