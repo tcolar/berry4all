@@ -11,11 +11,10 @@ import bb_messenging
 import bb_tether
 from bb_version import VERSION
 import os
-import string
 import threading
-from wx.lib.newevent import NewEvent
 try:
 	import wx
+	from wx.lib.newevent import NewEvent
 except ImportError:
 	print "The GUI requires wxPython to be installed !"
 	print "Linux: sudo apt-get install python-wxgtk2.8"
@@ -58,7 +57,7 @@ class BBFrame(wx.Frame):
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
-		button=wx.Button(self,BUTTON_START, "START")
+		button_start=wx.Button(self,BUTTON_START, "START")
 		wx.EVT_BUTTON(self, BUTTON_START, self.onStart)
 
 		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (400, 300), style=wx.TE_MULTILINE)
@@ -84,6 +83,7 @@ class BBFrame(wx.Frame):
 			self.Destroy()
 
 	def onStart(self, event):
+		self.log_pane.Clear()
 		options = {"verbose":True}
 		fake_args = ["tmobile"]
 		#instance & start bbtether
@@ -92,6 +92,9 @@ class BBFrame(wx.Frame):
 		bbtether.start()
 
 class SysOutListener:
+	def fileno(self):
+		return -1
+	
 	def write(self, string):
 		#wx.GetApp().frame.log_pane.AppendText(string)
 		evt = wx.StdOut(text=string)

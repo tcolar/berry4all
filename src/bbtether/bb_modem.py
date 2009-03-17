@@ -9,7 +9,6 @@ import pty
 import signal
 import time
 
-import bb_gui
 import bb_messenging
 import bb_usb
 import bb_util
@@ -226,7 +225,7 @@ class BBModem:
 			if bb_util.verbose:
 				command.append("debug")
 				command.append("dump")
-			process=subprocess.Popen(command)#,stdout=bb_gui)
+			process=subprocess.Popen(command)#,stdout=bb_gui.SysOutListener())#,stdout=bb_gui)
 		
 		bb_messenging.log("********************************************")
 		bb_messenging.status("Modem Ready at "+os.ttyname(slave))
