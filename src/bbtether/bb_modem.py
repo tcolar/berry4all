@@ -16,6 +16,7 @@ import hashlib
 import os
 import random
 import subprocess
+from subprocess import PIPE
 import threading
 import usb
 
@@ -45,6 +46,7 @@ class BBModem:
 	device=None
 		
 	def __init__(self, dev):
+		self.shutting_down=False
 		self.device=dev
 		self.data_mode=False
 		self.line_leftover=""
@@ -191,13 +193,15 @@ class BBModem:
 
 	def start(self, pppConfig, pppdCommand):
 		'''Start the modem and keep going until ^C'''
+		self.shutting_down=False
+
 		#open modem PTY
-		(master,slave)=pty.openpty()
+		(self.master,self.slave)=pty.openpty()
 		# make master non blocking
-		flag = fcntl.fcntl(master, fcntl.F_GETFL)
-		fcntl.fcntl(master, fcntl.F_SETFL, flag | os.O_NDELAY)
+		flag = fcntl.fcntl(self.master, fcntl.F_GETFL)
+		fcntl.fcntl(self.master, fcntl.F_SETFL, flag | os.O_NDELAY)
 		 
-		bb_messenging.log("\nModem pty: "+os.ttyname(slave))
+		bb_messenging.log("\nModem pty: "+os.ttyname(self.slave))
 				
 		bb_messenging.status("Initializing Modem")
 		try:
@@ -205,13 +209,13 @@ class BBModem:
 		except:
 			# If init fails, cleanup and quit
 			bb_messenging.warn(["Modem initialization Failed !"])
-			os.close(master)
-			os.close(slave)
+			os.close(self.master)
+			os.close(self.slave)
 			raise
 
 		# Start the USB Modem read thread
-		bbThread=BBModemThread(self,master)
-		bbThread.start()
+		self.bbThread=BBModemThread(self,self.master)
+		self.bbThread.start()
 		
 		bb_messenging.status("Modem Started")
 		
@@ -221,14 +225,19 @@ class BBModem:
 			#TODO: start pppd in thread/process
 			bb_messenging.status("Will try to start pppd now, ("+pppdCommand+") with config: "+pppConfig)
 			time.sleep(.5)
-			command=[pppdCommand,os.ttyname(slave),"file","conf/"+pppConfig,"nodetach"]
+			command=[pppdCommand,os.ttyname(self.slave),"file","conf/"+pppConfig,"nodetach"]
 			if bb_util.verbose:
 				command.append("debug")
 				command.append("dump")
-			process=subprocess.Popen(command)#,stdout=bb_gui.SysOutListener())#,stdout=bb_gui)
+			# we want output to go to the "real" sys.stdout (subprocess bypasses that)
+			# and then we can't catch it to put it in the gui.
+			# so we use a pipe to read the stuff, then read in in a thread and dump it to regulat stdout
+			self.process=subprocess.Popen(command, stdout=PIPE)
+			self.reader=ProcessOutputReader(self.process)
+			self.reader.start()
 		
 		bb_messenging.log("********************************************")
-		bb_messenging.status("Modem Ready at "+os.ttyname(slave))
+		bb_messenging.status("Modem Ready at "+os.ttyname(self.slave))
 		bb_messenging.log(" Use ^C to terminate")
 		bb_messenging.log("********************************************")
 		
@@ -240,7 +249,7 @@ class BBModem:
 			while(True):
 				
 				if not self.data_mode:
-					data=self.readline(master)
+					data=self.readline(self.master)
 					bb_messenging.status("PPP data: "+data)
 					# check for ~p (data mode start)
 					bytes=array.array("B",data)
@@ -254,13 +263,13 @@ class BBModem:
 						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 						self.write(session_packet)
 						# return OK, so chat script can proceed to next step
-						os.write(master,"\nOK\n")
+						os.write(self.master,"\nOK\n")
 					else:
 						self.write(bytes)
 				else:
 					data=[]
 					try:											
-						data=os.read(master, BUF_SIZE)
+						data=os.read(self.master, BUF_SIZE)
 					except OSError:
 						# wait a tiny bit (10 ms)
 						time.sleep(.01)
@@ -280,14 +289,20 @@ class BBModem:
 							newbytes.append(bytes[i])
 						self.write(newbytes)
 				
-		except KeyboardInterrupt:
-			msgs=["\nShutting down",
-			"******************************************************",
-			"** Please WAIT for shutdown to complete (up to 30s) **",
-			"** Otherwise you might have to reboot your BB !     **",
-			"******************************************************"
-			]
-			bb_messenging.warn(msgs)
+		except:
+			if not self.shutting_down:
+				bb_messenging.log("Error: "+str(error))
+				self.shutdown()
+
+	def shutdown(self):
+		self.shutting_down=True
+		msgs=["\nShutting down",
+		"******************************************************",
+		"** Please WAIT for shutdown to complete (up to 30s) **",
+		"** Otherwise you might have to reboot your BB !     **",
+		"******************************************************"
+		]
+		bb_messenging.warn(msgs)
 			
 		# Shutting down "gracefully"
 		try:
@@ -296,10 +311,11 @@ class BBModem:
 			self.write([0x41,0x54,0x48,0x0d]) # send ATH (modem hangup)
 			#self.readline(master)
 			# send SIGHUP(1) to pppd (causes ppd to hangup and terminate)
-			if process:
-				os.kill(process.pid,1)
+			if self.process:
+				os.kill(self.process.pid,1)
 				# wait for pppd to be done
-				os.waitpid(process.pid, 0)
+				os.waitpid(self.process.pid, 0)
+				self.reader.stop()
 			bb_messenging.status("PPP finished")
 			# Ending session (by opening different one, as seen in windows trace - odd)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0] + [0x71,0x67,0x7d,0x20,0x3c,0xcd,0x74,0x7d] + RIM_PACKET_TAIL
@@ -311,20 +327,21 @@ class BBModem:
 			self.write(end_session_packet)
 			#stopping modem read thread
 			bb_messenging.status("Stopping modem thread")
-			bbThread.stop()
+			self.bbThread.stop()
 		except Exception, error:
-			bb_messenging.warn(["Failure during shutdown, might have to reboot BB manually: "+error])
+			bb_messenging.warn(["Failure during shutdown, might have to reboot BB manually: "+str(error)])
 		# stopping pppd
 		try:
-			# making sure ppp process is gone (only if something went wrong)
-			os.kill(process.pid,signal.SIGKILL)
+			# making sure ppp self.process is gone (only if something went wrong)
+			os.kill(self.process.pid,signal.SIGKILL)
 		except:
 			# ppd already gone, all is good
 			pass
 		# close pty descriptors
-		os.close(master)
-		os.close(slave)
+		os.close(self.master)
+		os.close(self.slave)
 		# done
+		self.shutting_down=False
 
 	def send_password(self, seed):
 		seed_bytes=array.array("B",seed)
@@ -368,6 +385,26 @@ class BBModem:
 
 		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
+
+class ProcessOutputReader(threading.Thread):
+	'''Read process output Pipe(pppd) and pass it to regular system out(print)'''
+	def __init__(self, process):
+		threading.Thread.__init__(self)
+		self.process=process
+	
+	def run(self):
+		self.done=False
+		while not self.done:
+			try:
+				output=self.process.stdout.readline()
+				print output,
+			except:
+				pass
+				#print "err"
+		time.sleep(.02)
+
+	def stop(self):
+		self.done=True
 
 class BBModemThread( threading.Thread ):	
 	'''Thread that reads Modem data from BlackBerry USB'''

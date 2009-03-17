@@ -35,7 +35,7 @@ def parse_cmd(args):
 ''' Main Class '''
 class BBTether:
 
-	def __init__(self, options, args):
+	def __init__(self):
 		bb_messenging.log("--------------------------------")
 		bb_messenging.log("BBTether " + VERSION)
 		bb_messenging.log("Thibaut Colar - 2009")
@@ -43,6 +43,7 @@ class BBTether:
 		bb_messenging.log("Use '-h' flag for more informations : 'python bbtether.py -h'.")
 		bb_messenging.log("--------------------------------\n")
 
+	def start(self, options, args):
 		pppConfig = None
 		if len(args) > 0:
 			pppConfig = args[0]
@@ -120,10 +121,10 @@ class BBTether:
 				bb_messenging.log("Description: "+ berry.desc)
 
 				# Modem use does not require to be in desktop mode, so don't do it.
-				modem = bb_modem.BBModem(berry)
+				self.modem = bb_modem.BBModem(berry)
 				
 				if options.password:
-					modem.set_password(options.password)
+					self.modem.set_password(options.password)
 				
 				pppdCommand = "/usr/sbin/pppd";
 				if options.pppd:
@@ -141,7 +142,7 @@ class BBTether:
 				
 				# This will run forever (until ^C)
 				try:
-					modem.start(pppConfig, pppdCommand)
+					self.modem.start(pppConfig, pppdCommand)
 				except KeyboardInterrupt:
 					# sometimes the KInterrupt will propagate here(if ^C before modem read thread started)
 					# we don't want to crash and hang.
@@ -151,7 +152,9 @@ class BBTether:
 				berry.release_interface()
 				bb_osx.terminate_osx()
 				bb_messenging.status("bbtether completed.")
-				os._exit(0)
+				#os._exit(0)
 		else:
 			bb_messenging.warn(["\nNo RIM device found"])
 
+	def shutdown(self):
+		self.modem.shutdown()

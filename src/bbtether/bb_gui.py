@@ -24,6 +24,7 @@ except ImportError:
 MENU_ABOUT = 1
 MENU_EXIT = 2
 BUTTON_START=3
+BUTTON_STOP=4
 
 wx.StdOut, EVT_LOG_APPEND= NewEvent()
 
@@ -57,18 +58,23 @@ class BBFrame(wx.Frame):
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
-		button_start=wx.Button(self,BUTTON_START, "START")
+		button_start=wx.Button(self,BUTTON_START, "START",(0,0))
+		button_stop=wx.Button(self,BUTTON_STOP, "STOP",(100,0))
 		wx.EVT_BUTTON(self, BUTTON_START, self.onStart)
+		wx.EVT_BUTTON(self, BUTTON_STOP, self.onStop)
 
-		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (400, 300), style=wx.TE_MULTILINE)
+		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (600, 500), style=wx.TE_MULTILINE)
 		self.log_pane.Bind(EVT_LOG_APPEND, self.onLogEvent)
+
+		self.Fit()
+		self.CenterOnScreen()
 
 	def onLogEvent(self,event):
 		text = event.text
 		self.log_pane.AppendText(text)
 
 	def onAbout(self, event):
-		dlg = wx.MessageDialog(self, "This is the GUI for bbtether.\nBBTether Version: " + VERSION + "\n\nMore infos about BBTether at:\nhttp://wiki.colar.net/bbtether\n", "About BBTether", wx.OK | wx.ICON_INFORMATION)
+		dlg = wx.MessageDialog(self, "This is the GUI for bbtether.\nBBTether Version: " + VERSION + "\n\nMore infos about BBTether at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBTether", wx.OK | wx.ICON_INFORMATION)
 		dlg.ShowModal()
 		dlg.Destroy()
 
@@ -85,15 +91,18 @@ class BBFrame(wx.Frame):
 	def onStart(self, event):
 		self.log_pane.Clear()
 		options = {"verbose":True}
-		fake_args = ["tmobile"]
+		fake_args = ["tmobile","-v"]
 		#instance & start bbtether
 		(options,args)=bb_tether.parse_cmd(fake_args)
-		bbtether = BBTetherThread(options, args)
-		bbtether.start()
+		self.bbtether = BBTetherThread(options, args)
+		self.bbtether.start()
+
+	def onStop(self, event):
+		if self.bbtether:
+			self.bbtether.stop()
+
 
 class SysOutListener:
-	def fileno(self):
-		return -1
 	
 	def write(self, string):
 		#wx.GetApp().frame.log_pane.AppendText(string)
@@ -108,13 +117,13 @@ class BBTetherThread(threading.Thread):
 		self.setDaemon(True)
 
 	def stop(self,):
-		self.done=True
+		self.bbtether.shutdown()
 
 	def run (self):
-		self.done=False
 		bb_messenging.status("Starting Modem thread")
-		while( not self.done):
-			bbtether = bb_tether.BBTether(self.options, self.args)
+		# runs "forever"
+		self.bbtether = bb_tether.BBTether()
+		self.bbtether.start(self.options, self.args)
 
 
 class BBGui(wx.App):

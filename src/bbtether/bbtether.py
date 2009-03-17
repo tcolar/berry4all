@@ -23,7 +23,8 @@ import bb_tether
 
 # MAIN
 (options, args) = bb_tether.parse_cmd(sys.argv[1:])
-bb_tether.BBTether(options, args)
+bbtether=bb_tether.BBTether()
+bbtether.start(options, args)
 
 '''
 Protocol References: (Used to figure out BBerry protocol)

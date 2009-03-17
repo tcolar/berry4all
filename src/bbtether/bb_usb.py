@@ -257,7 +257,7 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 	except usb.USBError, error:
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			bb_messenging.log("error: ",error)
+			bb_messenging.log("error: "+str(error.message))
 			raise
 			
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
@@ -268,7 +268,7 @@ def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 	except usb.USBError, error:
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			bb_messenging.log("error: "+error)
+			bb_messenging.log("error: "+str(error.message))
 			raise
 	return bytes 
 
