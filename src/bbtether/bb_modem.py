@@ -9,6 +9,7 @@ import pty
 import signal
 import time
 
+import bb_gui
 import bb_messenging
 import bb_usb
 import bb_util
@@ -197,7 +198,7 @@ class BBModem:
 		flag = fcntl.fcntl(master, fcntl.F_GETFL)
 		fcntl.fcntl(master, fcntl.F_SETFL, flag | os.O_NDELAY)
 		 
-		bb_messenging.debug("\nModem pty: "+os.ttyname(slave))
+		bb_messenging.log("\nModem pty: "+os.ttyname(slave))
 				
 		bb_messenging.status("Initializing Modem")
 		try:
@@ -225,7 +226,7 @@ class BBModem:
 			if bb_util.verbose:
 				command.append("debug")
 				command.append("dump")
-			process=subprocess.Popen(command)
+			process=subprocess.Popen(command)#,stdout=bb_gui)
 		
 		bb_messenging.log("********************************************")
 		bb_messenging.status("Modem Ready at "+os.ttyname(slave))
@@ -250,7 +251,7 @@ class BBModem:
 
 					# check for special bbtether packet (BBT_xx.) where xx is the command
 					if data.startswith("BBT_OS"):
-						bb_messenging.debug("Starting session")
+						bb_messenging.log("Starting session")
 						session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0]+ self.session_key + RIM_PACKET_TAIL
 						self.write(session_packet)
 						# return OK, so chat script can proceed to next step
@@ -338,7 +339,7 @@ class BBModem:
 		digest2=sha1.digest()
 		digest_list=array.array("B",digest2).tolist()
 		response=[0x3, 0, 0, 0 ]+digest_list+RIM_PACKET_TAIL
-		bb_messenging.status(("Sending password digest: ")
+		bb_messenging.status("Sending password digest: ")
 		#bb_util.debug(response)  # unsafe to dump ?
 		self.write(response)
 		time.sleep(.5)

@@ -16,10 +16,13 @@ def warn(msgs):
 	'''
 	Show a warning popup and print in log
 	'''
-	for msg in msgs:
-		print msg
+	if gui != None:
+		gui.warn(msgs)
+	else:
+		for msg in msgs:
+			print msg
 
-def ask(msgs):
+def confirm(msgs):
 	'''
 	Do a warning and wait for OK (or keystroke in cmdline mode)
 	'''
@@ -32,4 +35,8 @@ def status(msg):
 	'''
 	Update status bar and print in logs
 	'''
-	print msg
+	if gui != None:
+		gui.update_status(msg)
+		gui.append_log(msg)
+	else:
+		print msg

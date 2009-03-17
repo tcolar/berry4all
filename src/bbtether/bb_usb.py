@@ -108,21 +108,21 @@ def read_bb_endpoints(device, userInterface):
 	if(berry.idProduct == PRODUCT_NEW_MASS_ONLY):
 		type="Storage Mode"
 	
-	bb_messenging.log("\nFound RIM device (",type,")")
-	bb_messenging.log("	Manufacturer:",handle.getString(berry.iManufacturer,100))
-	bb_messenging.log("	Product:",handle.getString(berry.iProduct,100))
+	bb_messenging.log("\nFound RIM device ("+type+")")
+	bb_messenging.log("	Manufacturer:"+handle.getString(berry.iManufacturer,100))
+	bb_messenging.log("	Product:"+handle.getString(berry.iProduct,100))
 	#print "	Serial:",handle.getString(berry.iSerialNumber,100)
-	bb_messenging.log("	Device:", berry.filename)
+	bb_messenging.log("	Device:"+berry.filename)
 	bb_messenging.log("	VendorId: %04x" % berry.idVendor)
 	bb_messenging.log("	ProductId: %04x" % berry.idProduct)
-	bb_messenging.log("	Version:",berry.deviceVersion)
-	bb_messenging.log("	Class:",berry.deviceClass," ",berry.deviceSubClass)
-	bb_messenging.log("	Protocol:",berry.deviceProtocol)
-	bb_messenging.log("	Max packet size:",berry.maxPacketSize)
-	bb_messenging.log("	Self Powered:", config.selfPowered)
-	bb_messenging.log("	Max Power:", config.maxPower)
+	bb_messenging.log("	Version:"+berry.deviceVersion)
+	bb_messenging.log("	Class:"+str(berry.deviceClass)+" "+str(berry.deviceSubClass))
+	bb_messenging.log("	Protocol:"+str(berry.deviceProtocol))
+	bb_messenging.log("	Max packet size:"+str(berry.maxPacketSize))
+	bb_messenging.log("	Self Powered:"+str(config.selfPowered))
+	bb_messenging.log("	Max Power:"+str(config.maxPower))
 	for inter in config.interfaces:
-		bb_messenging.log("\n	*Interface:",inter[0].interfaceNumber)
+		bb_messenging.log("\n	*Interface:"+str(inter[0].interfaceNumber))
 		if userInterface!=None and int(userInterface)!=inter[0].interfaceNumber:
 			bb_messenging.log("Skipping interface (-i flag used)")
 			continue
@@ -131,8 +131,8 @@ def read_bb_endpoints(device, userInterface):
 			continue
 		try:
 			handle.claimInterface(inter[0].interfaceNumber)
-			bb_messenging.log("		Interface class:",inter[0].interfaceClass,"/",inter[0].interfaceSubClass)
-			bb_messenging.log("		Interface protocol:",inter[0].interfaceProtocol)
+			bb_messenging.log("		Interface class:"+str(inter[0].interfaceClass)+"/"+str(inter[0].interfaceSubClass))
+			bb_messenging.log("		Interface protocol:"+str(inter[0].interfaceProtocol))
 			for att in inter:
 				i=0
 				# check endpoint pairs
@@ -141,7 +141,7 @@ def read_bb_endpoints(device, userInterface):
 					red=att.endpoints[i].address
 					writ=att.endpoints[i+1].address
 					i+=2
-					bb_messenging.log("		EndPoint Pair:",hex(red),"/",hex(writ))
+					bb_messenging.log("		EndPoint Pair:"+hex(red)+"/"+hex(writ))
 					try:
 						usb_write(device,writ,COMMAND_HELLO)
 						try:
@@ -154,7 +154,7 @@ def read_bb_endpoints(device, userInterface):
 								if modem_readpt==-1:
 									modem_readpt=red
 									modem_writept=writ
-									bb_messenging.log("			Found Modem endpoints: ",hex(red),"/",hex(writ))
+									bb_messenging.log("			Found Modem endpoints: "+hex(red)+"/"+hex(writ))
 
 							else:
 								if readpt == -1 :
@@ -164,7 +164,7 @@ def read_bb_endpoints(device, userInterface):
 									readpt=red
 									writept=writ
 									isDataPair=True
-									bb_messenging.log("			Found Data endpoints: ",hex(red),"/",hex(writ))
+									bb_messenging.log("			Found Data endpoints: "+hex(red)+"/"+hex(writ))
 						except usb.USBError:
 							bb_messenging.log("			Not Data Pair (Read failed)")
 					except usb.USBError:
@@ -173,7 +173,7 @@ def read_bb_endpoints(device, userInterface):
 					if (isDataPair==False) and readpt != -1 and next_readpt == -1:
 						next_readpt=red
 						next_writept=writ
-						bb_messenging.log("			Next endpoints:",hex(red),"/",hex(writ))
+						bb_messenging.log("			Next endpoints:"+hex(red)+"/"+hex(writ))
 
 			handle.releaseInterface()
 		except usb.USBError:
@@ -184,7 +184,7 @@ def read_bb_endpoints(device, userInterface):
 	if modem_readpt==-1:
 		modem_readpt=next_readpt
 		modem_writept=next_writept
-		bb_messenging.log("Defaulted Modem endpoints: ",hex(modem_readpt),"/",hex(modem_writept))
+		bb_messenging.log("Defaulted Modem endpoints: "+hex(modem_readpt)+"/"+hex(modem_writept))
 
 	device.readpt=readpt
 	device.writept=writept
