@@ -51,6 +51,11 @@ class BBModem:
 		self.data_mode=False
 		self.line_leftover=""
 		self.password=""
+		self.running=False
+
+		uname=os.uname()
+		bb_messenging.log("System: "+uname[0]+","+uname[2]+","+uname[3]+","+uname[4])
+
 
 	def write(self, data, timeout=TIMEOUT):
 		bb_util.debug("Writing data size: "+str(len(data)))
@@ -64,7 +69,13 @@ class BBModem:
 		data=[]
 		datar=[1]
 		while len(datar) > 0 and len(data)<MAX_RD_SIZE:
-			datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+			# without that will loop forever if no data at all (timeout)
+			datar=[]
+			# read data
+			try:
+				datar=bb_usb.usb_read(self.device,self.device.modem_readpt,size,timeout,"\tModem <- ")
+			except Exception, error:
+				bb_messenging.log("#error: "+str(error.message))
 			if len(datar) > 0:
 				data.extend(datar)
 		self.red+=len(data)
@@ -113,15 +124,15 @@ class BBModem:
 					bb_usb.reset(self.device)
 					resetted=True
 				if reset_time > 30:
+					bb_messenging.log("***********************************************")
 					msgs=["Timeout while trying to init modem, exiting.",
-					"****************************************************************************"
-					"If this was the first time using bbtether, it might have been caused by",
+					"If this was the FIRST TIME using bbtether, it might have been caused by",
 					"the first scan of the device. (Known issue on the Bold)",
-					"Please reboot the blackberry (remove/readd battery) and wait for BB to start",
+					"Please reboot the blackberry (REMOVE/ ADD The Battery)",
 					"and try again (won't have to scan anymore).",
-					"****************************************************************************",
 					]
 					bb_messenging.warn(msgs)
+					bb_messenging.log("***********************************************")
 					os._exit(0)
 				bb_messenging.status("Waiting for reset completion")
 				time.sleep(5)
@@ -194,6 +205,8 @@ class BBModem:
 	def start(self, pppConfig, pppdCommand):
 		'''Start the modem and keep going until ^C'''
 		self.shutting_down=False
+		self.request_down=False
+		self.running=True
 
 		#open modem PTY
 		(self.master,self.slave)=pty.openpty()
@@ -246,11 +259,17 @@ class BBModem:
 			
 			prev2=0x7E #start with this, so first 0x7E not doubled
 			prev=0x00
-			while(True):
+			while(not self.request_down):
 				
 				if not self.data_mode:
 					data=self.readline(self.master)
-					bb_messenging.status("PPP data: "+data)
+					# cleanup message
+					length=len(data)
+					if len(data)>0 and data[len(data)-1]==0xA:
+						length=length-1
+					if len(data)>0 and data[len(data)-2]==0xD:
+						length=length-1
+					bb_messenging.status("PPP data: "+data[:length-1])
 					# check for ~p (data mode start)
 					bytes=array.array("B",data)
 					if len(data)>0 and data.startswith("~p") :
@@ -288,34 +307,38 @@ class BBModem:
 							prev=bytes[i]										
 							newbytes.append(bytes[i])
 						self.write(newbytes)
-				
-		except:
-			if not self.shutting_down:
-				bb_messenging.log("Error: "+str(error))
-				self.shutdown()
+		except Exception, error:
+			bb_messenging.log("Error: "+str(error))
+		if not self.shutting_down:
+			self.do_shutdown()
 
 	def shutdown(self):
+		'''
+		Non blocking version of do_shutdown
+		'''
+		self.request_down=True
+
+	def do_shutdown(self):
 		self.shutting_down=True
-		msgs=["\nShutting down",
-		"Please WAIT for shutdown to complete (up to 30s)",
-		"Otherwise you might have to reboot your BB !",
-		]
-		self.log("******************************************************")
-		bb_messenging.warn(msgs)
-			
+		bb_messenging.log("******************************************************")
+		bb_messenging.log("\nShutting down")
+		bb_messenging.log("Please WAIT for shutdown to complete (up to 30s)")
+		bb_messenging.log("Otherwise you might have to reboot your BB !")
+		bb_messenging.log("******************************************************")
+
 		# Shutting down "gracefully"
 		try:
 			self.data_mode=False
 			#stop PPP
 			self.write([0x41,0x54,0x48,0x0d]) # send ATH (modem hangup)
-			#self.readline(master)
 			# send SIGHUP(1) to pppd (causes ppd to hangup and terminate)
 			if self.process:
 				os.kill(self.process.pid,1)
 				# wait for pppd to be done
+				bb_messenging.status("Waiting for PPPD shutdown to complete.")
 				os.waitpid(self.process.pid, 0)
 				self.reader.stop()
-			bb_messenging.status("PPP finished")
+			bb_messenging.status("PPPD finished")
 			# Ending session (by opening different one, as seen in windows trace - odd)
 			end_session_packet=[0, 0, 0, 0, 0x23, 0, 0, 0, 3, 0, 0, 0, 0, 0xC2, 1, 0] + [0x71,0x67,0x7d,0x20,0x3c,0xcd,0x74,0x7d] + RIM_PACKET_TAIL
 			self.write(end_session_packet)
@@ -327,11 +350,12 @@ class BBModem:
 			#stopping modem read thread
 			bb_messenging.status("Stopping modem thread")
 			self.bbThread.stop()
+			#give time for bbthread to stop, otherwise when we close the fd's during an usb_read it will hang !
+			time.sleep(2)
 		except Exception, error:
 			bb_messenging.warn(["Failure during shutdown, might have to reboot BB manually: "+str(error)])
-		# stopping pppd
 		try:
-			# making sure ppp self.process is gone (only if something went wrong)
+			# making sure ppp process is gone (only if something went wrong)
 			os.kill(self.process.pid,signal.SIGKILL)
 		except:
 			# ppd already gone, all is good
@@ -341,6 +365,9 @@ class BBModem:
 		os.close(self.slave)
 		# done
 		self.shutting_down=False
+		bb_messenging.status("Disconnected")
+		bb_messenging.warn(["Modem Disconnected","It is now safe to shutdown."])
+		self.running=False
 
 	def send_password(self, seed):
 		seed_bytes=array.array("B",seed)
@@ -395,11 +422,10 @@ class ProcessOutputReader(threading.Thread):
 		self.done=False
 		while not self.done:
 			try:
-				output=self.process.stdout.readline()
-				print output,
+				output=self.process.stdout.readline().splitlines(False)[0]
+				bb_messenging.status(output)
 			except:
 				pass
-				#print "err"
 		time.sleep(.02)
 
 	def stop(self):
@@ -433,6 +459,7 @@ class BBModemThread( threading.Thread ):
 							data=array.array("B",bytes)
 							#print "Read  "+str(len(bytes))+" bytes"
 							os.write(self.master,data.tostring())
+
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?
 					if error.message != "No error":

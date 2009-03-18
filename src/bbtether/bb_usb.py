@@ -4,12 +4,12 @@ Thibaut Colar
 '''
 import sys
 
-import ConfigParser
 import bb_data
 import bb_messenging
 import bb_osx
+import bb_prefs
+from bb_prefs import PREF_FILE
 import bb_util
-import os
 import string
 import traceback
 import usb
@@ -27,8 +27,6 @@ COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
 MODEM_HELLO_REPLY = [0x7, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
 
-PREF_FILE=".bbtether"
-
 def find_berry(userdev=None, userbus=None, verbose=True):
 	'''
 		Look on Bus for a RIM device
@@ -38,8 +36,7 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 	device=None
 	mybus=None;
 
-	if verbose:
-		bb_messenging.status("Looking for USB devices:")
+	bb_messenging.status("Looking for USB devices:")
 	berry=None
 	if userdev and userbus:
 		if verbose :
@@ -64,6 +61,9 @@ def find_berry(userdev=None, userbus=None, verbose=True):
 		device.usbdev=berry
 		device.bus=mybus
 
+	if verbose :
+		bb_messenging.log("USB Device lookup finished")
+
 	return device
 
 def read_bb_endpoints(device, userInterface):
@@ -75,15 +75,13 @@ def read_bb_endpoints(device, userInterface):
 	'''
 
 	#look for previously saved endpoints
-	if os.path.isfile(PREF_FILE):
-		bb_messenging.log("Will read saved scan results from "+PREF_FILE+" (delete if you want to force new scan)")
-		config = ConfigParser.RawConfigParser()
-		config.read(PREF_FILE)
-		device.interface=config.getint('EndPoints','interface')
-		device.readpt=config.getint('EndPoints','readpt')
-		device.writept=config.getint('EndPoints','writept')
-		device.modem_readpt=config.getint('EndPoints','modem_readpt')
-		device.modem_writept=config.getint('EndPoints','modem_writept')
+	config=bb_prefs.get_prefs()
+	if config.has_section('EndPoints'):
+		device.interface=config.getint(bb_prefs.SECTION_EP,'interface')
+		device.readpt=config.getint(bb_prefs.SECTION_EP,'readpt')
+		device.writept=config.getint(bb_prefs.SECTION_EP,'writept')
+		device.modem_readpt=config.getint(bb_prefs.SECTION_EP,'modem_readpt')
+		device.modem_writept=config.getint(bb_prefs.SECTION_EP,'modem_writept')
 		bb_messenging.log("Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
 		# return saved data
 		return device
@@ -192,17 +190,23 @@ def read_bb_endpoints(device, userInterface):
 	device.modem_writept=modem_writept
 
 	#save scan results to file
-	bb_messenging.log("Saving scan results to "+PREF_FILE+", some devices (Bold) do not like being scanned.")
-	config = ConfigParser.RawConfigParser()
-	config.add_section('EndPoints')
-	config.set('EndPoints','interface', device.interface)
-	config.set('EndPoints','readpt', device.readpt)
-	config.set('EndPoints','writept', device.writept)
-	config.set('EndPoints','modem_readpt', device.modem_readpt)
-	config.set('EndPoints','modem_writept', device.modem_writept)
-	configfile=open(PREF_FILE, 'wb')
-	config.write(configfile)
-	configfile.close()
+	bb_messenging.log("***********************************************")
+	msgs=["We just ran the initial device Endpoints Scan",
+	"This needs to be done only once.",
+	"Saved the scan results to "+PREF_FILE,
+	"some devices (Bold) do not like being scanned.","",
+	"AND WILL NEED THE BATTERY REMOVED / ADDED (just this once)",
+	"BEFORE YOU CAN USE THE MODEM."]
+	bb_messenging.warn(msgs)
+	bb_messenging.log("***********************************************")
+	config=bb_prefs.get_prefs()
+	config.add_section(bb_prefs.SECTION_EP)
+	config.set(bb_prefs.SECTION_EP,'interface', device.interface)
+	config.set(bb_prefs.SECTION_EP,'readpt', device.readpt)
+	config.set(bb_prefs.SECTION_EP,'writept', device.writept)
+	config.set(bb_prefs.SECTION_EP,'modem_readpt', device.modem_readpt)
+	config.set(bb_prefs.SECTION_EP,'modem_writept', device.modem_writept)
+	bb_prefs.save_prefs(config)
 
 def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)
@@ -211,14 +215,15 @@ def set_bb_power(device):
 	'''
 	Added try / expect blocks as I had reports of failure(which ?) on storm 9500
 	'''
-	bb_messenging.status("\nIncreasing USB power - for charging")
+	bb_messenging.status("Increasing USB power - for charging")
 	try:
 		buffer= [0,0]
 		device.handle.controlMsg(0xc0, 0xa5, buffer, 0 , 1)
 		buffer = []
 		device.handle.controlMsg(0x40, 0xA2, buffer, 0 , 1)
 		# reset
-		reset()
+		# reset()
+		bb_messenging.status("Increased USB power")
 	except usb.USBError, error:
 		bb_messenging.log("Error increasing power ",error.message,", continuing anyway.")
 
@@ -233,6 +238,7 @@ def set_data_mode(device):
 def reset(device):
 	bb_messenging.status("Resetting device")
 	device.handle.reset()
+	bb_messenging.status("Reset sent.")
 
 def get_pin(device):
 	pin=0x0;
@@ -259,7 +265,7 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
 			bb_messenging.log("error: "+str(error.message))
 			raise
-			
+
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 	bytes=[]
 	try:

@@ -34,6 +34,7 @@ def parse_cmd(args):
 
 ''' Main Class '''
 class BBTether:
+	modem=None
 
 	def __init__(self):
 		bb_messenging.log("--------------------------------")
@@ -51,10 +52,9 @@ class BBTether:
 		if(options.verbose):
 			bb_util.verbose = True
 
-		# Need to be root
+		# Need to be root (unless udev or OSX)
 		if os.getuid() != 0:
-			bb_messenging.log("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nThis probably will only work as root!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-			#sys.exit(0)
+			bb_messenging.log("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\nThis might will only work as root!\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 
 		bb_util.remove_berry_charge()
 		bb_osx.prepare_osx()
@@ -66,7 +66,8 @@ class BBTether:
 		if berry != None:
 
 			# open the connection
-			berry.open_handle()
+			if berry.handle==None:
+				berry.open_handle()
 
 			#bb_usbfs.find_kernel_driver(berry)
 
@@ -158,3 +159,6 @@ class BBTether:
 
 	def shutdown(self):
 		self.modem.shutdown()
+
+	def is_running(self):
+		return self.modem!=None and self.modem.running

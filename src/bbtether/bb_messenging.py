@@ -2,7 +2,7 @@
 Deal with user messages
 send mesages/questions to gui (if avail) / or console
 '''
-
+import sys
 # None, unless bbgui sets it
 gui=None
 
@@ -18,9 +18,9 @@ def warn(msgs):
 	'''
 	if gui != None:
 		gui.warn(msgs)
-	else:
-		for msg in msgs:
-			print msg
+	for msg in msgs:
+		sys.__stdout__.write(msg+"\n")
+
 
 def confirm(msgs):
 	'''
@@ -38,5 +38,4 @@ def status(msg):
 	if gui != None:
 		gui.update_status(msg)
 		gui.append_log(msg)
-	else:
-		print msg
+	sys.__stdout__.write(msg+"\n")
