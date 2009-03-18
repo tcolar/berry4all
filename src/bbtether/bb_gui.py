@@ -49,6 +49,9 @@ class BBFrame(wx.Frame):
 		#menu_file.AppendSeparator()
 		menu_file.Append(MENU_EXIT, "E&xit", "Terminate the program")
 
+		#item = wx.MenuItem(menu, 0, "Some Item")
+		#item.Enable(False)
+
 		menuBar.Append(menu_file, "&File");
 
 		menu_dev = wx.Menu()
