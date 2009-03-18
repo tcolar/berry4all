@@ -88,7 +88,7 @@ class BBFrame(wx.Frame):
 		self.log_pane.AppendText(text)
 
 	def onAbout(self, event):
-		dlg = wx.MessageDialog(self, "This is the GUI for bbtether.\nBBTether Version: " + VERSION + "\n\nMore infos about BBTether at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBTether", wx.OK | wx.ICON_INFORMATION)
+		dlg = wx.MessageDialog(self, "This is the BBGUI Version: " + VERSION + "\n\nMore infos about BBGUI at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBGUI", wx.OK | wx.ICON_INFORMATION)
 		dlg.ShowModal()
 		dlg.Destroy()
 
