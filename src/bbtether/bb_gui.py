@@ -145,7 +145,7 @@ class BBGui(wx.App):
 	frame = None
 
 	def OnInit(self):
-		self.frame = BBFrame(None, -1, "BBTether GUI")
+		self.frame = BBFrame(None, -1, "BBGUI")
 		self.frame.Show(True)
 
 		self.SetTopWindow(self.frame)
