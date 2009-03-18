@@ -21,10 +21,14 @@ except ImportError:
 	print "Max OSX: http://www.wxpython.org/download.php (get the one for python 2.5 unicode)"
 	os._exit(0)
 
-MENU_ABOUT = 1
-MENU_EXIT = 2
-BUTTON_START=3
-BUTTON_STOP=4
+MENU_PREFS = 2
+MENU_EXIT = 4
+MENU_CONNECT=14
+MENU_DISCONNECT=15
+MENU_MODEM_RESET=17
+MENU_DEV_RESET=24
+MENU_DEV_RESCAN=25
+MENU_ABOUT = 94
 
 wx.StdOut, EVT_LOG_APPEND= NewEvent()
 
@@ -41,13 +45,26 @@ class BBFrame(wx.Frame):
 
 		menuBar = wx.MenuBar()
 		menu_file = wx.Menu()
+		menu_file.Append(MENU_PREFS, "&Preferences", "Preferences")
 		#menu_file.AppendSeparator()
 		menu_file.Append(MENU_EXIT, "E&xit", "Terminate the program")
 
 		menuBar.Append(menu_file, "&File");
 
+		menu_dev = wx.Menu()
+		menu_dev.Append(MENU_DEV_RESET, "&Reset", "Force device reset(if stuck)")
+		menu_dev.Append(MENU_DEV_RESCAN, "Re&scan", "Force rescan of device endpoints")
+		menuBar.Append(menu_dev, "&Device");
+
+		menu_modem = wx.Menu()
+		menu_modem.Append(MENU_CONNECT, "&Connect", "Connect the modem")
+		menu_modem.Append(MENU_DISCONNECT, "&Disconnect", "Disconnect the modem")
+		#menu_file.AppendSeparator()
+		menu_modem.Append(MENU_MODEM_RESET, "&Reset", "Force modem reset(if stuck)")
+		menuBar.Append(menu_modem, "&Modem");
+
 		menu_help = wx.Menu()
-		menu_help.Append(MENU_ABOUT, "&About BBTether", "More information about this program")
+		menu_help.Append(MENU_ABOUT, "&About", "More information about this program")
 		menuBar.Append(menu_help, "&Help");
 
 		self.SetMenuBar(menuBar)
@@ -55,15 +72,12 @@ class BBFrame(wx.Frame):
 		# Menu events
 		wx.EVT_MENU(self, MENU_ABOUT, self.onAbout)
 		wx.EVT_MENU(self, MENU_EXIT, self.onQuit)
+		wx.EVT_MENU(self, MENU_CONNECT, self.onStart)
+		wx.EVT_MENU(self, MENU_DISCONNECT, self.onStop)
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
-		button_start=wx.Button(self,BUTTON_START, "CONNECT",(4,4))
-		button_stop=wx.Button(self,BUTTON_STOP, "DISCONNECT",(100,4))
-		wx.EVT_BUTTON(self, BUTTON_START, self.onStart)
-		wx.EVT_BUTTON(self, BUTTON_STOP, self.onStop)
-
-		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (2, 40), (700, 500), style=wx.TE_MULTILINE)
+		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (4, 4), (700, 500), style=wx.TE_MULTILINE | wx.TE_READONLY)
 		self.log_pane.Bind(EVT_LOG_APPEND, self.onLogEvent)
 
 		self.Fit()

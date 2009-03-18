@@ -297,11 +297,10 @@ class BBModem:
 	def shutdown(self):
 		self.shutting_down=True
 		msgs=["\nShutting down",
-		"******************************************************",
-		"** Please WAIT for shutdown to complete (up to 30s) **",
-		"** Otherwise you might have to reboot your BB !     **",
-		"******************************************************"
+		"Please WAIT for shutdown to complete (up to 30s)",
+		"Otherwise you might have to reboot your BB !",
 		]
+		self.log("******************************************************")
 		bb_messenging.warn(msgs)
 			
 		# Shutting down "gracefully"
