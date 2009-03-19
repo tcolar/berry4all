@@ -74,6 +74,11 @@ class BBFrame(wx.Frame):
 		menu_modem.Append(MENU_DISCONNECT, "&Disconnect", "Disconnect the modem")
 		menuBar.Append(menu_modem, "&Modem");
 
+		#menu_todo = wx.Menu()
+		#menu_todo.Append(MENU_CONNECT, "&Upload App", "COB / JAD")
+		#menu_todo.Append(MENU_DISCONNECT, "&Backup", "")
+		#menuBar.Append(menu_todo, "&Firmware");
+
 		menu_help = wx.Menu()
 		menu_help.Append(MENU_ABOUT, "&About", "More information about this program")
 		menuBar.Append(menu_help, "&Help");
@@ -152,6 +157,11 @@ class BBFrame(wx.Frame):
 			self.Destroy()
 
 	def onStart(self, event):
+		if self.bbtether!=None and self.bbtether.is_running():
+			dlg = wx.MessageDialog(self, "The modem is already Connected.", "Warning!", wx.OK | wx.ICON_INFORMATION)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
 		self.log_pane.Clear()
 		fake_args = ["tmobile"]
 		if bb_util.verbose:
@@ -162,6 +172,11 @@ class BBFrame(wx.Frame):
 		self.bbtether.start()
 
 	def onStop(self, event):
+		if self.bbtether==None or not self.bbtether.is_running():
+			dlg = wx.MessageDialog(self, "The modem is not Connected.", "Warning!",wx.OK | wx.ICON_INFORMATION)
+			dlg.ShowModal()
+			dlg.Destroy()
+			return
 		msg="Please WAIT for shutdown to complete (up to 30s)\n Otherwise you might have to reboot your BB !"
 		dlg = wx.MessageDialog(self, msg, "Warning!", wx.OK | wx.ICON_INFORMATION)
 		dlg.ShowModal()
