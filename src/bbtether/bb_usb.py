@@ -83,8 +83,11 @@ def read_bb_endpoints(device, userInterface):
 		device.modem_readpt=config.getint(bb_prefs.SECTION_EP,'modem_readpt')
 		device.modem_writept=config.getint(bb_prefs.SECTION_EP,'modem_writept')
 		bb_messenging.log("Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
-		# return saved data
-		return device
+		# return saved data if good (earlier version saved bad ones)
+		if device.readpt != -1 and device.writept !=-1:
+			return device
+		else:
+			print "Invalid saved endpoints, will rescan."
 
 	readpt=-1
 	writept=-1
@@ -189,24 +192,25 @@ def read_bb_endpoints(device, userInterface):
 	device.modem_readpt=modem_readpt
 	device.modem_writept=modem_writept
 
-	#save scan results to file
-	bb_messenging.log("***********************************************")
-	msgs=["We just ran the initial device Endpoints Scan",
-	"This needs to be done only once.",
-	"Saved the scan results to "+PREF_FILE,
-	"some devices (Bold) do not like being scanned.","",
-	"AND WILL NEED THE BATTERY REMOVED / ADDED (just this once)",
-	"BEFORE YOU CAN USE THE MODEM."]
-	bb_messenging.warn(msgs)
-	bb_messenging.log("***********************************************")
-	config=bb_prefs.get_prefs()
-	config.add_section(bb_prefs.SECTION_EP)
-	config.set(bb_prefs.SECTION_EP,'interface', device.interface)
-	config.set(bb_prefs.SECTION_EP,'readpt', device.readpt)
-	config.set(bb_prefs.SECTION_EP,'writept', device.writept)
-	config.set(bb_prefs.SECTION_EP,'modem_readpt', device.modem_readpt)
-	config.set(bb_prefs.SECTION_EP,'modem_writept', device.modem_writept)
-	bb_prefs.save_prefs(config)
+	#save scan results to file (only if found)
+	if writept!=-1:
+		bb_messenging.log("***********************************************")
+		msgs=["We just ran the initial device Endpoints Scan",
+		"This needs to be done only once.",
+		"Saved the scan results to "+PREF_FILE,
+		"some devices (Bold) do not like being scanned.","",
+		"AND WILL NEED THE BATTERY REMOVED / ADDED (just this once)",
+		"BEFORE YOU CAN USE THE MODEM."]
+		bb_messenging.warn(msgs)
+		bb_messenging.log("***********************************************")
+		config=bb_prefs.get_prefs()
+		config.add_section(bb_prefs.SECTION_EP)
+		config.set(bb_prefs.SECTION_EP,'interface', device.interface)
+		config.set(bb_prefs.SECTION_EP,'readpt', device.readpt)
+		config.set(bb_prefs.SECTION_EP,'writept', device.writept)
+		config.set(bb_prefs.SECTION_EP,'modem_readpt', device.modem_readpt)
+		config.set(bb_prefs.SECTION_EP,'modem_writept', device.modem_writept)
+		bb_prefs.save_prefs(config)
 
 def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)

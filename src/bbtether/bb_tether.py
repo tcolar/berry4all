@@ -4,6 +4,7 @@ import time
 import bb_messenging
 import bb_modem
 import bb_osx
+import bb_prefs
 import bb_usb
 import bb_util
 from bb_version import VERSION
@@ -20,6 +21,7 @@ def parse_cmd(args):
 	parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose: Show I/O data and other infos")
 	parser.add_option("-c", "--charge", action="store_true", dest="charge", help="Put the device in Charging mode (ex: Pearl) and reset it.")
 	parser.add_option("-m", "--dmode", action="store_true", dest="dmode", help="Put the device in data mode, might help on some devices.")
+	parser.add_option("-s", "--scan", action="store_true", dest="rescan", help="Force re-scan of endpoints.")
 	group = OptionGroup(parser, "Advanced Options", "Don't use unless you know what you are doing.")
 	group.add_option("-w", "--drp", dest="drp", help="Force Data read endpoint - Hex(ex -w 0x84)")
 	group.add_option("-x", "--dwp", dest="dwp", help="Force Data write endpoint - Hex (ex -x 0x6)")
@@ -45,6 +47,10 @@ class BBTether:
 		bb_messenging.log("--------------------------------\n")
 
 	def start(self, options, args):
+		if(options.rescan):
+			prefs=bb_prefs.get_prefs()
+			prefs.remove_section(bb_prefs.SECTION_EP)
+
 		pppConfig = None
 		if len(args) > 0:
 			pppConfig = args[0]

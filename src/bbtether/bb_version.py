@@ -1,4 +1,4 @@
 '''
 Version file
 '''
-VERSION="0.3beta1"
+VERSION="0.3beta2"
