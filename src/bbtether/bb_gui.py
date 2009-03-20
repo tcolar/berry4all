@@ -6,6 +6,7 @@ BBTether GUI
 http://www.wxpython.org/docs/api/
 '''
 import sys
+import time
 
 import bb_messenging
 import bb_prefs
@@ -38,10 +39,12 @@ MENU_ABOUT = 94
 appendEvent, EVT_LOG_APPEND= NewEvent()
 statusEvent, EVT_STATUS= NewEvent()
 warnEvent, EVT_WARN= NewEvent()
+askEvent, EVT_ASK= NewEvent()
 
 class BBFrame(wx.Frame):
 	connected = False
 	log_pane = None
+	parent=None
 
 	def __init__(self, parent, ID, title):
 		self.bbtether=None
@@ -93,6 +96,7 @@ class BBFrame(wx.Frame):
 		wx.EVT_MENU(self, MENU_DEV_CHARGE, self.onCharge)
 		wx.EVT_MENU(self, MENU_DEV_RESET, self.onDevReset)
 		wx.EVT_MENU(self, MENU_DEV_RESCAN, self.onDevRescan)
+		wx.EVT_MENU(self, MENU_PREFS, self.onAsk)
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
@@ -102,9 +106,13 @@ class BBFrame(wx.Frame):
 		self.CenterOnScreen()
 
 		# Binding custom events
-		self.log_pane.Bind(EVT_LOG_APPEND, self.onLogEvent)
-		self.log_pane.Bind(EVT_STATUS, self.onStatus)
-		self.log_pane.Bind(EVT_WARN, self.onWarn)
+		self.Bind(EVT_LOG_APPEND, self.onLogEvent)
+		self.Bind(EVT_STATUS, self.onStatus)
+		self.Bind(EVT_WARN, self.onWarn)
+		self.Bind(EVT_ASK, self.onAsk)
+
+	def set_parent(self, parent):
+		self.parent=parent
 
 	def onCharge(self, event):
 		berry = bb_usb.find_berry(None, None)
@@ -140,6 +148,17 @@ class BBFrame(wx.Frame):
 		dlg = wx.MessageDialog(self, event.text, "Warning!", wx.OK | wx.ICON_INFORMATION)
 		dlg.ShowModal()
 		dlg.Destroy()
+		self.parent.set_answer("OK")
+
+	def onAsk(self, event):
+		if not event.hide_input:
+			dlg = wx.TextEntryDialog(self, event.caption,"Question", event.default)
+		else:
+			dlg = wx.PasswordEntryDialog(self, event.caption,"Question", event.default)
+		dlg.ShowModal()
+		dlg.Destroy()
+		self.parent.set_answer(dlg.GetValue())
+		return dlg.GetValue()
 
 	def onAbout(self, event):
 		dlg = wx.MessageDialog(self, "This is the BBGUI Version: " + VERSION + "\n\nMore infos about BBGUI at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBGUI", wx.OK | wx.ICON_INFORMATION)
@@ -163,7 +182,15 @@ class BBFrame(wx.Frame):
 			dlg.Destroy()
 			return
 		self.log_pane.Clear()
-		fake_args = ["tmobile"]
+		# ask config to use
+		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
+		evt=askEvent(caption="PPP config to use (EX: tmobile) see conf/ folder.",hide_input=False,default=pppd)
+		pppconf=self.onAsk(evt)
+		if pppconf != pppd:
+			prefs=bb_prefs.get_prefs()
+			prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",pppconf)
+			bb_prefs.save_prefs(prefs)
+		fake_args = [pppconf]
 		if bb_util.verbose:
 			fake_args.append("-v")
 		#instance & start bbtether
@@ -217,10 +244,12 @@ class BBTetherThread(threading.Thread):
 
 class BBGui(wx.App):
 
+	answer = None
 	frame = None
 
 	def OnInit(self):
 		self.frame = BBFrame(None, -1, "BBGUI")
+		self.frame.set_parent(self)
 		self.frame.Show(True)
 
 		self.SetTopWindow(self.frame)
@@ -232,19 +261,39 @@ class BBGui(wx.App):
 
 	# callback methods, called from other process threads(ex: bbtether)
 	# Need to use events only as wx is not thread safe !
-	def warn(self, msgs):
+	def ask(self, caption, hide_input, default_value):
+		print "ask"
+		evt=askEvent(caption=caption,hide_input=hide_input,default=default_value)
+		print "post evt"
+		wx.PostEvent(self.frame, evt)
+		print "wait"
+		return self.wait_for_answer()
+
+	def warn(self, msgs, waitFor=False):
 		msg = ""
 		for m in msgs:
 			msg += m + "\n"
 		evt = warnEvent(text=msg)
-		wx.PostEvent(wx.GetApp().frame.log_pane, evt)
+		wx.PostEvent(self.frame, evt)
+		if waitFor:
+			self.wait_for_answer()
 
 	def append_log(self, msg):
 		evt = appendEvent(text=msg+"\n")
-		wx.PostEvent(wx.GetApp().frame.log_pane, evt)
+		wx.PostEvent(self.frame, evt)
 
 	def update_status(self, msg):
 		evt = statusEvent(text=msg)
-		wx.PostEvent(wx.GetApp().frame.log_pane, evt)
-		
+		wx.PostEvent(self.frame, evt)
+	
 	#End callback methods
+
+	def set_answer(self,ans):
+		self.answer=ans
+
+	def wait_for_answer(self):
+		self.answer=None
+		while self.answer == None:
+			time.sleep(.5)
+		return self.answer
+	

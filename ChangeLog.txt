@@ -2,6 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3beta5: 3/20/2009:
+	Fixes to password support
+	MUltiple small bug fixes
+	GUI now usable (asks for pppd conf & password)
+
 0.3beta4: 3/20/2009:
 	Added support for detaching binded usb kernel, should
 	take care of those can't claim interface issues. (Linux only)

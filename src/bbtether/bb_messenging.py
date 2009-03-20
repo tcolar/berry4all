@@ -12,21 +12,29 @@ def log(msg):
 	'''
 	print msg
 
-def warn(msgs):
+def warn(msgs, waitFor=False):
 	'''
 	Show a warning popup and print in log
 	'''
 	if gui != None:
-		gui.warn(msgs)
+		gui.warn(msgs, waitFor)
 	for msg in msgs:
 		sys.__stdout__.write(msg+"\n")
 
+def ask(caption,hide=False,default=""):
+	'''
+	Show a warning popup and print in log
+	'''
+	if gui != None:
+		return gui.ask(caption,hide,default)
+	else:
+		return raw_input("Question: "+caption+"\n")
 
 def confirm(msgs):
 	'''
 	Do a warning and wait for OK (or keystroke in cmdline mode)
 	'''
-	warn(msgs)
+	warn(msgs, True)
 	if gui==None:
 		raw_input("Press Enter to continue")
 

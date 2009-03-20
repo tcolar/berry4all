@@ -80,7 +80,7 @@ class BBModem:
 				data.extend(datar)
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
-			bb_messenging.status("GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ)
+			bb_messenging.status("GPRS Infos: Received Bytes:"+str(self.red)+"	Sent Bytes:"+str(self.writ))
 			self.lastcount=self.red+self.writ
 		if len(data)>0:
 			bb_util.debug("read: "+str(len(data)))
@@ -147,15 +147,14 @@ class BBModem:
 			triesLeft=answer[8]
 			seed=answer[4:8]
 			
-			bb_messenging.log("Got password Request from Device (",triesLeft," tries left)")
+			bb_messenging.log("Got password Request from Device ("+str(triesLeft)+" tries left)")
 			triesLeft=answer[8]
 			if triesLeft <= MIN_PASSWD_TRIES:
-				bb_messenging.warn(["The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries."]);
+				bb_messenging.confirm(["The device has only "+answer[8]+" password tries left, we don't want to risk it! Reboot/unplug the device to reset tries."]);
 				raise Exception
 			if len(self.password) == 0:
-				bb_messenging.warn(["No password was provided to bbtether, can't continue."]);
-				raise Exception
-			self.send_password(seed)
+				self.password=bb_messenging.ask("Please enter your BB Password", True, "")
+			self.send_password(self.password,seed)
 		else:
 			bb_messenging.log("No password requested.")
 
@@ -372,10 +371,10 @@ class BBModem:
 		bb_messenging.warn(["Modem Disconnected","It is now safe to shutdown."])
 		self.running=False
 
-	def send_password(self, seed):
+	def send_password(self, password, seed):
 		seed_bytes=array.array("B",seed)
 		sha1=hashlib.sha1()
-		sha1.update(self.password)
+		sha1.update(password)
 		digest=sha1.digest()
 		digest_bytes=array.array("B",digest)
 		seed_bytes.extend(digest_bytes)
