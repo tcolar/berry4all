@@ -184,6 +184,7 @@ class BBFrame(wx.Frame):
 		self.log_pane.Clear()
 		# ask config to use
 		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
+		#todo: use a SingleChoiceDialog
 		evt=askEvent(caption="PPP config to use (EX: tmobile) see conf/ folder.",hide_input=False,default=pppd)
 		pppconf=self.onAsk(evt)
 		if pppconf != pppd:
