@@ -131,7 +131,21 @@ def read_bb_endpoints(device, userInterface):
 			bb_messenging.log("Skipping interface (valid endpoints already found), use -i flag to force")
 			continue
 		try:
-			handle.claimInterface(inter[0].interfaceNumber)
+			try:
+				handle.claimInterface(inter[0].interfaceNumber)
+			except usb.USBError, error:
+				bb_messenging.log("Failed to claim interface: "+str(error.message)+"\nMust be in use.")
+				if not bb_osx.is_osx():
+					#Only implemented on libusb Linux !
+					#For mac we need the kext stuff.
+					bb_messenging.log("Will try to release it.")
+					detach_kernel_driver(device,inter[0].interfaceNumber)
+					try:
+						handle.claimInterface(inter[0].interfaceNumber)
+						bb_messenging.log("Interface is now claimed !")
+					except usb.USBError, error:
+						bb_messenging.log("Still could not claim the interface: "+str(error.message))
+						
 			bb_messenging.log("		Interface class:"+str(inter[0].interfaceClass)+"/"+str(inter[0].interfaceSubClass))
 			bb_messenging.log("		Interface protocol:"+str(inter[0].interfaceProtocol))
 			for att in inter:
@@ -283,3 +297,7 @@ def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 			raise
 	return bytes 
 
+def detach_kernel_driver(device,interface):
+	print "Trying to detach interface driver"
+	code=device.handle.detachKernelDriver(interface)
+	print "Detaching driver returned: "+str(code)

@@ -39,6 +39,8 @@ PYUSB_STATIC PyObject *PyExc_USBError;
 #define DUMP_PARAMS 0
 #endif /* NDEBUG */
 
+define DUMP_PARAMS 1
+
 #ifndef NDEBUG
 
 /*

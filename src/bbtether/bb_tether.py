@@ -70,7 +70,6 @@ class BBTether:
 		berry = bb_usb.find_berry(options.device, options.bus)
 
 		if berry != None:
-
 			# open the connection
 			if berry.handle==None:
 				berry.open_handle()

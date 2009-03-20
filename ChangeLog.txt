@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3beta4: 3/20/2009:
+	Added support for detaching binded usb kernel, should
+	take care of those can't claim interface issues. (Linux only)
+
 0.3beta2: 3/20/2009:
 	More failure checks and debug infos
 	.pyc clenup shell script (cleanup.sh)
