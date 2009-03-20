@@ -20,7 +20,7 @@ my_config=None
 def get_def_string(section, option, default):
 	config=get_prefs()
 	try:
-		return config.getstring(section, option)
+		return config.get(section, option)
 	except NoSectionError:
 		return default
 	except NoOptionError:

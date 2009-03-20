@@ -2,6 +2,12 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3beta1: 3/20/2009:
+	Started GUI work - not fully complete (bbgui)
+	Fixed bbtether broken endpoint save/load in 0.2l
+	Fixed command line shutdown
+	Fixed error reported by pylint
+
 0.2l: 3/16/2009:
 	Save/Load endpoints data, so we only scan once, this fixes 2 issues:
 	- Makes subsequent use of bbtether faster

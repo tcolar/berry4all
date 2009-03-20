@@ -88,9 +88,9 @@ def prepare_osx():
 				msgs=["PocketMac found, it's incompatible with bbtether, will try to disbale it temporarily",
 				"*** Note that this might not work, you might have to uninstall pocketMac :-( **"]
 				bb_messenging.warn(msgs)
-				bb_messenging.ask(["Please Unplug the Blackberry"])
+				bb_messenging.confirm(["Please Unplug the Blackberry"])
 				unload_pocketmac()
-				bb_messenging.ask(["Please Plug the Blackberry"])
+				bb_messenging.confirm(["Please Plug the Blackberry"])
             #if not os.path.isdir("/System/Library/Extensions/libusbshield_rim.kext/"):
 			#	raw_input("Please Unplug the Blackberry, then press Enter")
 			#	install_kextd()

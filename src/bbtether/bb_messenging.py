@@ -26,10 +26,9 @@ def confirm(msgs):
 	'''
 	Do a warning and wait for OK (or keystroke in cmdline mode)
 	'''
-	if gui != None:
-		warn(msgs)
-	else:
-		raw_input(msg+ "then press Enter")
+	warn(msgs)
+	if gui==None:
+		raw_input("Press Enter to continue")
 
 def status(msg):
 	'''
