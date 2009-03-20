@@ -2,10 +2,14 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
-0.3beat2: 3/21/2009:
+0.3beta2: 3/20/2009:
+	More failure checks and debug infos
+	.pyc clenup shell script (cleanup.sh)
+
+0.3beta2: 3/20/2009:
 	Fixed to save endpoints routine
 
-0.3beta1: 3/20/2009:
+0.3beta1: 3/19/2009:
 	Started GUI work - not fully complete (bbgui)
 	Fixed bbtether broken endpoint save/load in 0.2l
 	Fixed command line shutdown

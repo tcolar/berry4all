@@ -96,8 +96,11 @@ class BBModem:
 		for i in range(5):
 			self.session_key[i+3]=random.randrange(0, 256)
 		# clear endpoints
-		bb_usb.clear_halt(self.device,self.device.modem_readpt)
-		bb_usb.clear_halt(self.device,self.device.modem_writept)
+		try:
+			bb_usb.clear_halt(self.device,self.device.modem_readpt)
+			bb_usb.clear_halt(self.device,self.device.modem_writept)
+		except usb.USBError, error:
+			bb_messenging.log("clearhalt failed: "+str(error.message))
 
 		# reset modem
 		# ok, on pearl it will fail the first time, because after querying the modem (hello commands) it's broke and need a reset

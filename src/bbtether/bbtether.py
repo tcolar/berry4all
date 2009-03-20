@@ -25,7 +25,6 @@ import bb_tether
 (options, args) = bb_tether.parse_cmd(sys.argv[1:])
 bbtether=bb_tether.BBTether()
 bbtether.start(options, args)
-
 '''
 Protocol References: (Used to figure out BBerry protocol)
 	http://www.off.net/cassis/protocol-description.html

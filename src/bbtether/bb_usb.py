@@ -210,6 +210,7 @@ def read_bb_endpoints(device, userInterface):
 		config.set(bb_prefs.SECTION_EP,'writept', device.writept)
 		config.set(bb_prefs.SECTION_EP,'modem_readpt', device.modem_readpt)
 		config.set(bb_prefs.SECTION_EP,'modem_writept', device.modem_writept)
+		bb_messenging.log("Saving EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
 		bb_prefs.save_prefs(config)
 
 def clear_halt(device, endpt):
