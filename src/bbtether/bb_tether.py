@@ -145,9 +145,11 @@ class BBTether:
 				try:
 					self.modem.start(pppConfig, pppdCommand)
 				except KeyboardInterrupt:
+					bb_messenging.log("KBD interrupt")
 					# sometimes the KInterrupt will propagate here(if ^C before modem read thread started)
 					# we don't want to crash and hang.
-					pass
+					if self.modem!=None:
+						self.modem.do_shutdown()
 
 				bb_messenging.status("Releasing interface")
 				berry.release_interface()
