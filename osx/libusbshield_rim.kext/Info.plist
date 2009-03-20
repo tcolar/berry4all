@@ -26,18 +26,16 @@
 			<string>com.apple.kernel.iokit</string>
 			<key>IOClass</key>
 			<string>IOService</string>
-			<key>IOProbeScore</key>
-			<integer>106000</integer>
 			<key>IOProviderClass</key>
-			<string>IOUSBInterface</string>
-			<key>bConfigurationValue</key>
-			<integer>1</integer>
-			<key>bInterfaceNumber</key>
-			<integer>0</integer>
+			<string>IOUSBDevice</string>
 			<key>idProduct</key>
 			<string>*</string>
 			<key>idVendor</key>
 			<integer>4042</integer>
+			<key>IKitDebug</key>
+			<integer>65535</integer>
+			<key>IProbeScore</key>
+			<integer>15100</integer>
 		</dict>
 	</dict>
 	<key>OSBundleCompatibleVersion</key>
