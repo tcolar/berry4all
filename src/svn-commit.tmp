@@ -1,0 +1,4 @@
+Fixed error (modem thread was started twice -> deadlocks !)
+--This line, and those below, will be ignored--
+
+M    bbtether/bb_modem.py

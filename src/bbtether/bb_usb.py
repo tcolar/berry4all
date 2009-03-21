@@ -123,6 +123,9 @@ def read_bb_endpoints(device, userInterface):
 	bb_messenging.log("	Self Powered:"+str(config.selfPowered))
 	bb_messenging.log("	Max Power:"+str(config.maxPower))
 	for inter in config.interfaces:
+		if len(inter) == 0:
+			bb_messenging.log("Skipping Interface -> empty array !")
+			continue
 		bb_messenging.log("\n	*Interface:"+str(inter[0].interfaceNumber))
 		if userInterface!=None and int(userInterface)!=inter[0].interfaceNumber:
 			bb_messenging.log("Skipping interface (-i flag used)")

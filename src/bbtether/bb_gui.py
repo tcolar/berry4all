@@ -177,10 +177,11 @@ class BBFrame(wx.Frame):
 			dlg = wx.MessageDialog(self, "You should Disconnect before quitting!\nOtherwise your Blackberry might need a reboot\n\nDo you want to Quit anyway ?\n", "Warning !", wx.OK | wx.CANCEL)
 			result = dlg.ShowModal()
 			dlg.Destroy()
-			if result == wx.ID_OK:
-				self.Destroy()
-		else:
-			self.Destroy()
+			if result != wx.ID_OK:
+				return
+		if self.prefs != None:
+			self.prefs.Destroy()
+		self.Destroy()
 
 	def onStart(self, event):
 		if self.bbtether!=None and self.bbtether.is_running():
@@ -231,7 +232,7 @@ class PreferencesFrame(wx.Frame):
 		sizer.AddGrowableCol(1)
 		
 		passwordl=wx.StaticText(self,-1,"Password:")
-		password=wx.TextCtrl(self,-1,"fsdffds",size=(200,-1))
+		password=wx.TextCtrl(self,-1,"fsdffds",size=(200,-1),style=wx.TE_PASSWORD)
 		sizer.Add(passwordl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
 		sizer.Add(password, 0, wx.EXPAND)
 
@@ -240,10 +241,10 @@ class PreferencesFrame(wx.Frame):
 		sizer.Add(pppdl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
 		sizer.Add(pppd, 0, wx.EXPAND)
 
-		#save=wx.Button(panel,-1,"Save")
-		#cancel=wx.Button(panel,-1,"Cancel")
-		#sizer.Add(save)
-		#sizer.Add(cancel)
+		save=wx.Button(self,-1,"Save")
+		cancel=wx.Button(self,-1,"Cancel")
+		sizer.Add(cancel)
+		sizer.Add(save,0,wx.ALIGN_RIGHT)
 		self.SetSizer(sizer)
 		sizer.Fit(self)
 		sizer.SetSizeHints(self)
