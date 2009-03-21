@@ -1,3 +1,8 @@
+after reading a bunch of data it seem to deadlock (last log: read 96)
+	no answer to disconnect request
+    reset does go through, though still can't disconnect.
+	stuck on read or write ??
+
 Help window on gui (ex: send me the log ...)
 more work on prefs
 show a warnning if resolv.conf not updated
