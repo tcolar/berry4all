@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3beta6: 3/21/2009:
+	Fixed a bad bug that would cause a diconect after ~100k sent
+
 0.3beta5: 3/20/2009:
 	Fixes to password support
 	MUltiple small bug fixes

@@ -62,7 +62,7 @@ class BBModem:
 		bb_usb.usb_write(self.device,self.device.modem_writept,data,timeout,"\tModem -> ")
 		self.writ+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
-			bb_messenging.status("GPRS Infos: Received Bytes:",self.red,"	Sent Bytes:",+self.writ)
+			bb_messenging.status("GPRS Infos: Received Bytes:"+str(self.red)+"	Sent Bytes:"+str(self.writ))
 			self.lastcount=self.red+self.writ
 			
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
