@@ -26,6 +26,7 @@ except ImportError:
 	os._exit(0)
 
 MENU_PREFS = 2
+MENU_CLEAR_CONSOLE = 3
 MENU_EXIT = 4
 MENU_CONNECT=14
 MENU_DISCONNECT=15
@@ -45,6 +46,7 @@ class BBFrame(wx.Frame):
 	connected = False
 	log_pane = None
 	parent=None
+	prefs=None
 
 	def __init__(self, parent, ID, title):
 		self.bbtether=None
@@ -57,6 +59,7 @@ class BBFrame(wx.Frame):
 		menuBar = wx.MenuBar()
 		menu_file = wx.Menu()
 		menu_file.Append(MENU_PREFS, "&Preferences", "Preferences")
+		menu_file.Append(MENU_CLEAR_CONSOLE, "&Clear Log Console", "Clear the log console.")
 		menu_file.AppendSeparator()
 		menu_file.Append(MENU_EXIT, "E&xit", "Terminate the program")
 
@@ -96,7 +99,8 @@ class BBFrame(wx.Frame):
 		wx.EVT_MENU(self, MENU_DEV_CHARGE, self.onCharge)
 		wx.EVT_MENU(self, MENU_DEV_RESET, self.onDevReset)
 		wx.EVT_MENU(self, MENU_DEV_RESCAN, self.onDevRescan)
-		wx.EVT_MENU(self, MENU_PREFS, self.onAsk)
+		wx.EVT_MENU(self, MENU_PREFS, self.onPrefs)
+		wx.EVT_MENU(self, MENU_CLEAR_CONSOLE, self.onClearConsole)
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
@@ -137,6 +141,9 @@ class BBFrame(wx.Frame):
 			prefs.remove_section(bb_prefs.SECTION_EP)
 			#Note: will replace prefs with sanedd values
 			bb_usb.read_bb_endpoints(berry, None)
+
+	def onClearConsole(self,event):
+		self.log_pane.Clear()
 
 	def onStatus(self, event):
 		self.SetStatusText(event.text)
@@ -181,7 +188,6 @@ class BBFrame(wx.Frame):
 			dlg.ShowModal()
 			dlg.Destroy()
 			return
-		self.log_pane.Clear()
 		# ask config to use
 		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
 		#todo: use a SingleChoiceDialog
@@ -211,6 +217,37 @@ class BBFrame(wx.Frame):
 		dlg.Destroy()
 		if self.bbtether!=None:
 			self.bbtether.stop()
+
+	def onPrefs(self,event):
+		if self.prefs==None:
+			self.prefs=PreferencesFrame()
+		self.prefs.Show()
+
+class PreferencesFrame(wx.Frame):
+	def __init__(self):
+		wx.Frame.__init__(self,None,-1,"BBGUI Preferences")
+		#panel=wx.Panel(self)
+		sizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+		sizer.AddGrowableCol(1)
+		
+		passwordl=wx.StaticText(self,-1,"Password:")
+		password=wx.TextCtrl(self,-1,"fsdffds",size=(200,-1))
+		sizer.Add(passwordl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		sizer.Add(password, 0, wx.EXPAND)
+
+		pppdl=wx.StaticText(self,-1,"pppd path:")
+		pppd=wx.TextCtrl(self,-1,"/usr/bin/pppd")
+		sizer.Add(pppdl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		sizer.Add(pppd, 0, wx.EXPAND)
+
+		#save=wx.Button(panel,-1,"Save")
+		#cancel=wx.Button(panel,-1,"Cancel")
+		#sizer.Add(save)
+		#sizer.Add(cancel)
+		self.SetSizer(sizer)
+		sizer.Fit(self)
+		sizer.SetSizeHints(self)
+		self.CenterOnScreen()
 
 class SysOutListener:
 	def write(self, msg):
