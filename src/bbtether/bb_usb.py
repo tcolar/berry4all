@@ -281,8 +281,11 @@ def get_description(device):
 def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 	bb_util.debug_bytes(bytes,msg)
 	try:
+		bb_util.debug2(">bulkwrite")
 		device.handle.bulkWrite(endpt, bytes, timeout)
+		bb_util.debug2("<bulkwrite")
 	except usb.USBError, error:
+		bb_util.debug2("<bulkwrite(exc)")
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
 			bb_messenging.log("error: "+str(error.message))
@@ -291,9 +294,12 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 	bytes=[]
 	try:
+		bb_util.debug2(">bulkread")
 		bytes=device.handle.bulkRead(endpt, size, timeout)
+		bb_util.debug2("<bulkread")
 		bb_util.debug_bytes(bytes,msg)
 	except usb.USBError, error:
+		bb_util.debug2("<bulkread (exc)")
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
 		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
 			bb_messenging.log("error: "+str(error.message))

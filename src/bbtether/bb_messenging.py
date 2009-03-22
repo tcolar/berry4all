@@ -3,8 +3,20 @@ Deal with user messages
 send mesages/questions to gui (if avail) / or console
 '''
 import sys
+
+verbose=True
+veryVerbose=False
+
 # None, unless bbgui sets it
 gui=None
+
+def debug2(msg):
+	if verbose or veryVerbose:
+		log(msg)
+
+def debug(msg):
+	if verbose:
+		log(msg)
 
 def log(msg):
 	'''

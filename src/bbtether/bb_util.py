@@ -7,12 +7,12 @@ import bb_osx
 import re
 import subprocess
 from subprocess import PIPE
-# might be set/get from other module
-verbose = False
 
 def debug(msg):
-	if verbose:
-		bb_messenging.log(msg)
+	bb_messenging.debug(msg)
+
+def debug2(msg):
+	bb_messenging.debug2(msg)
 	
 def debug_bytes(tuple, msg):
 	'''Get a tuple of bytes and print it as lines of 16 digits (hex and ascii)'''

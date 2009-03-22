@@ -68,6 +68,7 @@ class BBModem:
 	def read(self, size=BUF_SIZE,timeout=TIMEOUT):
 		data=[]
 		datar=[1]
+		bb_util.debug2("> modem_usb_read")
 		while len(datar) > 0 and len(data)<MAX_RD_SIZE:
 			# without that will loop forever if no data at all (timeout)
 			datar=[]
@@ -78,6 +79,7 @@ class BBModem:
 				bb_messenging.log("#error: "+str(error.message))
 			if len(datar) > 0:
 				data.extend(datar)
+		bb_util.debug2("< modem_usb_read")
 		self.red+=len(data)
 		if(self.red+self.writ>self.lastcount+NOTIFY_EVERY):
 			bb_messenging.status("GPRS Infos: Received Bytes:"+str(self.red)+"	Sent Bytes:"+str(self.writ))
@@ -175,6 +177,7 @@ class BBModem:
 		prev=0
 		elapsed=0
 		line=self.line_leftover
+		bb_util.debug2("> modem_readline")
 		while(True):
 			try:
 				char=os.read(fd, 1)
@@ -202,6 +205,7 @@ class BBModem:
 				line+=char
 				self.line_leftover=""
 			prev=ord(char)
+		bb_util.debug2("< modem_readline")
 		return line
 
 	def start(self, pppConfig, pppdCommand):
@@ -241,7 +245,7 @@ class BBModem:
 			bb_messenging.status("Will try to start pppd now, ("+pppdCommand+") with config: "+pppConfig)
 			time.sleep(.5)
 			command=[pppdCommand,os.ttyname(self.slave),"file","conf/"+pppConfig,"nodetach"]
-			if bb_util.verbose:
+			if bb_messenging.verbose:
 				command.append("debug")
 				command.append("dump")
 			# we want output to go to the "real" sys.stdout (subprocess bypasses that)
@@ -289,9 +293,12 @@ class BBModem:
 						self.write(bytes)
 				else:
 					data=[]
-					try:											
+					try:
+						bb_util.debug2("> modem_pty_read")
 						data=os.read(self.master, BUF_SIZE)
+						bb_util.debug2("< modem_pty_read")
 					except OSError:
+						bb_util.debug2("< modem_pty_read (exc)")
 						# wait a tiny bit (10 ms)
 						time.sleep(.01)
 					if len(data) > 0:
@@ -451,7 +458,9 @@ class BBModemThread( threading.Thread ):
 			try:
 				try:
 					# Read from USB modem and write to PTY
+					bb_util.debug2("> modem_read loop")
 					bytes=self.modem.read()
+					bb_util.debug2("< modem_read loop")
 					if(len(bytes)>0):
 						if bb_util.end_with_tuple(bytes,RIM_PACKET_TAIL):
 							# Those are RIM control packet, not data. So not writing them back to PTY							
@@ -460,7 +469,9 @@ class BBModemThread( threading.Thread ):
 						else:
 							data=array.array("B",bytes)
 							#print "Read  "+str(len(bytes))+" bytes"
+							bb_util.debug2("> modem write to pty")
 							os.write(self.master,data.tostring())
+							bb_util.debug2("< modem write to pty")
 
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?

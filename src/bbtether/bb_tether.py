@@ -19,6 +19,7 @@ def parse_cmd(args):
 	parser.add_option("-l", "--list", action="store_true", dest="listonly", help="Only detect and list Device, do nothing more")
 	parser.add_option("-p", "--pppd", dest="pppd", help="Path To pppd binary (default: /usr/sbin/pppd)")
 	parser.add_option("-v", "--verbose", action="store_true", dest="verbose", help="Verbose: Show I/O data and other infos")
+	parser.add_option("--veryverbose", action="store_true", dest="veryverbose", help="Only good for debugging.")
 	parser.add_option("-c", "--charge", action="store_true", dest="charge", help="Put the device in Charging mode (ex: Pearl) and reset it.")
 	parser.add_option("-m", "--dmode", action="store_true", dest="dmode", help="Put the device in data mode, might help on some devices.")
 	parser.add_option("-s", "--scan", action="store_true", dest="rescan", help="Force re-scan of endpoints.")
@@ -39,6 +40,10 @@ class BBTether:
 	modem=None
 
 	def __init__(self):
+		verbose=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"verbose",False)
+		bb_messenging.verbose=verbose
+		very=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"veryverbose",False)
+		bb_messenging.veryVerbose=very
 		bb_messenging.log("--------------------------------")
 		bb_messenging.log("BBTether " + VERSION)
 		bb_messenging.log("Thibaut Colar - 2009")
@@ -54,9 +59,6 @@ class BBTether:
 		pppConfig = None
 		if len(args) > 0:
 			pppConfig = args[0]
-
-		if(options.verbose):
-			bb_util.verbose = True
 
 		# Need to be root (unless udev or OSX)
 		if os.getuid() != 0:

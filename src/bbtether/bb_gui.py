@@ -180,8 +180,14 @@ class BBFrame(wx.Frame):
 			if result != wx.ID_OK:
 				return
 		if self.prefs != None:
-			self.prefs.Destroy()
-		self.Destroy()
+			try:
+				self.prefs.Destroy()
+			except:
+				pass
+		try:
+			self.Destroy()
+		except:
+			pass
 
 	def onStart(self, event):
 		if self.bbtether!=None and self.bbtether.is_running():
@@ -199,7 +205,7 @@ class BBFrame(wx.Frame):
 			prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",pppconf)
 			bb_prefs.save_prefs(prefs)
 		fake_args = [pppconf]
-		if bb_util.verbose:
+		if bb_messenging.verbose:
 			fake_args.append("-v")
 		#instance & start bbtether
 		(options,args)=bb_tether.parse_cmd(fake_args)
@@ -287,14 +293,16 @@ class BBGui(wx.App):
 	frame = None
 
 	def OnInit(self):
+		verbose=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"verbose",False)
+		bb_messenging.verbose=verbose
+		very=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"veryverbose",False)
+		bb_messenging.veryVerbose=very
+	
 		self.frame = BBFrame(None, -1, "BBGUI")
 		self.frame.set_parent(self)
 		self.frame.Show(True)
 
 		self.SetTopWindow(self.frame)
-
-		# set options
-		bb_util.verbose=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"verbose",True)
 
 		return True
 
