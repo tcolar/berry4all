@@ -15,6 +15,9 @@ import bb_usb
 from bb_version import VERSION
 import os
 import threading
+from wxPython._core import wxBITMAP_TYPE_PNG
+from wxPython._core import wxImage
+from wxPython._gdi import wxEmptyIcon
 try:
 	import wx
 	from wx.lib.newevent import NewEvent
@@ -41,6 +44,16 @@ statusEvent, EVT_STATUS= NewEvent()
 warnEvent, EVT_WARN= NewEvent()
 askEvent, EVT_ASK= NewEvent()
 
+# prepare icon
+icon=None
+def get_icon():
+	global icon
+	if icon == None:
+		image = wxImage('img/berry4all.png', wxBITMAP_TYPE_PNG).ConvertToBitmap()
+		icon = wxEmptyIcon()
+		icon.CopyFromBitmap(image)
+	return icon
+
 class BBFrame(wx.Frame):
 	connected = False
 	log_pane = None
@@ -48,10 +61,13 @@ class BBFrame(wx.Frame):
 	prefs=None
 
 	def __init__(self, parent, ID, title):
+		global icon
 		self.bbtether=None
 		sys.stdout = SysOutListener()
 
 		wx.Frame.__init__(self, parent, ID, title, wx.DefaultPosition)
+
+		self.SetIcon(get_icon())
 		self.CreateStatusBar()
 		self.SetStatusText("")
 
@@ -233,7 +249,9 @@ class BBFrame(wx.Frame):
 
 class PreferencesFrame(wx.Frame):
 	def __init__(self):
+		global icon
 		wx.Frame.__init__(self,None,-1,"BBGUI Preferences")
+		self.SetIcon(get_icon())
 		
 		mainpanel=wx.Panel(self)
 		nb=wx.Notebook(mainpanel)
