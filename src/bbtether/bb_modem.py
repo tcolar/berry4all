@@ -299,8 +299,8 @@ class BBModem:
 						bb_util.debug2("< modem_pty_read")
 					except OSError:
 						bb_util.debug2("< modem_pty_read (exc)")
-						# wait a tiny bit (10 ms)
-						time.sleep(.01)
+						# wait a tiny bit
+						time.sleep(.025)
 					if len(data) > 0:
 						bytes=array.array("B",data)
 						newbytes=[]

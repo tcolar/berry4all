@@ -12,7 +12,6 @@ import bb_messenging
 import bb_prefs
 import bb_tether
 import bb_usb
-import bb_util
 from bb_version import VERSION
 import os
 import threading
@@ -207,6 +206,8 @@ class BBFrame(wx.Frame):
 		fake_args = [pppconf]
 		if bb_messenging.verbose:
 			fake_args.append("-v")
+		# TODO: temporary
+		fake_args.append("--veryverbose")
 		#instance & start bbtether
 		(options,args)=bb_tether.parse_cmd(fake_args)
 		self.bbtether = BBTetherThread(options, args)
