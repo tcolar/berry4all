@@ -8,6 +8,7 @@ http://www.wxpython.org/docs/api/
 import sys
 import time
 
+import base64
 import bb_messenging
 import bb_prefs
 import bb_tether
@@ -15,12 +16,12 @@ import bb_usb
 from bb_version import VERSION
 import os
 import threading
-from wxPython._core import wxBITMAP_TYPE_PNG
-from wxPython._core import wxImage
-from wxPython._gdi import wxEmptyIcon
 try:
 	import wx
 	from wx.lib.newevent import NewEvent
+	from wxPython._core import wxBITMAP_TYPE_PNG
+	from wxPython._core import wxImage
+	from wxPython._gdi import wxEmptyIcon
 except ImportError:
 	print "The GUI requires wxPython to be installed !"
 	print "Linux: sudo apt-get install python-wxgtk2.8"
@@ -43,6 +44,7 @@ appendEvent, EVT_LOG_APPEND= NewEvent()
 statusEvent, EVT_STATUS= NewEvent()
 warnEvent, EVT_WARN= NewEvent()
 askEvent, EVT_ASK= NewEvent()
+pickEvent, EVT_PICK= NewEvent()
 
 # prepare icon
 icon=None
@@ -53,6 +55,15 @@ def get_icon():
 		icon = wxEmptyIcon()
 		icon.CopyFromBitmap(image)
 	return icon
+
+def get_ppp_confs():
+	configs=[]
+	# We don't cache so user can add files on the fly
+	for file in os.listdir ("conf/"):
+		if not file.endswith("-chat") and not file.startswith('.'):
+			configs.append(file)
+	configs.sort()
+	return configs
 
 class BBFrame(wx.Frame):
 	connected = False
@@ -153,7 +164,7 @@ class BBFrame(wx.Frame):
 			if berry.handle==None:
 				berry.open_handle()
 			prefs=bb_prefs.get_prefs()
-			prefs.remove_section(bb_prefs.SECTION_EP)
+			prefs.remove_section(bb_prefs.SECTION_SCANNED_EP)
 			#Note: will replace prefs with sanedd values
 			bb_usb.read_bb_endpoints(berry, None)
 
@@ -181,6 +192,20 @@ class BBFrame(wx.Frame):
 		dlg.Destroy()
 		self.parent.set_answer(dlg.GetValue())
 		return dlg.GetValue()
+
+	def onPick(self, event):
+		dlg=wx.SingleChoiceDialog (self, event.caption, 'Choose One', event.choices)
+		try:
+			index=event.choices.index(event.default)
+			dlg.SetSelection(index)
+		except ValueError:
+			# selection not in list, ignore
+			pass
+		dlg.ShowModal()
+		dlg.Destroy()
+		selection=event.choices[dlg.GetSelection()]
+		self.parent.set_answer(selection)
+		return selection
 
 	def onAbout(self, event):
 		dlg = wx.MessageDialog(self, "This is the BBGUI Version: " + VERSION + "\n\nMore infos about BBGUI at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBGUI", wx.OK | wx.ICON_INFORMATION)
@@ -211,23 +236,71 @@ class BBFrame(wx.Frame):
 			dlg.Destroy()
 			return
 		# ask config to use
-		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
-		#todo: use a SingleChoiceDialog
-		evt=askEvent(caption="PPP config to use (EX: tmobile) see conf/ folder.",hide_input=False,default=pppd)
-		pppconf=self.onAsk(evt)
-		if pppconf != pppd:
-			prefs=bb_prefs.get_prefs()
-			prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",pppconf)
-			bb_prefs.save_prefs(prefs)
-		fake_args = [pppconf]
-		if bb_messenging.verbose:
-			fake_args.append("-v")
-		# TODO: temporary
-		fake_args.append("--veryverbose")
-		#instance & start bbtether
+		pppdconf=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
+		# if none picked yet, ask and save in prefs for next time
+		if pppdconf == "":
+			choices=get_ppp_confs()
+			choices.append("--Do not start PPPD--")
+			evt=pickEvent(caption="PPP config to use (EX: tmobile) see conf/ folder.",choices=choices,default=pppdconf)
+			pppconf=self.onPick(evt)
+			if pppconf == "--Do not start PPPD--":
+				pppconf=""
+			bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",pppconf)
+			bb_prefs.save_prefs()
+
+		fake_args=self.build_args_from_prefs()
+		bb_messenging.log("Will run bbtether with args: "+str(fake_args))
+		
 		(options,args)=bb_tether.parse_cmd(fake_args)
 		self.bbtether = BBTetherThread(options, args)
 		self.bbtether.start()
+
+	def build_args_from_prefs(self):
+		fake_args=[]
+		fake_args.append(bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", ""))
+		password=base64.b64decode(bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "password", ""))
+		if len(password) > 0:
+			fake_args.append("-P")
+			fake_args.append(password)
+		verb=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "verbose", False)
+		if verb:
+			fake_args.append("-v")
+		vverb=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "veryverbose", False)
+		if vverb:
+			fake_args.append("--veryverbose")
+		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_path", "/usr/bin/pppd")
+		if pppd != "/usr/bin/pppd":
+			fake_args.append("-p")
+			fake_args.append(pppd)
+		device=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "device", -1)
+		if device != "":
+			fake_args.append("-d")
+			fake_args.append(device)
+		interface=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "interface", -1)
+		if interface != "":
+			fake_args.append("-i")
+			fake_args.append(interface)
+		bus=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "bus", -1)
+		if bus != "":
+			fake_args.append("-b")
+			fake_args.append(bus)
+		rp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "readpt", -1)
+		if rp != "":
+			fake_args.append("-w")
+			fake_args.append(rp)
+		wp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "writept", -1)
+		if wp != "":
+			fake_args.append("-x")
+			fake_args.append(wp)
+		mrp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_readpt", -1)
+		if mrp != "":
+			fake_args.append("-y")
+			fake_args.append(mrp)
+		mwp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_writept", -1)
+		if mwp != "":
+			fake_args.append("-z")
+			fake_args.append(mwp)
+		return fake_args
 
 	def onStop(self, event):
 		if self.bbtether==None or not self.bbtether.is_running():
@@ -252,6 +325,7 @@ class PreferencesFrame(wx.Frame):
 		global icon
 		wx.Frame.__init__(self,None,-1,"BBGUI Preferences")
 		self.SetIcon(get_icon())
+		self.Bind(wx.EVT_CLOSE, self.onQuit)
 		
 		mainpanel=wx.Panel(self)
 		nb=wx.Notebook(mainpanel)
@@ -261,17 +335,23 @@ class PreferencesFrame(wx.Frame):
 		basicsizer.AddGrowableCol(1)
 		
 		passwordl=wx.StaticText(basic,-1,"Device Password:")
-		password=wx.TextCtrl(basic,-1,"fsdffds",size=(200,-1),style=wx.TE_PASSWORD)
+		passwords=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "password", "")
+		passwords=base64.b64decode(passwords)
+		self.password=wx.TextCtrl(basic,-1,passwords,size=(200,-1),style=wx.TE_PASSWORD)
 		basicsizer.Add(passwordl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		basicsizer.Add(password, 0, wx.EXPAND)
+		basicsizer.Add(self.password, 0, wx.EXPAND)
 		verbosel=wx.StaticText(basic,-1,"Verbose logging")
-		verbose=wx.CheckBox(basic,-1,"")
+		verboses=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "verbose", True)
+		self.verbose=wx.CheckBox(basic,-1,"")
+		self.verbose.SetValue(verboses)
 		basicsizer.Add(verbosel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		basicsizer.Add(verbose, 0, 0)
+		basicsizer.Add(self.verbose, 0, 0)
 		sverbosel=wx.StaticText(basic,-1,"Extra Verbose !")
-		sverbose=wx.CheckBox(basic,-1,"")
+		sverboses=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "veryverbose", False)
+		self.sverbose=wx.CheckBox(basic,-1,"")
+		self.sverbose.SetValue(sverboses)
 		basicsizer.Add(sverbosel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		basicsizer.Add(sverbose, 0, 0)
+		basicsizer.Add(self.sverbose, 0, 0)
 		basic.SetSizer(basicsizer)
 		nb.AddPage(basic,"General")
 		
@@ -279,44 +359,119 @@ class PreferencesFrame(wx.Frame):
 		modemsizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 		modemsizer.AddGrowableCol(1)
 		pppdconfl=wx.StaticText(modem,-1,"PPPD Config:")
-		pppdconf=wx.TextCtrl(modem,-1,"tmobile")
+		self.pppdchoices=get_ppp_confs()
+		self.pppdchoices.append("--Do not start PPPD--")
+		self.pppdconf=wx.Choice(modem,-1,choices=self.pppdchoices)
+		selection=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
+		self.pppdconf.SetSelection(self.pppdconf.FindString(selection))
 		modemsizer.Add(pppdconfl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		modemsizer.Add(pppdconf, 0, wx.EXPAND)
+		modemsizer.Add(self.pppdconf, 0, wx.EXPAND)
+		modemsizer.AddSpacer((1,1))
+		pppdconft=wx.StaticText(modem,-1,"(Conf. files are in bbtether/conf/)")
+		modemsizer.Add(pppdconft,0,0)
 		pppdl=wx.StaticText(modem,-1,"PPPD path:")
-		pppd=wx.TextCtrl(modem,-1,"/usr/bin/pppd")
+		pppds=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_path", "/usr/bin/pppd")
+		self.pppd=wx.TextCtrl(modem,-1,pppds)
 		modemsizer.Add(pppdl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		modemsizer.Add(pppd, 0, wx.EXPAND)
+		modemsizer.Add(self.pppd, 0, wx.EXPAND)
 		modem.SetSizer(modemsizer)
 		nb.AddPage(modem,"Modem")
 		
 		usb=wx.Panel(nb)
 		usbsizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 		usbsizer.AddGrowableCol(1)
-		rpl=wx.StaticText(usb,-1,"Data read point:")
-		rp=wx.TextCtrl(usb,-1,"")
+		devicel=wx.StaticText(usb,-1,"Device:")
+		devices=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "device", "")
+		self.device=wx.TextCtrl(usb,-1,str(devices),size=(40,-1))
+		usbsizer.Add(devicel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.device, 0, 0)
+		interfacel=wx.StaticText(usb,-1,"Interface:")
+		interfaces=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "interface", "")
+		self.interface=wx.TextCtrl(usb,-1,str(interfaces),size=(40,-1))
+		usbsizer.Add(interfacel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.interface, 0, 0)
+		busl=wx.StaticText(usb,-1,"Bus:")
+		buss=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "bus", "")
+		self.bus=wx.TextCtrl(usb,-1,str(buss),size=(40,-1))
+		usbsizer.Add(busl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.bus, 0, 0)
+		rpl=wx.StaticText(usb,-1,"Data read point(Ex: 0x83):")
+		rps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "readpt", "")
+		self.rp=wx.TextCtrl(usb,-1,str(rps),size=(40,-1))
 		usbsizer.Add(rpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
-		usbsizer.Add(rp, 0, wx.EXPAND)
-		# TODO: wp,mrp,mwp
+		usbsizer.Add(self.rp, 0, 0)
+		wpl=wx.StaticText(usb,-1,"Data write point:(Ex: 0x4)")
+		wps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "writept", "")
+		self.wp=wx.TextCtrl(usb,-1,str(wps),size=(40,-1))
+		usbsizer.Add(wpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.wp, 0, 0)
+		mrpl=wx.StaticText(usb,-1,"Modem read point:(Ex: 0x85)")
+		mrps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_readpt", "")
+		self.mrp=wx.TextCtrl(usb,-1,str(mrps),size=(40,-1))
+		usbsizer.Add(mrpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.mrp, 0, 0)
+		mwpl=wx.StaticText(usb,-1,"Modem write point:(Ex: 0x6)")
+		mwps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_writept", "")
+		self.mwp=wx.TextCtrl(usb,-1,str(mwps),size=(40,-1))
+		usbsizer.Add(mwpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(self.mwp, 0, 0)
 		usb.SetSizer(usbsizer)
 		nb.AddPage(usb,"USB")
+
+		bottomsizer=wx.BoxSizer(wx.HORIZONTAL)
+		save=wx.Button(mainpanel,-1,"Save")
+		cancel=wx.Button(mainpanel,-1,"Cancel")
+		bottomsizer.Add(cancel,0)
+		# expandable spacer in middle so i get a button on left and one on right
+		bottomsizer.AddSpacer((1,1),wx.EXPAND)
+		bottomsizer.Add(save,0,wx.ALIGN_RIGHT)
 		
-		#save=wx.Button(self,-1,"Save")
-		
-		#cancel=wx.Button(self,-1,"Cancel")
-		#sizer.Add(cancel)
-		#sizer.Add(save,0,wx.ALIGN_RIGHT)
-		
-		mainsizer=wx.BoxSizer()
+		mainsizer=wx.BoxSizer(wx.VERTICAL)
 		mainsizer.Add(nb, 1, wx.EXPAND)
+		mainsizer.Add(bottomsizer, 0, wx.EXPAND)
 		mainpanel.SetSizer(mainsizer)
+		mainsizer.SetSizeHints(self)
 		self.CenterOnScreen()
+		
+		# Button events:
+		cancel.Bind(wx.EVT_BUTTON, self.onQuit)
+		save.Bind(wx.EVT_BUTTON, self.onSave)
+
+	def onQuit(self,event):
+		# Just hide it, so we don't need to rebuild it everytime
+		self.Hide()
+
+	def onSave(self,event):
+		# Save, then hide
+		# not very safe but at least no human readable
+		passwd=base64.b64encode(self.password.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"password",passwd)
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"verbose",self.verbose.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"veryverbose",self.sverbose.GetValue())
+		# Make those take effect right away
+		bb_messenging.verbose=self.verbose.GetValue()
+		bb_messenging.veryVerbose=self.sverbose.GetValue()
+		selection=self.pppdchoices[self.pppdconf.GetSelection()]
+		if selection == "--Do not start PPPD--":
+			selection=""
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",selection)
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_path",self.pppd.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"device",self.device.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"bus",self.bus.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"interface",self.interface.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"readpt",self.rp.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"writept",self.wp.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"modem_readpt",self.mrp.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_USER_EP,"modem_writept",self.mwp.GetValue())
+		bb_prefs.save_prefs()
+		self.Hide()
 
 class SysOutListener:
 	def write(self, msg):
 		sys.__stdout__.write(msg)
 		#and gui too
 		evt = appendEvent(text=msg)
-		wx.PostEvent(wx.GetApp().frame.log_pane, evt)
+		wx.PostEvent(wx.GetApp().frame, evt)
 
 class BBTetherThread(threading.Thread):
 	def __init__(self, options, args):

@@ -89,3 +89,4 @@ def remove_berry_charge():
 			bb_messenging.warn(msg)
 		else:
 			print "\t -> OK.\n"
+

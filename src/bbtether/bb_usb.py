@@ -2,6 +2,7 @@
 USB utilities for Blackberry
 Thibaut Colar
 '''
+from bb_prefs import SECTION_SCANNED_EP
 import sys
 
 import bb_data
@@ -76,12 +77,12 @@ def read_bb_endpoints(device, userInterface):
 
 	#look for previously saved endpoints
 	config=bb_prefs.get_prefs()
-	if config.has_section('EndPoints'):
-		device.interface=config.getint(bb_prefs.SECTION_EP,'interface')
-		device.readpt=config.getint(bb_prefs.SECTION_EP,'readpt')
-		device.writept=config.getint(bb_prefs.SECTION_EP,'writept')
-		device.modem_readpt=config.getint(bb_prefs.SECTION_EP,'modem_readpt')
-		device.modem_writept=config.getint(bb_prefs.SECTION_EP,'modem_writept')
+	if config.has_section(SECTION_SCANNED_EP):
+		device.interface=bb_prefs.get_def_int(bb_prefs.SECTION_SCANNED_EP,'interface',-1)
+		device.readpt=bb_prefs.get_def_int(bb_prefs.SECTION_SCANNED_EP,'readpt',-1)
+		device.writept=bb_prefs.get_def_int(bb_prefs.SECTION_SCANNED_EP,'writept',-1)
+		device.modem_readpt=bb_prefs.get_def_int(bb_prefs.SECTION_SCANNED_EP,'modem_readpt',-1)
+		device.modem_writept=bb_prefs.get_def_int(bb_prefs.SECTION_SCANNED_EP,'modem_writept',-1)
 		bb_messenging.log("Using saved EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
 		# return saved data if good (earlier version saved bad ones)
 		if device.readpt != -1 and device.writept !=-1:
@@ -220,15 +221,13 @@ def read_bb_endpoints(device, userInterface):
 		"BEFORE YOU CAN USE THE MODEM."]
 		bb_messenging.warn(msgs)
 		bb_messenging.log("***********************************************")
-		config=bb_prefs.get_prefs()
-		config.add_section(bb_prefs.SECTION_EP)
-		config.set(bb_prefs.SECTION_EP,'interface', device.interface)
-		config.set(bb_prefs.SECTION_EP,'readpt', device.readpt)
-		config.set(bb_prefs.SECTION_EP,'writept', device.writept)
-		config.set(bb_prefs.SECTION_EP,'modem_readpt', device.modem_readpt)
-		config.set(bb_prefs.SECTION_EP,'modem_writept', device.modem_writept)
+		bb_prefs.set(bb_prefs.SECTION_SCANNED_EP,'interface', device.interface)
+		bb_prefs.set(bb_prefs.SECTION_SCANNED_EP,'readpt', device.readpt)
+		bb_prefs.set(bb_prefs.SECTION_SCANNED_EP,'writept', device.writept)
+		bb_prefs.set(bb_prefs.SECTION_SCANNED_EP,'modem_readpt', device.modem_readpt)
+		bb_prefs.set(bb_prefs.SECTION_SCANNED_EP,'modem_writept', device.modem_writept)
 		bb_messenging.log("Saving EP data: "+str(device.interface)+", "+str(device.readpt)+", "+str(device.writept)+", "+str(device.modem_readpt)+", "+str(device.modem_writept))
-		bb_prefs.save_prefs(config)
+		bb_prefs.save_prefs()
 
 def clear_halt(device, endpt):
 	device.handle.clearHalt(endpt)

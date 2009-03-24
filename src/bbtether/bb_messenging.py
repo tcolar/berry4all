@@ -4,18 +4,20 @@ send mesages/questions to gui (if avail) / or console
 '''
 import sys
 
-verbose=True
+verbose=False
 veryVerbose=False
 
 # None, unless bbgui sets it
 gui=None
 
 def debug2(msg):
-	if verbose or veryVerbose:
+	global veryVerbose
+	if veryVerbose:
 		log(msg)
 
 def debug(msg):
-	if verbose:
+	global veryVerbose, verbose
+	if verbose or veryVerbose:
 		log(msg)
 
 def log(msg):
@@ -25,6 +27,7 @@ def log(msg):
 	print msg
 
 def warn(msgs, waitFor=False):
+	global gui
 	'''
 	Show a warning popup and print in log
 	'''
@@ -34,6 +37,7 @@ def warn(msgs, waitFor=False):
 		sys.__stdout__.write(msg+"\n")
 
 def ask(caption,hide=False,default=""):
+	global gui
 	'''
 	Show a warning popup and print in log
 	'''
@@ -43,6 +47,7 @@ def ask(caption,hide=False,default=""):
 		return raw_input("Question: "+caption+"\n")
 
 def confirm(msgs):
+	global gui
 	'''
 	Do a warning and wait for OK (or keystroke in cmdline mode)
 	'''
@@ -51,6 +56,7 @@ def confirm(msgs):
 		raw_input("Press Enter to continue")
 
 def status(msg):
+	global gui
 	'''
 	Update status bar and print in logs
 	'''

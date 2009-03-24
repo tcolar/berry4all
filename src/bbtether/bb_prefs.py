@@ -9,13 +9,21 @@ import bb_osx
 import os
 
 SECTION_MAIN="Global"
-SECTION_EP="EndPoints"
+SECTION_USER_EP="User_EndPoints"
+SECTION_SCANNED_EP="Scanned_EndPoints"
 
 PREF_FILE=os.environ['HOME']+"/.bbtether.conf"
 if bb_osx.is_osx():
 	PREF_FILE=os.environ['HOME']+"/library/Preferences/bbtether.conf"
 
 my_config=None
+
+def set(section,option,value):
+	config=get_prefs()
+	if not config.has_section(section):
+		config.add_section(section)
+	# Note: we use str(value), because otherwise if we re-read the value it will fail if not a string
+	config.set(section, option, str(value))
 
 def get_def_string(section, option, default):
 	config=get_prefs()
@@ -43,6 +51,8 @@ def get_def_int(section, option, default):
 		return default
 	except NoOptionError:
 		return default
+	except ValueError:
+		return default
 
 def read_prefs():
 	config = ConfigParser.RawConfigParser()
@@ -52,7 +62,6 @@ def read_prefs():
 	else:
 		bb_messenging.log("Creating initial config file "+PREF_FILE)
 		config.add_section(SECTION_MAIN)
-		config.set(SECTION_MAIN, "verbose", "True")
 		# do not use save() to prevent recursion
 		configfile=open(PREF_FILE, 'wb')
 		config.write(configfile)
@@ -65,10 +74,10 @@ def get_prefs():
 		my_config=read_prefs()
 	return my_config
 
-def save_prefs(prefs):
+def save_prefs():
 	global my_config
-	my_config=prefs
 	configfile=open(PREF_FILE, 'wb')
 	my_config.write(configfile)
 	configfile.close()
+
 

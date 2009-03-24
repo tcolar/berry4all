@@ -40,10 +40,6 @@ class BBTether:
 	modem=None
 
 	def __init__(self):
-		verbose=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"verbose",False)
-		bb_messenging.verbose=verbose
-		very=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"veryverbose",False)
-		bb_messenging.veryVerbose=very
 		bb_messenging.log("--------------------------------")
 		bb_messenging.log("BBTether " + VERSION)
 		bb_messenging.log("Thibaut Colar - 2009")
@@ -52,9 +48,11 @@ class BBTether:
 		bb_messenging.log("--------------------------------\n")
 
 	def start(self, options, args):
+		bb_messenging.verbose = options.verbose
+		bb_messenging.veryVerbose = options.veryverbose
 		if(options.rescan):
 			prefs=bb_prefs.get_prefs()
-			prefs.remove_section(bb_prefs.SECTION_EP)
+			prefs.remove_section(bb_prefs.SECTION_SCANNED_EP)
 
 		pppConfig = None
 		if len(args) > 0:
