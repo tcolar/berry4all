@@ -156,6 +156,8 @@ class BBModem:
 				raise Exception
 			if len(self.password) == 0:
 				self.password=bb_messenging.ask("Please enter your BB Password", True, "")
+			if self.password==None:
+				raise Exception
 			self.send_password(self.password,seed)
 		else:
 			bb_messenging.log("No password requested.")
@@ -230,6 +232,7 @@ class BBModem:
 			bb_messenging.warn(["Modem initialization Failed !"])
 			os.close(self.master)
 			os.close(self.slave)
+			self.running=False
 			raise
 
 		# Start the USB Modem read thread
@@ -239,7 +242,7 @@ class BBModem:
 		bb_messenging.status("Modem Started")
 		
 		if(not pppConfig):
-			bb_messenging.warn(["No ppp requested, you can now start pppd manually."])
+			bb_messenging.warn(["No PPPD requested, you can now start pppd manually (within the next 30s)."])
 		else:
 			#TODO: start pppd in thread/process
 			bb_messenging.status("Will try to start pppd now, ("+pppdCommand+") with config: "+pppConfig)
@@ -259,7 +262,8 @@ class BBModem:
 		bb_messenging.status("Modem Ready at "+os.ttyname(self.slave))
 		bb_messenging.log(" Use ^C to terminate")
 		bb_messenging.log("********************************************")
-		
+
+
 		try:
 			# Read from PTY and write to USB modem until ^C
 			
@@ -268,7 +272,11 @@ class BBModem:
 			while(not self.request_down):
 				
 				if not self.data_mode:
-					data=self.readline(self.master)
+					if not pppConfig:
+						# if manual ppp startup use a longer timeout.
+						data=self.readline(self.master,30000)
+					else:
+						data=self.readline(self.master)
 					# cleanup message
 					length=len(data)
 					if len(data)>0 and data[len(data)-1]==0xA:

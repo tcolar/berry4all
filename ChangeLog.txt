@@ -2,6 +2,11 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3a: 3/24/2009:
+	Lots of GUI work, gui should now be fully working.
+	Other fixes and cleanup.
+	berry4all.sh script
+
 0.3beta6: 3/21/2009:
 	Fixed a bad bug that would cause a diconect after ~100k sent
 
@@ -13,6 +18,7 @@ tcolar AT colar d.o.t NET
 0.3beta4: 3/20/2009:
 	Added support for detaching binded usb kernel, should
 	take care of those can't claim interface issues. (Linux only)
+	Renamed gui to Berry4All
 
 0.3beta2: 3/20/2009:
 	More failure checks and debug infos

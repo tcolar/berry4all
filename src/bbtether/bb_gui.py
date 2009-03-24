@@ -189,8 +189,10 @@ class BBFrame(wx.Frame):
 			dlg = wx.TextEntryDialog(self, event.caption,"Question", event.default)
 		else:
 			dlg = wx.PasswordEntryDialog(self, event.caption,"Question", event.default)
-		dlg.ShowModal()
+		returnCode=dlg.ShowModal()
 		dlg.Destroy()
+		if returnCode == wx.ID_CANCEL:
+			return None
 		self.parent.set_answer(dlg.GetValue())
 		return dlg.GetValue()
 
@@ -202,14 +204,16 @@ class BBFrame(wx.Frame):
 		except ValueError:
 			# selection not in list, ignore
 			pass
-		dlg.ShowModal()
+		returnCode=dlg.ShowModal()
 		dlg.Destroy()
+		if returnCode == wx.ID_CANCEL:
+			return None
 		selection=event.choices[dlg.GetSelection()]
 		self.parent.set_answer(selection)
 		return selection
 
 	def onAbout(self, event):
-		dlg = wx.MessageDialog(self, "This is the BBGUI Version: " + VERSION + "\n\nMore infos about BBGUI at:\nhttp://wiki.colar.net/bbtether\n\nThibaut Colar", "About BBGUI", wx.OK | wx.ICON_INFORMATION)
+		dlg = wx.MessageDialog(self, "This is the Berry4All Version: " + VERSION + "\n\nMore infos about Berry4All at:\nhttp://www.berry4all.com\n\nThibaut Colar", "About Berry4All", wx.OK | wx.ICON_INFORMATION)
 		dlg.ShowModal()
 		dlg.Destroy()
 
@@ -244,6 +248,10 @@ class BBFrame(wx.Frame):
 			choices.append("--Do not start PPPD--")
 			evt=pickEvent(caption="PPP config to use (EX: tmobile) see conf/ folder.",choices=choices,default=pppdconf)
 			pppconf=self.onPick(evt)
+			print "pppconf:"+str(pppconf)
+			if pppconf==None:
+				# cancelled
+				return
 			if pppconf == "--Do not start PPPD--":
 				pppconf=""
 			bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",pppconf)
@@ -324,7 +332,7 @@ class BBFrame(wx.Frame):
 class PreferencesFrame(wx.Frame):
 	def __init__(self):
 		global icon
-		wx.Frame.__init__(self,None,-1,"BBGUI Preferences")
+		wx.Frame.__init__(self,None,-1,"Berry4All Preferences")
 		self.SetIcon(get_icon())
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 		
@@ -339,19 +347,19 @@ class PreferencesFrame(wx.Frame):
 		passwords=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "password", "")
 		passwords=base64.b64decode(passwords)
 		self.password=wx.TextCtrl(basic,-1,passwords,size=(200,-1),style=wx.TE_PASSWORD)
-		basicsizer.Add(passwordl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		basicsizer.Add(passwordl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		basicsizer.Add(self.password, 0, wx.EXPAND)
 		verbosel=wx.StaticText(basic,-1,"Verbose logging")
 		verboses=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "verbose", True)
 		self.verbose=wx.CheckBox(basic,-1,"")
 		self.verbose.SetValue(verboses)
-		basicsizer.Add(verbosel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		basicsizer.Add(verbosel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		basicsizer.Add(self.verbose, 0, 0)
 		sverbosel=wx.StaticText(basic,-1,"Extra Verbose !")
 		sverboses=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "veryverbose", False)
 		self.sverbose=wx.CheckBox(basic,-1,"")
 		self.sverbose.SetValue(sverboses)
-		basicsizer.Add(sverbosel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		basicsizer.Add(sverbosel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		basicsizer.Add(self.sverbose, 0, 0)
 		basic.SetSizer(basicsizer)
 		nb.AddPage(basic,"General")
@@ -365,7 +373,7 @@ class PreferencesFrame(wx.Frame):
 		self.pppdconf=wx.Choice(modem,-1,choices=self.pppdchoices)
 		selection=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_config", "")
 		self.pppdconf.SetSelection(self.pppdconf.FindString(selection))
-		modemsizer.Add(pppdconfl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		modemsizer.Add(pppdconfl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		modemsizer.Add(self.pppdconf, 0, wx.EXPAND)
 		modemsizer.AddSpacer((1,1))
 		pppdconft=wx.StaticText(modem,-1,"(Conf. files are in bbtether/conf/)")
@@ -373,50 +381,57 @@ class PreferencesFrame(wx.Frame):
 		pppdl=wx.StaticText(modem,-1,"PPPD path:")
 		pppds=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_path", "/usr/bin/pppd")
 		self.pppd=wx.TextCtrl(modem,-1,pppds)
-		modemsizer.Add(pppdl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		modemsizer.Add(pppdl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		modemsizer.Add(self.pppd, 0, wx.EXPAND)
 		modem.SetSizer(modemsizer)
 		nb.AddPage(modem,"Modem")
 		
 		usb=wx.Panel(nb)
+
+		usbmainsizer=wx.BoxSizer(wx.VERTICAL)
+		usbmainsizer.Add(wx.StaticText(usb,-1,"Leave blank, unless you know what you are doing."),0,0)
+		usbmainsizer.Add(wx.StaticLine(usb,size=(-1,15)),0,wx.EXPAND)
+
 		usbsizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 		usbsizer.AddGrowableCol(1)
 		devicel=wx.StaticText(usb,-1,"Device:")
 		devices=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "device", "")
 		self.device=wx.TextCtrl(usb,-1,str(devices),size=(40,-1))
-		usbsizer.Add(devicel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(devicel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.device, 0, 0)
 		interfacel=wx.StaticText(usb,-1,"Interface:")
 		interfaces=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "interface", "")
 		self.interface=wx.TextCtrl(usb,-1,str(interfaces),size=(40,-1))
-		usbsizer.Add(interfacel, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(interfacel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.interface, 0, 0)
 		busl=wx.StaticText(usb,-1,"Bus:")
 		buss=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "bus", "")
 		self.bus=wx.TextCtrl(usb,-1,str(buss),size=(40,-1))
-		usbsizer.Add(busl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(busl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.bus, 0, 0)
 		rpl=wx.StaticText(usb,-1,"Data read point(Ex: 0x83):")
 		rps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "readpt", "")
 		self.rp=wx.TextCtrl(usb,-1,str(rps),size=(40,-1))
-		usbsizer.Add(rpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(rpl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.rp, 0, 0)
 		wpl=wx.StaticText(usb,-1,"Data write point:(Ex: 0x4)")
 		wps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "writept", "")
 		self.wp=wx.TextCtrl(usb,-1,str(wps),size=(40,-1))
-		usbsizer.Add(wpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(wpl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.wp, 0, 0)
 		mrpl=wx.StaticText(usb,-1,"Modem read point:(Ex: 0x85)")
 		mrps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_readpt", "")
 		self.mrp=wx.TextCtrl(usb,-1,str(mrps),size=(40,-1))
-		usbsizer.Add(mrpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(mrpl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.mrp, 0, 0)
 		mwpl=wx.StaticText(usb,-1,"Modem write point:(Ex: 0x6)")
 		mwps=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_writept", "")
 		self.mwp=wx.TextCtrl(usb,-1,str(mwps),size=(40,-1))
-		usbsizer.Add(mwpl, 0, wx.ALIGN_RIGHT,wx.ALIGN_CENTER_VERTICAL)
+		usbsizer.Add(mwpl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		usbsizer.Add(self.mwp, 0, 0)
-		usb.SetSizer(usbsizer)
+
+		usbmainsizer.Add(usbsizer,0,wx.EXPAND)
+		usb.SetSizer(usbmainsizer)
 		nb.AddPage(usb,"USB")
 
 		bottomsizer=wx.BoxSizer(wx.HORIZONTAL)
@@ -509,7 +524,7 @@ class BBGui(wx.App):
 		very=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN,"veryverbose",False)
 		bb_messenging.veryVerbose=very
 	
-		self.frame = BBFrame(None, -1, "BBGUI")
+		self.frame = BBFrame(None, -1, "Berry4All")
 		self.frame.set_parent(self)
 		self.frame.Show(True)
 
