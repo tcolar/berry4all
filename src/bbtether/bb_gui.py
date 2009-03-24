@@ -5,6 +5,15 @@ BBTether GUI
 
 http://www.wxpython.org/docs/api/
 '''
+import os
+try:
+	import wx
+except ImportError:
+	print "The GUI requires wxPython to be installed !"
+	print "Linux: sudo apt-get install python-wxgtk2.8"
+	print "Max OSX: http://www.wxpython.org/download.php (get the one for python 2.5 unicode)"
+	os._exit(0)
+
 import sys
 import time
 
@@ -14,19 +23,11 @@ import bb_prefs
 import bb_tether
 import bb_usb
 from bb_version import VERSION
-import os
 import threading
-try:
-	import wx
-	from wx.lib.newevent import NewEvent
-	from wxPython._core import wxBITMAP_TYPE_PNG
-	from wxPython._core import wxImage
-	from wxPython._gdi import wxEmptyIcon
-except ImportError:
-	print "The GUI requires wxPython to be installed !"
-	print "Linux: sudo apt-get install python-wxgtk2.8"
-	print "Max OSX: http://www.wxpython.org/download.php (get the one for python 2.5 unicode)"
-	os._exit(0)
+from wx.lib.newevent import NewEvent
+from wxPython._core import wxBITMAP_TYPE_PNG
+from wxPython._core import wxImage
+from wxPython._gdi import wxEmptyIcon
 
 MENU_PREFS = 2
 MENU_CLEAR_CONSOLE = 3
