@@ -156,6 +156,7 @@ class BBFrame(wx.Frame):
 		self.modem_panel.field_con_time.SetLabel("%d:%d" % (event.elapsed/60,event.elapsed%60))
 		self.modem_panel.field_con_speed.SetLabel("%d / %d" % (event.speedDown, event.speedUp))
 		self.modem_panel.field_con_avg_speed.SetLabel("%d / %d" % (event.avgDown, event.avgUp))
+		self.modem_panel.field_con_max_speed.SetLabel("%d / %d" % (event.maxDown, event.maxUp))
 		self.modem_panel.field_con_transfer.SetLabel("%d / %d" % (event.totalDown, event.totalUp))
 
 	def set_parent(self, parent):
@@ -379,6 +380,8 @@ class NetworkStatsThread(threading.Thread):
 		modem=self.frame.bbtether.bbtether.modem;
 		lastIn=0
 		lastOut=0
+		maxIn=0
+		maxOut=0
 		while(True):
 			time.sleep(1)
 			if modem==None or self.done:
@@ -392,6 +395,10 @@ class NetworkStatsThread(threading.Thread):
 				lastIn=totalUp
 				lastOut=totalDown
 				elapsed=time.time()-self.start_time
+				if newIn > maxIn:
+					maxIn=newIn
+				if newOut > maxOut:
+					maxOut=newOut
 				evt = networkStatsEvent(
 				#TODO: hours
 					elapsed=elapsed,
@@ -399,6 +406,8 @@ class NetworkStatsThread(threading.Thread):
 					speedDown=newOut*8/1024,
 					avgUp=totalUp*8/1024/elapsed,
 					avgDown=totalDown*8/1024/elapsed,
+					maxDown=maxOut*8/1024,
+					maxUp=maxIn*8/1024,
 					totalUp=totalUp/1024,
 					totalDown=totalDown/1024
 				)
@@ -420,6 +429,7 @@ class ModemPanel(wx.Panel):
 		self.field_con_time=wx.StaticText(self,-1,"",size=(130,-1))
 		self.field_con_speed=wx.StaticText(self,-1,"")
 		self.field_con_avg_speed=wx.StaticText(self,-1,"")
+		self.field_con_max_speed=wx.StaticText(self,-1,"")
 		self.field_con_transfer=wx.StaticText(self,-1,"")
 
 		box=wx.StaticBox(self,label="IP infos")
@@ -444,6 +454,8 @@ class ModemPanel(wx.Panel):
 		sizer.Add(self.field_con_speed)
 		sizer.Add(wx.StaticText(self,-1,"AVG speed (Kb/s) :"))
 		sizer.Add(self.field_con_avg_speed)
+		sizer.Add(wx.StaticText(self,-1,"Max speed (Kb/s) :"))
+		sizer.Add(self.field_con_max_speed)
 		sizer.Add(wx.StaticText(self,-1,"Transfered KB    :"))
 		sizer.Add(self.field_con_transfer)
 		consizer.Add(sizer,0,wx.EXPAND)
