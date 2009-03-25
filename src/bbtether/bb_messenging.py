@@ -64,3 +64,10 @@ def status(msg):
 		gui.update_status(msg)
 		gui.append_log(msg)
 	sys.__stdout__.write(msg+"\n")
+
+def set_info(field,msg):
+	'''
+	Send infos to the gui
+	'''
+	if gui != None:
+		gui.set_info(field,msg)

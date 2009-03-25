@@ -2,10 +2,14 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3b: 3/24/2009:
+	More GUI work, now displays: IP, peer IP, DNS 1 & 2 IP
+	Also displays speed stats (current, average, total) and connection time.
+
 0.3a: 3/24/2009:
 	Lots of GUI work, gui should now be fully working.
 	Other fixes and cleanup.
-	berry4all.sh script
+	berry4all.sh script to start the GUI
 
 0.3beta6: 3/21/2009:
 	Fixed a bad bug that would cause a diconect after ~100k sent

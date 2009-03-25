@@ -46,6 +46,8 @@ statusEvent, EVT_STATUS= NewEvent()
 warnEvent, EVT_WARN= NewEvent()
 askEvent, EVT_ASK= NewEvent()
 pickEvent, EVT_PICK= NewEvent()
+infoEvent, EVT_INFO= NewEvent()
+networkStatsEvent, EVT_NETWORK_STATS= NewEvent()
 
 # prepare icon
 icon=None
@@ -71,6 +73,7 @@ class BBFrame(wx.Frame):
 	log_pane = None
 	parent=None
 	prefs=None
+	ns_thread=None
 
 	def __init__(self, parent, ID, title):
 		global icon
@@ -131,7 +134,12 @@ class BBFrame(wx.Frame):
 		# close button
 		self.Bind(wx.EVT_CLOSE, self.onQuit)
 
+		sizer=wx.BoxSizer(wx.VERTICAL)
+		self.modem_panel=ModemPanel(self)
 		self.log_pane = wx.TextCtrl(self, wx.ID_ANY, "", (4, 4), (700, 300), style=wx.TE_MULTILINE | wx.TE_READONLY)
+		sizer.Add(self.modem_panel,0,wx.EXPAND)
+		sizer.Add(self.log_pane,0,wx.EXPAND)
+		self.SetSizer(sizer)
 
 		self.Fit()
 		self.CenterOnScreen()
@@ -141,6 +149,14 @@ class BBFrame(wx.Frame):
 		self.Bind(EVT_STATUS, self.onStatus)
 		self.Bind(EVT_WARN, self.onWarn)
 		self.Bind(EVT_ASK, self.onAsk)
+		self.Bind(EVT_INFO, self.onInfo)
+		self.Bind(EVT_NETWORK_STATS, self.onStats)
+
+	def onStats(self,event):
+		self.modem_panel.field_con_time.SetLabel("%d:%d" % (event.elapsed/60,event.elapsed%60))
+		self.modem_panel.field_con_speed.SetLabel("%d / %d" % (event.speedDown, event.speedUp))
+		self.modem_panel.field_con_avg_speed.SetLabel("%d / %d" % (event.avgDown, event.avgUp))
+		self.modem_panel.field_con_transfer.SetLabel("%d / %d" % (event.totalDown, event.totalUp))
 
 	def set_parent(self, parent):
 		self.parent=parent
@@ -323,11 +339,123 @@ class BBFrame(wx.Frame):
 		dlg.Destroy()
 		if self.bbtether!=None:
 			self.bbtether.stop()
+		if self.ns_thread!=None:
+			self.ns_thread.stop()
 
 	def onPrefs(self,event):
 		if self.prefs==None:
 			self.prefs=PreferencesFrame()
 		self.prefs.Show()
+
+	def onInfo(self,event):
+		field=event.field
+		msg=event.text
+		if field=="ip":
+			self.modem_panel.field_ip.SetLabel(msg)
+			# we will consider the connection "started" once we receive an IP
+			if self.ns_thread==None:
+				self.ns_thread=NetworkStatsThread(self)
+				self.ns_thread.start()
+		if field=="peer":
+			self.modem_panel.field_peer.SetLabel(msg)
+		if field=="dns":
+			self.modem_panel.field_dns.SetLabel(msg)
+		if field=="dns2":
+			self.modem_panel.field_dns2.SetLabel(msg)
+
+class NetworkStatsThread(threading.Thread):
+	done=False
+	start_time=None
+	def __init__(self, parent):
+		threading.Thread.__init__(self)
+		self.start_time=time.time()
+		self.frame=parent
+
+	def stop(self):
+		self.done=True
+
+	def run (self):
+		bb_messenging.status("Starting Network Stats thread")
+		modem=self.frame.bbtether.bbtether.modem;
+		lastIn=0
+		lastOut=0
+		while(True):
+			time.sleep(1)
+			if modem==None or self.done:
+				self.done=True
+				break;
+			try:
+				totalDown=modem.red
+				totalUp=modem.writ
+				newIn=totalUp-lastIn
+				newOut=totalDown-lastOut
+				lastIn=totalUp
+				lastOut=totalDown
+				elapsed=time.time()-self.start_time
+				evt = networkStatsEvent(
+				#TODO: hours
+					elapsed=elapsed,
+					speedUp=newIn*8/1024,
+					speedDown=newOut*8/1024,
+					avgUp=totalUp*8/1024/elapsed,
+					avgDown=totalDown*8/1024/elapsed,
+					totalUp=totalUp/1024,
+					totalDown=totalDown/1024
+				)
+				wx.PostEvent(self.frame, evt)
+			except:
+				raise
+				bb_messenging.log("Network stats thread error.")
+				self.done=True
+		bb_messenging.log("Network stats thread completed.")
+
+class ModemPanel(wx.Panel):
+	def __init__(self, parent):
+		wx.Panel.__init__(self, parent)
+		mainsizer=wx.BoxSizer(wx.HORIZONTAL)
+		self.field_ip=wx.StaticText(self,-1,"",size=(130,-1))
+		self.field_peer=wx.StaticText(self,-1,"")
+		self.field_dns=wx.StaticText(self,-1,"")
+		self.field_dns2=wx.StaticText(self,-1,"")
+		self.field_con_time=wx.StaticText(self,-1,"",size=(130,-1))
+		self.field_con_speed=wx.StaticText(self,-1,"")
+		self.field_con_avg_speed=wx.StaticText(self,-1,"")
+		self.field_con_transfer=wx.StaticText(self,-1,"")
+
+		box=wx.StaticBox(self,label="IP infos")
+		ipsizer=wx.StaticBoxSizer(box,orient=wx.VERTICAL)
+		sizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+		sizer.Add(wx.StaticText(self,-1,"Local IP:"))
+		sizer.Add(self.field_ip)
+		sizer.Add(wx.StaticText(self,-1,"Peer IP:"))
+		sizer.Add(self.field_peer)
+		sizer.Add(wx.StaticText(self,-1,"DNS server:"))
+		sizer.Add(self.field_dns)
+		sizer.Add(wx.StaticText(self,-1,"Alt. DNS  :"))
+		sizer.Add(self.field_dns2)
+		ipsizer.Add(sizer,0,wx.EXPAND)
+
+		box=wx.StaticBox(self,label="Connection infos")
+		consizer=wx.StaticBoxSizer(box,orient=wx.VERTICAL)
+		sizer=wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+		sizer.Add(wx.StaticText(self,-1,"Connect. time    :"))
+		sizer.Add(self.field_con_time)
+		sizer.Add(wx.StaticText(self,-1,"Cur. speed (Kb/s):"))
+		sizer.Add(self.field_con_speed)
+		sizer.Add(wx.StaticText(self,-1,"AVG speed (Kb/s) :"))
+		sizer.Add(self.field_con_avg_speed)
+		sizer.Add(wx.StaticText(self,-1,"Transfered KB    :"))
+		sizer.Add(self.field_con_transfer)
+		consizer.Add(sizer,0,wx.EXPAND)
+
+		box=wx.StaticBox(self,label="Network Graphs")
+		graphsizer=wx.StaticBoxSizer(box,orient=wx.HORIZONTAL)
+		graphsizer.Add(wx.StaticText(self,-1,"--TBD--",size=(220,-1)))
+
+		mainsizer.Add(ipsizer,0,wx.EXPAND)
+		mainsizer.Add(consizer,0,wx.EXPAND)
+		mainsizer.Add(graphsizer,0,wx.EXPAND)
+		self.SetSizer(mainsizer)
 
 class PreferencesFrame(wx.Frame):
 	def __init__(self):
@@ -558,7 +686,10 @@ class BBGui(wx.App):
 	def update_status(self, msg):
 		evt = statusEvent(text=msg)
 		wx.PostEvent(self.frame, evt)
-	
+
+	def set_info(self, field, msg):
+		evt = infoEvent(text=msg, field=field)
+		wx.PostEvent(self.frame, evt)
 	#End callback methods
 
 	def set_answer(self,ans):
