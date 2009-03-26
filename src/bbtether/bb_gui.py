@@ -25,9 +25,6 @@ import bb_usb
 from bb_version import VERSION
 import threading
 from wx.lib.newevent import NewEvent
-from wxPython._core import wxBITMAP_TYPE_PNG
-from wxPython._core import wxImage
-from wxPython._gdi import wxEmptyIcon
 
 MENU_PREFS = 2
 MENU_CLEAR_CONSOLE = 3
@@ -54,8 +51,8 @@ icon=None
 def get_icon():
 	global icon
 	if icon == None:
-		image = wxImage('img/berry4all.png', wxBITMAP_TYPE_PNG).ConvertToBitmap()
-		icon = wxEmptyIcon()
+		image = wx.Image('img/berry4all.png', wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+		icon = wx.EmptyIcon()
 		icon.CopyFromBitmap(image)
 	return icon
 
@@ -298,31 +295,31 @@ class BBFrame(wx.Frame):
 		if pppd != "/usr/bin/pppd":
 			fake_args.append("-p")
 			fake_args.append(pppd)
-		device=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "device", -1)
+		device=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "device", "")
 		if device != "":
 			fake_args.append("-d")
 			fake_args.append(device)
-		interface=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "interface", -1)
+		interface=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "interface", "")
 		if interface != "":
 			fake_args.append("-i")
 			fake_args.append(interface)
-		bus=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "bus", -1)
+		bus=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "bus", "")
 		if bus != "":
 			fake_args.append("-b")
 			fake_args.append(bus)
-		rp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "readpt", -1)
+		rp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "readpt", "")
 		if rp != "":
 			fake_args.append("-w")
 			fake_args.append(rp)
-		wp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "writept", -1)
+		wp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "writept", "")
 		if wp != "":
 			fake_args.append("-x")
 			fake_args.append(wp)
-		mrp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_readpt", -1)
+		mrp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_readpt", "")
 		if mrp != "":
 			fake_args.append("-y")
 			fake_args.append(mrp)
-		mwp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_writept", -1)
+		mwp=bb_prefs.get_def_string(bb_prefs.SECTION_USER_EP, "modem_writept", "")
 		if mwp != "":
 			fake_args.append("-z")
 			fake_args.append(mwp)
