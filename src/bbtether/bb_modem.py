@@ -7,6 +7,7 @@ import array
 import fcntl
 import pty
 import signal
+import struct
 import time
 
 import bb_messenging
@@ -415,12 +416,15 @@ class BBModem:
 		if len(answer) > 8 and answer[0] == 0x4:
 			new_seed = answer[4:8]
 			bb_messenging.log("New Seed: "+str(new_seed))
-			# incr. seed value - would that fail on differnet indian system ? (shouldn't)
-			seed[3] = seed[3] + 1
-			bb_messenging.log("Old Seed +1: "+str(seed))
+			# Reading value as an unsigned big indian int
+			seed_val=struct.unpack('>I', seed_bytes)
+			new_seed_bytes=array.array("B", new_seed)
+			new_seed_val=struct.unpack('>I', new_seed_bytes)
+			bb_messenging.log("Seed val: "+str(seed_val))
+			bb_messenging.log("New Seed val: "+str(new_seed_val))
 
 			# if seed is now 0(pearl) or old_seed+1(curve) then password was accepted
-			if bb_util.is_same_tuple(new_seed, [0, 0, 0, 0]) or bb_util.is_same_tuple(new_seed, seed):
+			if bb_util.is_same_tuple(new_seed, [0, 0, 0, 0]) or new_seed_val == seed_val+1:
 				bb_messenging.status("Password accepted")
 				# make session key from end of hash
 				self.session_key = array.array("B", digest[len(digest)-8:]).tolist()
