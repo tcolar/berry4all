@@ -417,9 +417,8 @@ class BBModem:
 			new_seed = answer[4:8]
 			bb_messenging.log("New Seed: "+str(new_seed))
 			# Reading value as an unsigned big indian int
-			seed_val=struct.unpack('>I', seed_bytes)
-			new_seed_bytes=array.array("B", new_seed)
-			new_seed_val=struct.unpack('>I', new_seed_bytes)
+			seed_val=struct.unpack('>I', array.array("B", seed))[0]
+			new_seed_val=struct.unpack('>I', array.array("B", new_seed))[0]
 			bb_messenging.log("Seed val: "+str(seed_val))
 			bb_messenging.log("New Seed val: "+str(new_seed_val))
 
