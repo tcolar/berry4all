@@ -428,8 +428,9 @@ class BBModem:
 				# we are good, done!
 				return
 			else:
-				bb_messenging.status("New seed value is invalid")
-
+				bb_messenging.status("New seed value is invalid: ")
+		else:
+			bb_messenging.log("Answer too short: "+str(answer))
 		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
 
