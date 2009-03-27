@@ -388,6 +388,7 @@ class BBModem:
 		self.running = False
 
 	def send_password(self, password, seed):
+		bb_messenging.status("Seed: "+str(seed))
 		seed_bytes = array.array("B", seed)
 		sha1 = hashlib.sha1()
 		sha1.update(password)
@@ -413,8 +414,10 @@ class BBModem:
 		# Normal answer
 		if len(answer) > 8 and answer[0] == 0x4:
 			new_seed = answer[4:8]
+			bb_messenging.status("New Seed: "+str(new_seed))
 			# incr. seed value - would that fail on differnet indian system ? (shouldn't)
 			seed[3] = seed[3] + 1
+			bb_messenging.status("Old Seed +1: "+str(seed))
 
 			# if seed is now 0(pearl) or old_seed+1(curve) then password was accepted
 			if bb_util.is_same_tuple(new_seed, [0, 0, 0, 0]) or bb_util.is_same_tuple(new_seed, seed):
