@@ -246,7 +246,7 @@ def set_bb_power(device):
 		# reset()
 		bb_messenging.status("Increased USB power")
 	except usb.USBError, error:
-		bb_messenging.log("Error increasing power ",error.message,", continuing anyway.")
+		bb_messenging.log("Error increasing power "+error.message+", continuing anyway.")
 
 def set_data_mode(device):
 	bb_messenging.status("Switching Device to data only mode")
@@ -254,7 +254,7 @@ def set_data_mode(device):
 		buffer= [0,0]
 		device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
 	except usb.USBError, error:
-		bb_messenging.log("Error setting device to data mode ",error.message,", continuing anyway.")
+		bb_messenging.log("Error setting device to data mode "+error.message+", continuing anyway.")
 
 def reset(device):
 	bb_messenging.status("Resetting device")

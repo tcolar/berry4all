@@ -2,6 +2,10 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3d: 3/29/2009:
+	Fix to password seed verification code.
+	Other small bug fixes (debug calls)
+
 0.3c: 3/26/2009:
 	If stable, will not changed for a little while (stable version)
 	Fixed bug in preferences handling (could cause endpoint scanning to fail and thsu not usbale)
