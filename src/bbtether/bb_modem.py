@@ -416,9 +416,9 @@ class BBModem:
 		if len(answer) > 8 and answer[0] == 0x4:
 			new_seed = answer[4:8]
 			bb_messenging.log("New Seed: "+str(new_seed))
-			# Reading value as an unsigned big indian int
-			seed_val=struct.unpack('>I', array.array("B", seed))[0]
-			new_seed_val=struct.unpack('>I', array.array("B", new_seed))[0]
+			# Reading value as an unsigned little indian int
+			seed_val=struct.unpack('<I', array.array("B", seed))[0]
+			new_seed_val=struct.unpack('<I', array.array("B", new_seed))[0]
 			bb_messenging.log("Seed val: "+str(seed_val))
 			bb_messenging.log("New Seed val: "+str(new_seed_val))
 
