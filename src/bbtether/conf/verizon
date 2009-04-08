@@ -19,6 +19,11 @@ crtscts
 nomagic
 noccp
 noipdefault
+usepeerdns
+
+#Does not exist in all pppd versions (osx)
+#replacedefaultroute
+
 novj # refused anyway, no point in trying every time
 usepeerdns
 user 5555555555@vzw3g.com

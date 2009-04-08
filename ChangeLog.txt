@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3e: 4/8/2009:
+	Fixes to some ppp scripts
+
 0.3d: 3/29/2009:
 	Fix to password seed verification code.
 	Other small bug fixes (debug calls)

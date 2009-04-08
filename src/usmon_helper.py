@@ -5,7 +5,7 @@ http://wiki.colar.net/
 
 Quick (&dirty) script that takes in an usbmon log (USB sniffer)
 and dumps out an easier to read html file.
-This is used to debug/rev. engeneer USB protocols under linux/unix.
+This is used to debug/rev. engineer USB protocols under linux/unix.
 
 What it adds to a usbmon log:
 - colors so it's easier to scan through
