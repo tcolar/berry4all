@@ -406,6 +406,15 @@ class BBModem:
 		self.write(response)
 		time.sleep(.5)
 		answer = self.read();
+		if len(answer) == 0 :
+			print "will try read again"
+			time.sleep(2)
+			answer = self.read();
+			if len(answer) == 0 :
+				print "will try write & read again"
+				time.sleep(2)
+				self.write(response)
+				answer = self.read();
 		# check answer
 		# Storm sends 2 lines - untested
 		if len(answer) > 16 and answer[0] == 0:
