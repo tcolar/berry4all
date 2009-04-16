@@ -160,7 +160,7 @@ class BBModem:
 				self.password = bb_messenging.ask("Please enter your BB Password", True, "")
 			if self.password == None:
 				raise Exception
-			self.send_password(self.password, seed)
+			#self.send_password(self.password, seed)
 		else:
 			bb_messenging.log("No password requested.")
 
@@ -402,22 +402,22 @@ class BBModem:
 		digest_list = array.array("B", digest2).tolist()
 		response = [0x3, 0, 0, 0] + digest_list + RIM_PACKET_TAIL
 		bb_messenging.status("Sending password digest: ")
-		bb_util.debug(response)  # unsafe to dump ?
+		#bb_util.debug(response)  # unsafe to dump ?
 		self.write(response)
 		time.sleep(.5)
 		answer = self.read();
 		bb_messenging.log("answer "+str(answer))
-		if len(answer) == 0 :
-			bb_messenging.log("will try read again")
-			time.sleep(2)
-			answer = self.read()
-			bb_messenging.log("answer2 "+str(answer))
-			if len(answer) == 0 :
-				bb_messenging.log("will try write & read again")
-				time.sleep(2)
-				self.write(response)
-				bb_messenging.log("answer3 "+str(answer))
-				answer = self.read()
+		#if len(answer) == 0 :
+		#	bb_messenging.log("will try read again")
+		#	time.sleep(2)
+		#	answer = self.read()
+		#	bb_messenging.log("answer2 "+str(answer))
+		#	if len(answer) == 0 :
+		#		bb_messenging.log("will try write & read again")
+		#		time.sleep(2)
+		#		self.write(response)
+		#		bb_messenging.log("answer3 "+str(answer))
+		#		answer = self.read()
 		# check answer
 		# Storm sends 2 lines - untested
 		if len(answer) > 16 and answer[0] == 0:
