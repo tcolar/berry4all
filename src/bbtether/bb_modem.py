@@ -406,17 +406,17 @@ class BBModem:
 		self.write(response)
 		time.sleep(.5)
 		answer = self.read();
-		print "answer "+str(answer)
+		bb_messenging.log("answer "+str(answer))
 		if len(answer) == 0 :
-			print "will try read again"
+			bb_messenging.log("will try read again")
 			time.sleep(2)
 			answer = self.read()
-			print "answer2 "+str(answer)
+			bb_messenging.log("answer2 "+str(answer))
 			if len(answer) == 0 :
-				print "will try write & read again"
+				bb_messenging.log("will try write & read again")
 				time.sleep(2)
 				self.write(response)
-				print "answer3 "+str(answer)
+				bb_messenging.log("answer3 "+str(answer))
 				answer = self.read()
 		# check answer
 		# Storm sends 2 lines - untested
