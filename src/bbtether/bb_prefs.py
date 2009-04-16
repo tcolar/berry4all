@@ -14,7 +14,7 @@ SECTION_SCANNED_EP="Scanned_EndPoints"
 
 PREF_FILE=os.environ['HOME']+"/.bbtether.conf"
 if bb_osx.is_osx():
-	PREF_FILE=os.environ['HOME']+"/library/Preferences/bbtether.conf"
+	PREF_FILE=os.environ['HOME']+"/Library/Preferences/bbtether.conf"
 
 my_config=None
 
