@@ -160,7 +160,7 @@ class BBModem:
 				self.password = bb_messenging.ask("Please enter your BB Password", True, "")
 			if self.password == None:
 				raise Exception
-			#self.send_password(self.password, seed)
+			self.send_password(self.password, seed)
 		else:
 			bb_messenging.log("No password requested.")
 
