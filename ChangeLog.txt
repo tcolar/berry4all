@@ -14,7 +14,7 @@ tcolar AT colar d.o.t NET
 
 0.3c: 3/26/2009:
 	If stable, will not changed for a little while (stable version)
-	Fixed bug in preferences handling (could cause endpoint scanning to fail and thsu not usbale)
+	Fixed bug in preferences handling (could cause endpoint scanning to fail and thus not usable)
 	Removed obsolete wx entries (replaced by wx.)
 	Addec Max down/UP transfer speed to GUI.
 
