@@ -402,7 +402,7 @@ class BBModem:
 		digest_list = array.array("B", digest2).tolist()
 		response = [0x3, 0, 0, 0]+ digest_list + RIM_PACKET_TAIL
 		bb_messenging.status("Sending password digest: ")
-		bb_util.debug(response)  # unsafe to dump ?
+		bb_util.debug(str(response))  # unsafe to dump ?
 		self.write(response)
 		time.sleep(.5)
 		answer = self.read();
