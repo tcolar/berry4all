@@ -400,9 +400,9 @@ class BBModem:
 		sha1.update(seed_bytes.tostring())
 		digest2 = sha1.digest()
 		digest_list = array.array("B", digest2).tolist()
-		response = [0x3, 0, 0, 0] + digest_list + RIM_PACKET_TAIL
+		response = [0x3, 0, 0, 0]+ digest_list + RIM_PACKET_TAIL
 		bb_messenging.status("Sending password digest: ")
-		#bb_util.debug(response)  # unsafe to dump ?
+		bb_util.debug(response)  # unsafe to dump ?
 		self.write(response)
 		time.sleep(.5)
 		answer = self.read();
