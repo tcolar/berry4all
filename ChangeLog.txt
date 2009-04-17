@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3f: 4/17/2009:
+	Added GUI option to force modem data mode only, might help on some devices.
+
 0.3e: 4/8/2009:
 	Fixes to some ppp scripts
 

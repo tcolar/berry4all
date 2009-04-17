@@ -291,6 +291,9 @@ class BBFrame(wx.Frame):
 		vverb=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "veryverbose", False)
 		if vverb:
 			fake_args.append("--veryverbose")
+		data_mode=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "data_mode", False)
+		if data_mode:
+			fake_args.append("-m")
 		pppd=bb_prefs.get_def_string(bb_prefs.SECTION_MAIN, "pppd_path", "/usr/bin/pppd")
 		if pppd != "/usr/bin/pppd":
 			fake_args.append("-p")
@@ -520,6 +523,12 @@ class PreferencesFrame(wx.Frame):
 		self.pppd=wx.TextCtrl(modem,-1,pppds)
 		modemsizer.Add(pppdl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 		modemsizer.Add(self.pppd, 0, wx.EXPAND)
+		datal=wx.StaticText(modem,-1,"Use Data Only Mode:")
+		datas=bb_prefs.get_def_bool(bb_prefs.SECTION_MAIN, "data_mode", False)
+		self.datamode=wx.CheckBox(modem,-1,"")
+		self.datamode.SetValue(datas)
+		modemsizer.Add(datal, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+		modemsizer.Add(self.datamode, 0, wx.EXPAND)
 		modem.SetSizer(modemsizer)
 		nb.AddPage(modem,"Modem")
 		
@@ -609,6 +618,7 @@ class PreferencesFrame(wx.Frame):
 			selection=""
 		bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_config",selection)
 		bb_prefs.set(bb_prefs.SECTION_MAIN,"pppd_path",self.pppd.GetValue())
+		bb_prefs.set(bb_prefs.SECTION_MAIN,"data_mode",self.datamode.GetValue())
 		bb_prefs.set(bb_prefs.SECTION_USER_EP,"device",self.device.GetValue())
 		bb_prefs.set(bb_prefs.SECTION_USER_EP,"bus",self.bus.GetValue())
 		bb_prefs.set(bb_prefs.SECTION_USER_EP,"interface",self.interface.GetValue())
