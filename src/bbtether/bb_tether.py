@@ -101,6 +101,9 @@ class BBTether:
 			if options.dmode:
 				bb_usb.set_data_mode(berry)
 
+			if len(options.password) > 0:
+				bb_usb.send_password(berry, password)
+
 			# overwrite found endpoints with user endpoints if specified
 			if options.drp:
 				berry.readpt = int(options.drp, 16)
