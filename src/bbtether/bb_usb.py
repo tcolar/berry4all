@@ -263,6 +263,7 @@ def reset(device):
 	bb_messenging.status("Reset sent.")
 
 def send_password(device, password):
+	pass
 	#usb_write(device, device.writept, COMMAND_SEND_PASSWORD)
 	#data=usb_read(device,device.readpt, TBD);
 	#if len(data)>0 and data[4] == 0x6 and data[10] == 4:
