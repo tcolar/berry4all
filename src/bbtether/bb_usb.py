@@ -2,6 +2,7 @@
 USB utilities for Blackberry
 Thibaut Colar
 '''
+import bb_modem
 from bb_prefs import SECTION_SCANNED_EP
 import sys
 
@@ -23,11 +24,12 @@ PRODUCT_NEW_DUAL=0x0004   #(mass storage & data)
 PRODUCT_NEW_8120=0x8004   #(Pearl 8120)
 PRODUCT_NEW_MASS_ONLY=0x0006   #(mass storage only)
 BERRY_CONFIG=1
-COMMAND_MODE_DESKTOP=[]
+COMMAND_MODE_DESKTOP= [0,0,0x18,0,7,0xFF,0,7,0x52,0x49,0x4D,0x20,0x44,0x65,0x73,0x6B,0x74,0x6F,0x70,0,0,0,0,0]
 COMMAND_PIN = [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x04,0x00]
 COMMAND_DESC= [0x00,0x00,0x0c,0x00,0x05,0xff,0x00,0x00,0x00,0x00,0x02,0x00]
 COMMAND_HELLO = [0x00, 0x00, 0x10, 0x00, 0x01, 0xff, 0x00, 0x00,0xa8, 0x18, 0xda, 0x8d, 0x6c, 0x02, 0x00, 0x00]
 MODEM_HELLO_REPLY = [0x7, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x78, 0x56, 0x34, 0x12 ]
+COMMAND_PASS_START_CHLG = [0,0,8,0,0xA,4,1,8]
 
 def find_berry(userdev=None, userbus=None, verbose=True):
 	'''
@@ -249,6 +251,22 @@ def set_bb_power(device):
 	except usb.USBError, error:
 		bb_messenging.log("Error increasing power "+error.message+", continuing anyway.")
 
+def set_desktop_mode(device, password):
+	# TODO: always try ? but only send password if requested ?
+	bb_messenging.status("Switching Device to Desktop mode")
+	usb_write(device, device.writept, COMMAND_MODE_DESKTOP)
+	data=usb_read(device,device.readpt);
+	if len(password) > 0:
+		bb_messenging.log("Trying to send Desktop mode password.")
+		usb_write(device, device.writept, COMMAND_PASS_START_CHLG)
+		data=usb_read(device,device.readpt);
+		if len(data) <=8 :
+			bb_messenging.log("No seed sent by device, probably doesn't need a password.")
+		else:
+			seed=data[9:]
+			digest=bb_modem.digest_password(seed)
+			print("digest: "+str(digest))
+
 def set_data_mode(device):
 	bb_messenging.status("Switching Device to data only mode")
 	try:
@@ -261,13 +279,6 @@ def reset(device):
 	bb_messenging.status("Resetting device")
 	device.handle.reset()
 	bb_messenging.status("Reset sent.")
-
-def send_password(device, password):
-	pass
-	#usb_write(device, device.writept, COMMAND_SEND_PASSWORD)
-	#data=usb_read(device,device.readpt, TBD);
-	#if len(data)>0 and data[4] == 0x6 and data[10] == 4:
-	#	pin=bb_data.readlong(data,16);
 
 def get_pin(device):
 	pin=0x0;

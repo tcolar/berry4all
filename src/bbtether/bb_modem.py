@@ -389,16 +389,7 @@ class BBModem:
 		self.running = False
 
 	def send_password(self, password, seed):
-		bb_messenging.log("Seed: "+str(seed))
-		seed_bytes = array.array("B", seed)
-		sha1 = hashlib.sha1()
-		sha1.update(password)
-		digest = sha1.digest()
-		digest_bytes = array.array("B", digest)
-		seed_bytes.extend(digest_bytes)
-		sha1 = hashlib.sha1()
-		sha1.update(seed_bytes.tostring())
-		digest2 = sha1.digest()
+		digest=digest_password(seed)
 		digest_list = array.array("B", digest2).tolist()
 		response = [0x3, 0, 0, 0]
 		response.extend(digest_list)
@@ -450,6 +441,19 @@ class BBModem:
 			bb_messenging.log("Unexpected answer: "+str(answer))
 		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
+
+def digest_password(self, seed):
+	bb_messenging.log("Seed: "+str(seed))
+	seed_bytes = array.array("B", seed)
+	sha1 = hashlib.sha1()
+	sha1.update(password)
+	digest = sha1.digest()
+	digest_bytes = array.array("B", digest)
+	seed_bytes.extend(digest_bytes)
+	sha1 = hashlib.sha1()
+	sha1.update(seed_bytes.tostring())
+	digest2 = sha1.digest()
+	return digest2
 
 class ProcessOutputReader(threading.Thread):
 	'''Read process output Pipe(pppd) and pass it to regular system out(print)'''
