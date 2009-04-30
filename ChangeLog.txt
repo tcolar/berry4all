@@ -2,6 +2,9 @@ BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
 
+0.3g: 4/29/2009:
+	Remove uses of BaseException.message (deprecated in python 2.6)
+
 0.3f: 4/17/2009:
 	Added GUI option to force modem data mode only, might help on some devices.
 
