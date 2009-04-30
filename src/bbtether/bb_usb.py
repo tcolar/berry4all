@@ -141,7 +141,7 @@ def read_bb_endpoints(device, userInterface):
 			try:
 				handle.claimInterface(inter[0].interfaceNumber)
 			except usb.USBError, error:
-				bb_messenging.log("Failed to claim interface: "+str(error.message)+"\nMust be in use.")
+				bb_messenging.log("Failed to claim interface: "+str(error)+"\nMust be in use.")
 				if not bb_osx.is_osx():
 					#Only implemented on libusb Linux !
 					#For mac we need the kext stuff.
@@ -151,7 +151,7 @@ def read_bb_endpoints(device, userInterface):
 						handle.claimInterface(inter[0].interfaceNumber)
 						bb_messenging.log("Interface is now claimed !")
 					except usb.USBError, error:
-						bb_messenging.log("Still could not claim the interface: "+str(error.message))
+						bb_messenging.log("Still could not claim the interface: "+str(error))
 						
 			bb_messenging.log("		Interface class:"+str(inter[0].interfaceClass)+"/"+str(inter[0].interfaceSubClass))
 			bb_messenging.log("		Interface protocol:"+str(inter[0].interfaceProtocol))
@@ -249,7 +249,7 @@ def set_bb_power(device):
 		# reset()
 		bb_messenging.status("Increased USB power")
 	except usb.USBError, error:
-		bb_messenging.log("Error increasing power "+error.message+", continuing anyway.")
+		bb_messenging.log("Error increasing power "+str(error)+", continuing anyway.")
 
 def set_desktop_mode(device, password):
 	# TODO: always try ? but only send password if requested ?
@@ -273,7 +273,7 @@ def set_data_mode(device):
 		buffer= [0,0]
 		device.handle.controlMsg(0xc0, 0xa9, buffer, 0 , 1)
 	except usb.USBError, error:
-		bb_messenging.log("Error setting device to data mode "+error.message+", continuing anyway.")
+		bb_messenging.log("Error setting device to data mode "+str(error)+", continuing anyway.")
 
 def reset(device):
 	bb_messenging.status("Resetting device")
@@ -305,8 +305,8 @@ def usb_write(device,endpt,bytes,timeout=TIMEOUT,msg="\t-> "):
 	except usb.USBError, error:
 		bb_util.debug2("<bulkwrite(exc)")
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
-		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			bb_messenging.log("error: "+str(error.message))
+		if str(error) != "No error" and not (bb_osx.is_osx() and error.errno == None):
+			bb_messenging.log("error: "+str(error))
 			raise
 
 def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
@@ -319,8 +319,8 @@ def usb_read(device,endpt,size=BUF_SIZE,timeout=TIMEOUT,msg="\t<- "):
 	except usb.USBError, error:
 		bb_util.debug2("<bulkread (exc)")
 		# ! osx returns an empty error (no errorno) so we justcan't check anything :-(
-		if error.message != "No error" and not (bb_osx.is_osx() and error.errno == None):
-			bb_messenging.log("error: "+str(error.message))
+		if str(error) != "No error" and not (bb_osx.is_osx() and error.errno == None):
+			bb_messenging.log("error: "+str(error))
 			raise
 	return bytes 
 

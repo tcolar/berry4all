@@ -78,7 +78,7 @@ class BBModem:
 			try:
 				datar = bb_usb.usb_read(self.device, self.device.modem_readpt, size, timeout, "\tModem <- ")
 			except Exception, error:
-				bb_messenging.log("#error: " + str(error.message))
+				bb_messenging.log("#error: " + str(error))
 			if len(datar) > 0:
 				data.extend(datar)
 		bb_util.debug2("< modem_usb_read")
@@ -104,7 +104,7 @@ class BBModem:
 			bb_usb.clear_halt(self.device, self.device.modem_readpt)
 			bb_usb.clear_halt(self.device, self.device.modem_writept)
 		except usb.USBError, error:
-			bb_messenging.log("clearhalt failed: " + str(error.message))
+			bb_messenging.log("clearhalt failed: " + str(error))
 
 		# reset modem
 		# ok, on pearl it will fail the first time, because after querying the modem (hello commands) it's broke and need a reset
@@ -122,7 +122,7 @@ class BBModem:
 			try:
 				answer = self.read()
 			except OSError, error:
-				bb_messenging.log("Read failed: " + error.message)
+				bb_messenging.log("Read failed: " + error)
 				answer = ""
 			if len(answer) == 0:
 				reset_time += 5
@@ -523,7 +523,7 @@ class BBModemThread(threading.Thread):
 
 				except usb.USBError, error:
 					# Ignore the odd "No error" error, must be a pyusb bug, maybe just means no data ?
-					if error.message != "No error":
+					if str(error) != "No error":
 						raise
 								
 			except:
