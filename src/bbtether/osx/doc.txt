@@ -1,0 +1,3 @@
+http://svn.pythonmac.org/py2app/py2app/trunk/doc/index.html
+http://wiki.wxpython.org/Optimizing%20for%20Mac%20OS%20X
+Generally, the rule of thumb is that your stand alone executable should work on every version of OS X equal or greater to the version the executable was created on. Thus a .app bundle created on Jaguar would run on Panther, but one created on Panther would not run on Jaguar.
