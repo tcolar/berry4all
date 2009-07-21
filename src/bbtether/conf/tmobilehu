@@ -1,0 +1,32 @@
+# was tested as working by Me
+#460800
+115200
+noipdefault
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+novj
+user "internet"
+password "internet"
+usepeerdns
+
+#debug debug debug
+# does not exist in all pppd versions (osx)
+#replacedefaultroute
+
+# Default - IP - internet
+connect "/usr/sbin/chat -f conf/tmobilehu-chat"
+

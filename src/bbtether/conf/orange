@@ -1,0 +1,29 @@
+# Not tested yet
+115200
+noipdefault
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 999
+nopcomp
+noaccomp
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+novj
+#noauth
+nomagic
+noccp
+crtscts
+usepeerdns
+novj
+user "Orange"
+password "Multimedia"
+#debug debug debug
+# does not exist in all pppd versions (osx)
+replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/orange-chat"
