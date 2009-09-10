@@ -1,0 +1,34 @@
+# was tested as Alex Mely
+Notes:
+- Networking Mode changed to 2G on the BB (doest not work with 3G, could not get local address...)
+- FF Agent changed to "Vodafone/1.0/HTC_Mercury/1.23.163.5/Mozilla/4.0" (provider only accepts http requests
+#460800
+115200
+noipdefault
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+#noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+novj
+user ""
+password ""
+usepeerdns
+
+#debug debug debug
+# does not exist in all pppd versions (osx)
+#replacedefaultroute
+
+# Default (works for all but slower ?) wap.voicestreeam.com
+connect "/usr/sbin/chat -f conf/sfr-chat"
