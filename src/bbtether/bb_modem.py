@@ -389,7 +389,7 @@ class BBModem:
 		self.running = False
 
 	def send_password(self, password, seed):
-		digest=self.digest_password(seed,password)
+		digest=digest_password(seed,password)
 		digest_list = array.array("B", digest).tolist()
 		response = [0x3, 0, 0, 0]
 		response.extend(digest_list)
