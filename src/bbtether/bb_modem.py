@@ -389,8 +389,8 @@ class BBModem:
 		self.running = False
 
 	def send_password(self, password, seed):
-		digest=digest_password(seed)
-		digest_list = array.array("B", digest2).tolist()
+		digest=self.digest_password(seed,password)
+		digest_list = array.array("B", digest).tolist()
 		response = [0x3, 0, 0, 0]
 		response.extend(digest_list)
 		response.extend(RIM_PACKET_TAIL)
@@ -442,7 +442,7 @@ class BBModem:
 		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
 
-def digest_password(self, seed):
+def digest_password(self, seed, password):
 	bb_messenging.log("Seed: "+str(seed))
 	seed_bytes = array.array("B", seed)
 	sha1 = hashlib.sha1()
