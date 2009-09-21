@@ -1,6 +1,9 @@
 BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
+0.3j: 9/21/09:
+	Password routine fix (Again)
+
 0.3h: 9/10/09:
 	Fixed bug in password routine
 	Added some more user provided ppp scripts

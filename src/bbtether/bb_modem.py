@@ -442,7 +442,8 @@ class BBModem:
 		bb_messenging.warn(["Passord was not accepted, cannot continue !"])
 		os._exit(0)
 
-def digest_password(self, seed, password):
+# Static method
+def digest_password(seed, password):
 	bb_messenging.log("Seed: "+str(seed))
 	seed_bytes = array.array("B", seed)
 	sha1 = hashlib.sha1()
