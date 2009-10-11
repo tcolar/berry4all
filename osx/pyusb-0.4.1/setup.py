@@ -28,8 +28,8 @@ elif -1 != platform.find("darwin"):
 					   'CoreFoundation',
 					   '-framework',
 					   'IOKit',
-					   '-L/sw/lib']
-	extra_compile_args = ['-I/sw/include']
+					   '-L/sw/lib','-L/usr/local/include']
+	extra_compile_args = ['-I/sw/include','-I/usr/local/include']
 # Juha Torkkel has reported problems compiling on freebsd
 # when libusb is in /usr/local tree. I don't know on freebsd, but
 # on Linux the paths to usr/local are in $PATH.
@@ -45,6 +45,7 @@ usbmodule = Extension(name = 'usb',
 					extra_link_args = extra_link_args,
 					extra_compile_args = extra_compile_args,
 					depends = ['pyusb.h'])
+
 
 setup(name = 'pyusb',
 	version = '0.4.1',
