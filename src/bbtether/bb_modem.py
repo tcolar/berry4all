@@ -195,6 +195,7 @@ class BBModem:
 				elapsed += 100
 				if elapsed > timeout:
 					bb_messenging.warn(["Failed finding end of line(timeout) for: " + line])
+					bb_messenging.warn(["Usually means no reply from the modem"])
 					raise
 				continue
 			if prev == 0xD and ord(char) != 0xA:
@@ -397,7 +398,8 @@ class BBModem:
 		bb_messenging.status("Sending password digest: ")
 		bb_util.debug(str(response))  # unsafe to dump ?
 		self.write(response)
-		time.sleep(.5)
+# Increased from .5 to 2 as had report .5 was not always enough
+		time.sleep(2)
 		answer = self.read();
 		bb_messenging.log("answer "+str(answer))
 		#if len(answer) == 0 :
@@ -415,7 +417,7 @@ class BBModem:
 		# Storm sends 2 lines - untested
 		if len(answer) > 16 and answer[0] == 0:
 			bb_messenging.log("Received [0x0...] line (storm ??) ... trying to read again.")
-			time.sleep(.5)
+			time.sleep(2)
 			answer = self.read();
 		# Normal answer
 		if len(answer) > 8 and answer[0] == 0x4:

@@ -265,7 +265,7 @@ def set_mode(device, command, password=''):
 			bb_messenging.log("No seed sent by device, probably doesn't need a password.")
 		else:
 			seed=data[9:]
-			digest=bb_modem.digest_password(seed)
+			digest=bb_modem.digest_password(seed,password)
 			print("digest: "+str(digest))
 
 def set_data_mode(device):
