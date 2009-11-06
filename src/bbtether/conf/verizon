@@ -1,4 +1,8 @@
 #not tested yet
+
+#Make sure to use your actual phone number in here :
+user 5555555555@vzw3g.com
+
 nodetach
 115200
 #nomultilink
@@ -26,6 +30,5 @@ usepeerdns
 
 novj # refused anyway, no point in trying every time
 usepeerdns
-user 5555555555@vzw3g.com
 password vzw
 connect "/usr/sbin/chat -f conf/verizon-chat"

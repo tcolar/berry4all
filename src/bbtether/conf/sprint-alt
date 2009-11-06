@@ -1,7 +1,9 @@
-# Note: it seems that sprint my have blocked tethering all together since ~oct 09 !
-# http://community.sprint.com/baw/message/124503
+# Alternate sprint config (chat is different)
+# Created from sprint settings (untested)
 
-# Tested by Timothy Owings
+# USE YOUR ACTUAL PHONE NUMBER
+user 555555555@sprintpcs.com
+
 115200
 noipdefault
 defaultroute
@@ -22,11 +24,10 @@ noccp
 crtscts
 usepeerdns
 novj
-user wapuser
-password wap
-name wapuser
+password sprint
+name sprint
 #debug debug debug
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect "/usr/sbin/chat -v -V -f conf/sprint-chat"
+connect "/usr/sbin/chat -v -V -f conf/sprint-alt-chat"
