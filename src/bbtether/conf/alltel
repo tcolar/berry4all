@@ -1,0 +1,24 @@
+#Provided and tested by Jayson
+noauth
+115200
+user mobile-phone-number@alltel.net
+password alltel
+defaultroute
+usepeerdns
+noipdefault
+nodetach
+novj
+nodeflate
+nobsdcomp
+noaccomp
+nocrtscts
+nopcomp
+nomagic
+passive
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 999
+debug
+connect "/usr/sbin/chat -f conf/alltel-chat"
