@@ -1,0 +1,17 @@
+TIMEOUT 10
+ABORT 'BUSY'
+ABORT 'NO ANSWER'
+ABORT 'ERROR'
+SAY 'Starting GPRS connect script\n'
+
+'' 'BBT_OS'
+'' 'ATZ'
+SAY 'Setting APN\n'
+OK 'AT+CGDCONT=1,"IP","ibox.tim.it"'
+ABORT 'NO CARRIER'
+SAY 'Dialing...\n'
+OK 'ATD*99#'
+CONNECT
+# Without ~p it does NOT continue passed Connect !!
+~p
+
