@@ -6,7 +6,7 @@ SAY 'Starting GPRS connect script\n'
 
 '' 'BBT_OS'
 '' 'ATZ'
-OK 'AT+CGDCONT=1,"IP","epc.t-mobile.com"'
+OK 'AT+CGDCONT=1,"IP","epc.tmobile.com"'
 ABORT 'NO CARRIER'
 SAY 'Dialing...\n'
 OK 'ATD*99#'
