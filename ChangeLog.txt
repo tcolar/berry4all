@@ -1,6 +1,9 @@
 BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
+0.3l: 004/25/10:
+	Config files fixes
+	And new config files for other providers
 0.3k: 11/5/09:
 	New orange config (Suiss)
 	New USCellular config
