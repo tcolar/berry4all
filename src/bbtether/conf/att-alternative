@@ -1,0 +1,41 @@
+# User submitted Tested on Blackberry Bold, Ubuntu 10.04
+115200
+#nomultilink
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+noauth
+user ""
+password ""
+
+defaultroute
+usepeerdns
+
+noipdefault
+nodetach
+nobsdcomp
+noaccomp
+nocrtscts
+nopcomp
+nomagic
+noccp
+#novj
+
+passive
+
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 999
+
+mtu 1492
+
+
+#crtscts
+#debug debug debug
+# does not exist in all pppd versions (osx)
+#replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/att-chat"
+
