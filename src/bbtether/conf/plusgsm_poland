@@ -1,0 +1,27 @@
+115200
+#noipdefault should be disabled
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+#ipcp-max-configure 20
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+#noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+#novj should be disabled
+#auth below - should be without any user
+user ""
+password ""
+usepeerdns
+replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/plusgsm_poland-chat"

@@ -1,0 +1,14 @@
+TIMEOUT 10
+ABORT 'BUSY'
+ABORT 'NO ANSWER'
+ABORT 'ERROR'
+SAY 'Starting GPRS connect script\n'
+
+'' 'BBT_OS'
+'' 'ATZ'
+OK 'AT+CGDCONT=1,"IP","internet"'
+ABORT 'NO CARRIER'
+SAY 'Dialing...\n'
+OK 'ATD*99#'
+CONNECT
+~p
