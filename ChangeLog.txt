@@ -1,7 +1,10 @@
 BBTether
 Thibaut Colar
 tcolar AT colar d.o.t NET
-0.3l: 004/25/10:
+0.3m: 11/29/10:
+	Config files fixes
+	Many new ISP config files
+0.3l: 04/25/10:
 	Config files fixes
 	And new config files for other providers
 0.3k: 11/5/09:
