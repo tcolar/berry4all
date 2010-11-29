@@ -1,0 +1,7 @@
+115200
+defaultroute
+usepeerdns
+noipdefault
+user "ppp@a1plus.at"
+password "ppp"
+connect "/usr/sbin/chat -f conf/a1Australia-chat"

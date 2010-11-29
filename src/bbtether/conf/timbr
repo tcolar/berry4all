@@ -7,7 +7,9 @@
 # tcolar AT colar DOT net
 
 #460800
-115200
+#115200
+#230400
+921600
 noipdefault
 defaultroute
 #nomultilink
@@ -25,14 +27,14 @@ crtscts
 pap-timeout 20
 pap-restart 20
 lcp-restart 10
-#novj
-user ""
-password ""
+novj
+user "tim"
+password "tim"
 usepeerdns
 
 #debug debug debug
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/generic-chat"
+connect "/usr/sbin/chat -f conf/timbr-chat"
 

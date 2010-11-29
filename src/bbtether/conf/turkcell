@@ -1,5 +1,7 @@
-# Tested by Max Taranukha
-115200
+# was tested as working by Erol SANER
+
+460800
+#115200
 noipdefault
 defaultroute
 #nomultilink
@@ -7,23 +9,24 @@ ipcp-restart 7
 ipcp-accept-local
 ipcp-accept-remote
 lcp-echo-interval 0
-lcp-echo-failure 999
+lcp-echo-failure 99
 nopcomp
 noaccomp
+#noauth
+nomagic
+noccp
+crtscts
 pap-timeout 20
 pap-restart 20
 lcp-restart 10
-#noauth
-crtscts
+novj
+user "gprs"
+password "gprs"
 usepeerdns
-nomagic
-noccp
-#novj
-user ""
-password ""
-#name wapuser
+
 #debug debug debug
 # does not exist in all pppd versions (osx)
-#replacedefaultroute
+# replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/bellmobility-chat"
+connect "/usr/sbin/chat -f conf/turkcell-chat"
+

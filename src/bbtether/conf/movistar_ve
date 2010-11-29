@@ -6,8 +6,8 @@
 # If you do get a new provider working please send me the 2 config files and the name of the provider so I can add it to the standad distribution
 # tcolar AT colar DOT net
 
-#460800
-115200
+460800
+#115200
 noipdefault
 defaultroute
 #nomultilink
@@ -18,21 +18,19 @@ lcp-echo-interval 0
 lcp-echo-failure 99
 nopcomp
 noaccomp
-#noauth
+noauth
 nomagic
 noccp
 crtscts
 pap-timeout 20
 pap-restart 20
 lcp-restart 10
-#novj
-user ""
-password ""
+novj
 usepeerdns
 
 #debug debug debug
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/generic-chat"
+connect "/usr/sbin/chat -f conf/movistar_ve-chat"
 

@@ -1,0 +1,29 @@
+#460800
+115200
+defaultroute
+noipdefault
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+#noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+#novj
+#user ""
+#password ""
+usepeerdns
+
+#debug debug debug
+# does not exist in all pppd versions (osx)
+replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/claro-do-chat"

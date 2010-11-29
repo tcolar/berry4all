@@ -1,14 +1,20 @@
+# Turkcell
+
 TIMEOUT 10
 ABORT 'BUSY'
 ABORT 'NO ANSWER'
 ABORT 'ERROR'
+ABORT "NO DIALTONE"
+ABORT VOICE
+ABORT RINGING
+
 SAY 'Starting GPRS connect script\n'
 
 '' 'BBT_OS'
-'' 'ATZ'
-OK 'AT+CGDCONT=1,"IP","web.vodafone.de"'
+OK 'ATZ'
+OK 'AT+CGDCONT=1,"IP","internet"'
 ABORT 'NO CARRIER'
-SAY 'Dialing...\n'
+SAY 'Dialing...'
 OK 'ATD*99#'
 CONNECT
 ~p

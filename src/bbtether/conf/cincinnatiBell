@@ -26,7 +26,7 @@ pap-timeout 20
 pap-restart 20
 lcp-restart 10
 #novj
-user ""
+user "cbw"
 password ""
 usepeerdns
 
@@ -34,5 +34,5 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/generic-chat"
+connect "/usr/sbin/chat -f conf/cincinattiBell-chat"
 

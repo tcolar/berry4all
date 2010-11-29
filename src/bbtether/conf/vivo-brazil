@@ -1,0 +1,34 @@
+# Conf file for Vivo (Brazil)
+# Contribution by Joao C. Coutinho
+# jc AT joaocoutinho DOT com DOT br
+
+#460800
+115200
+noipdefault
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+#noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+#novj
+user "vivo"
+password "vivo"
+usepeerdns
+
+#debug debug debug
+# does not exist in all pppd versions (osx)
+#replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/vivo-brazil-chat"
+
