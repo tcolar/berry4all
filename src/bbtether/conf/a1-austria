@@ -4,4 +4,4 @@ usepeerdns
 noipdefault
 user "ppp@a1plus.at"
 password "ppp"
-connect "/usr/sbin/chat -f conf/a1Australia-chat"
+connect "/usr/sbin/chat -f conf/a1-austria-chat"
