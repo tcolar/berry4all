@@ -1,0 +1,38 @@
+# Generic conf you can modify for "others" providers
+
+# See http://www.berry4all.com/faqs#there_is_no_config_for_my_provider_yet
+# On instructions to setup a new provider.
+#
+# If you do get a new provider working please send me the 2 config files and the name of the provider so I can add it to the standad distribution
+# tcolar AT colar DOT net
+
+#460800
+115200
+noipdefault
+defaultroute
+#nomultilink
+ipcp-restart 7
+ipcp-accept-local
+ipcp-accept-remote
+lcp-echo-interval 0
+lcp-echo-failure 99
+nopcomp
+noaccomp
+#noauth
+nomagic
+noccp
+crtscts
+pap-timeout 20
+pap-restart 20
+lcp-restart 10
+#novj
+user ""
+password ""
+usepeerdns
+
+#debug debug debug
+# does not exist in all pppd versions (osx)
+replacedefaultroute
+
+connect "/usr/sbin/chat -f conf/mtnZA-chat"
+

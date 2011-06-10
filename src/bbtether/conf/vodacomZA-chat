@@ -1,0 +1,21 @@
+# Generic script, you will need to at least replace "wap.voicestream.com" by your provider APN
+# here is a good page to find it: http://www.quickim.com/support/gprs-settings.html#USA
+
+TIMEOUT 10
+ABORT 'BUSY'
+ABORT 'NO ANSWER'
+ABORT 'ERROR'
+ABORT "NO DIALTONE"
+ABORT VOICE
+ABORT RINGING
+
+SAY 'Starting GPRS connect script\n'
+
+'' 'BBT_OS'
+OK 'ATZ'
+OK 'AT+CGDCONT=1,"IP","internet"'
+ABORT 'NO CARRIER'
+SAY 'Dialing...'
+OK 'ATD*99#'
+CONNECT
+~p
