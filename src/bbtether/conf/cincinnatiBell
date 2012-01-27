@@ -34,5 +34,5 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/cincinattiBell-chat"
+connect "/usr/sbin/chat -f ./conf/cincinattiBell-chat"
 

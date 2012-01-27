@@ -27,5 +27,5 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/starhub-chat"
+connect "/usr/sbin/chat -f ./conf/starhub-chat"
 

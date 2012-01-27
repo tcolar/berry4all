@@ -24,4 +24,4 @@ password ""
 usepeerdns
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/plusgsm_poland-chat"
+connect "/usr/sbin/chat -f ./conf/plusgsm_poland-chat"

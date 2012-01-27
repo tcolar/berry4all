@@ -31,4 +31,4 @@ usepeerdns
 novj # refused anyway, no point in trying every time
 usepeerdns
 password vzw
-connect "/usr/sbin/chat -f conf/verizon-chat"
+connect "/usr/sbin/chat -f ./conf/verizon-chat"

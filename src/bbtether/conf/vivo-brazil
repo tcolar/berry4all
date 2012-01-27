@@ -30,5 +30,5 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/vivo-brazil-chat"
+connect "/usr/sbin/chat -f ./conf/vivo-brazil-chat"
 

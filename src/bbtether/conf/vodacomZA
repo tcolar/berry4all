@@ -35,5 +35,5 @@ usepeerdns
 replacedefaultroute
 
 #connect "/usr/sbin/chat -f conf/vodacomZA-chat"
-connect "/usr/sbin/chat -f /home/leet/Desktop/bbtether/conf/vodacomZA-chat"
+connect "/usr/sbin/chat -f ./conf/vodacomZA-chat"
 

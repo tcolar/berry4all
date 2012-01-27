@@ -28,5 +28,5 @@ usepeerdns
 #replacedefaultroute
 
 # Default - IP - internet
-connect "/usr/sbin/chat -f conf/tmobilehu-chat"
+connect "/usr/sbin/chat -f ./conf/tmobilehu-chat"
 

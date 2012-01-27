@@ -26,5 +26,5 @@ password "fido"
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/fido-chat"
+connect "/usr/sbin/chat -f ./conf/fido-chat"
 

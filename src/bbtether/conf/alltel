@@ -21,4 +21,4 @@ ipcp-accept-remote
 lcp-echo-interval 0
 lcp-echo-failure 999
 debug
-connect "/usr/sbin/chat -f conf/alltel-chat"
+connect "/usr/sbin/chat -f ./conf/alltel-chat"

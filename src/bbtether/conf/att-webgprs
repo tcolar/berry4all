@@ -37,5 +37,5 @@ mtu 1492
 # does not exist in all pppd versions (osx)
 #replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/att-webgprs-chat"
+connect "/usr/sbin/chat -f ./conf/att-webgprs-chat"
 

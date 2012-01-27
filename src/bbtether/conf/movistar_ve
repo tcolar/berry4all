@@ -32,5 +32,5 @@ usepeerdns
 # does not exist in all pppd versions (osx)
 replacedefaultroute
 
-connect "/usr/sbin/chat -f conf/movistar_ve-chat"
+connect "/usr/sbin/chat -f ./conf/movistar_ve-chat"
 

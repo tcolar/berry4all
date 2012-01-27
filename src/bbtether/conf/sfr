@@ -31,4 +31,4 @@ usepeerdns
 #replacedefaultroute
 
 # Default (works for all but slower ?) wap.voicestreeam.com
-connect "/usr/sbin/chat -f conf/sfr-chat"
+connect "/usr/sbin/chat -f ./conf/sfr-chat"
