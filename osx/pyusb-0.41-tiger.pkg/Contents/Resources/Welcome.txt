@@ -1,4 +1,0 @@
-This is pyusb-0.41 repackaged for OSX.
-This is an universal binary (PPC/386)
-Repackaged by Thibaut Colar.
-Comes without warranties of any kind.
