@@ -6,11 +6,11 @@ Script to use a USB BlackBerry device as a modem (Tethering), and enable chargin
 On My Pearl (Edge) in Seattle, I get speeds of 8K/s-29K/s, avering about 14K/s.
 
 This script requires python, pppd, libusb and the python usb module installed:
-	You probably already have python, pppd and libusb installed
-	Ex: sudo apt-get install python libusb pppd python-pyusb
-		or yum install python libusb pppd pyusb
+    You probably already have python, pppd and libusb installed
+    Ex: sudo apt-get install python libusb pppd python-pyusb
+        or yum install python libusb pppd pyusb
 
------------------------------------		
+-----------------------------------
 Thibaut Colar - 2009+
 tcolar AT colar DOT net
 http://wiki.colar.net/bbtether
@@ -28,13 +28,13 @@ bbtether.start(options, args)
 
 '''
 Protocol References: (Used to figure out BBerry protocol)
-	http://www.off.net/cassis/protocol-description.html
-	http://xmblackberry.cvs.sourceforge.net/viewvc/xmblackberry/XmBlackBerry/	
-	http://barry.cvs.sourceforge.net/viewvc/barry/barry/
-	http://libusb.sourceforge.net/doc/
-	http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
-	http://www.fibble.org/archives/000508.html
-	http://www.wxpython.org/download.php
+    http://www.off.net/cassis/protocol-description.html
+    http://xmblackberry.cvs.sourceforge.net/viewvc/xmblackberry/XmBlackBerry/
+    http://barry.cvs.sourceforge.net/viewvc/barry/barry/
+    http://libusb.sourceforge.net/doc/
+    http://bazaar.launchpad.net/~pygarmin-dev/pygarmin/trunk/annotate/91?file_id=garmin.py-20070323161514-arelz0uc976re3e4-1
+    http://www.fibble.org/archives/000508.html
+    http://www.wxpython.org/download.php
 
 If usb_claim_interface() returns -EBUSY, this means there's already
 another (possibly kernel) driver bound to that interface. On Linux you

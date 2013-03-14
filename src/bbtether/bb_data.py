@@ -5,53 +5,53 @@ Thibaut Colar
 import bb_usb
 
 class Device:
-	'''
-	Data structure for a device infos
-	Usually created by bb_usb.find_berry
-	'''
-	# the usb device
-	usbdev=None
-	bus=None #(the bus it was found on)
-	# usb handle (once opened)
-	handle=None
-	# readpt empty until read_endpoints() called
-	readpt=-1;
-	writept=-1;
-	interface=-1;
-	modem_readpt=-1
-	modem_writept=-1
-	# Following empty until read_infos() called
-	pin=-1
-	desc="N/A"
-	
-	def claim_interface(self):
-		self.handle.claimInterface(self.interface)
-		
-	def release_interface(self):
-		self.handle.releaseInterface()
+    '''
+    Data structure for a device infos
+    Usually created by bb_usb.find_berry
+    '''
+    # the usb device
+    usbdev=None
+    bus=None #(the bus it was found on)
+    # usb handle (once opened)
+    handle=None
+    # readpt empty until read_endpoints() called
+    readpt=-1
+    writept=-1
+    interface=-1
+    modem_readpt=-1
+    modem_writept=-1
+    # Following empty until read_infos() called
+    pin=-1
+    desc="N/A"
 
-	# This fails on some devices (8130), we just ignore it
-	def read_infos(self):
-		''' read pin and description and store them in this data structure'''
-		self.pin=bb_usb.get_pin(self)
-		self.desc=bb_usb.get_description(self)
+    def claim_interface(self):
+        self.handle.claimInterface(self.interface)
 
-	def read_endpoints(self,interface):
-		''' read endpoints (data & modem) and store them in this data structure'''
-		bb_usb.read_bb_endpoints(self,interface)
-		
-	def open_handle(self):
-		''' Open the usb handle '''
-		self.handle=self.usbdev.open()
+    def release_interface(self):
+        self.handle.releaseInterface()
+
+    # This fails on some devices (8130), we just ignore it
+    def read_infos(self):
+        ''' read pin and description and store them in this data structure'''
+        self.pin=bb_usb.get_pin(self)
+        self.desc=bb_usb.get_description(self)
+
+    def read_endpoints(self,interface):
+        ''' read endpoints (data & modem) and store them in this data structure'''
+        bb_usb.read_bb_endpoints(self,interface)
+
+    def open_handle(self):
+        ''' Open the usb handle '''
+        self.handle=self.usbdev.open()
 
 #Data utilities
 def readlong(data,index):
-	return (data[index+3]<<24)+(data[index+2]<<16)+(data[index+1]<<8)+data[index]
+    return (data[index+3]<<24)+(data[index+2]<<16)+(data[index+1]<<8)+data[index]
 
 def readstring(data,index):
-	s="";
-	while(data[index]!=0):
-		s+=chr(data[index])
-		index+=1
-	return s;
+    s=""
+    while(data[index]!=0):
+        s+=chr(data[index])
+        index+=1
+    return s
 
